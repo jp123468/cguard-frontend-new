@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
 import { Section, EmptyState, SkeletonCards, StatusBadge } from '@/components/kit';
+import type { Station } from '@/types';
 
-type Props = { station: any; stationId: string; postSiteId: string };
+type Props = { station: Station; stationId: string; postSiteId: string };
 
 export default function StationIncidents({ stationId, postSiteId }: Props) {
   const { t } = useTranslation();

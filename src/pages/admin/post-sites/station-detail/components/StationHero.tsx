@@ -17,6 +17,17 @@ import { StatusBadge, FadeIn } from "@/components/kit";
 import { ApiService } from "@/services/api/apiService";
 import { invalidateEntity } from "@/lib/queryClient";
 import { usePermissions } from "@/hooks/usePermissions";
+import type { Station } from "@/types";
+
+interface StationDetail extends Station {
+    name?: string;
+    nickname?: string;
+    isMobile?: boolean;
+    geofencePolygon?: unknown[] | null;
+    geofenceRadius?: number | string | null;
+    startingTimeInDay?: string | null;
+    finishTimeInDay?: string | null;
+}
 
 const HUES = [205, 150, 265, 28, 340, 95, 180, 12];
 function hueFor(name: string): number {
@@ -38,7 +49,7 @@ export default function StationHero({
     postSiteId,
     onRenamed,
 }: {
-    station: any;
+    station: StationDetail;
     stationId: string;
     postSiteId: string;
     onRenamed: (name: string) => void;
@@ -165,7 +176,7 @@ export default function StationHero({
                                 <Clock className="h-3.5 w-3.5" />
                                 {station?.startingTimeInDay || station?.finishTimeInDay
                                     ? `${station?.startingTimeInDay || "?"} – ${station?.finishTimeInDay || "?"}`
-                                    : SCHEDULE_LABEL[station?.scheduleType] || "Horario sin definir"}
+                                    : SCHEDULE_LABEL[station?.scheduleType || ""] || "Horario sin definir"}
                             </span>
                             {!station?.isMobile && (
                                 <span className="flex items-center gap-1.5">

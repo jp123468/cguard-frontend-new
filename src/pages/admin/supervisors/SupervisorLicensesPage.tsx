@@ -14,13 +14,13 @@ export default function SupervisorLicensesPage() {
 
   const licensesApi = {
     list: (pg: { limit?: number; offset?: number }) =>
-      api.get(`${base}?limit=${pg?.limit ?? 25}&offset=${pg?.offset ?? 0}`).then((r: any) => r.data),
+      api.get(`${base}?limit=${pg?.limit ?? 25}&offset=${pg?.offset ?? 0}`).then((r) => r.data),
     // No single-GET endpoint — derive from the list (rows already carry images).
     get: (licenseId: string) =>
-      api.get(base).then((r: any) => (r.data?.rows || []).find((x: any) => x.id === licenseId) || null),
-    create: (payload: any) => api.post(base, payload).then((r: any) => r.data?.data ?? r.data),
-    update: (licenseId: string, payload: any) =>
-      api.put(`${base}/${licenseId}`, payload).then((r: any) => r.data?.data ?? r.data),
+      api.get(base).then((r) => (r.data?.rows || []).find((x: { id: string }) => x.id === licenseId) || null),
+    create: (payload: unknown) => api.post(base, payload).then((r) => r.data?.data ?? r.data),
+    update: (licenseId: string, payload: unknown) =>
+      api.put(`${base}/${licenseId}`, payload).then((r) => r.data?.data ?? r.data),
     remove: (ids: string[]) => Promise.all((ids || []).map((lid) => api.delete(`${base}/${lid}`))),
     // No PDF report for supervisors (yet).
     download: (_licenseId: string) => Promise.reject(new Error("Reporte no disponible")),

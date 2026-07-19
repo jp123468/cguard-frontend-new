@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import type { Client } from '@/types/client';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
@@ -39,7 +40,7 @@ const fmtDateTime = (d: any) => {
   return Number.isNaN(dt.getTime()) ? '' : dt.toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 };
 
-export default function ClientOverview({ client }: { client: any }) {
+export default function ClientOverview({ client }: { client: Client & { lat?: number | string; lng?: number | string; latitude?: number | string; longitude?: number | string } }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement | null>(null);

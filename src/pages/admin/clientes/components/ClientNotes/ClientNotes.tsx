@@ -13,9 +13,10 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Section, EmptyState, Modal } from '@/components/kit';
+import type { Client } from '@/types/client';
 
 type Props = {
-    client?: any;
+    client?: Client & { firstName?: string };
 };
 
 export default function ClientNotes({ client }: Props) {

@@ -26,8 +26,8 @@ export default function LicenseTypePage() {
         offset: String((page - 1) * pageSize),
       };
       if (query) params['filter[name]'] = query;
-      const resp: any = await licenseTypeService.list(params);
-      const mapped: LicenseTypeRow[] = (resp?.rows || []).map((r: any) => ({
+      const resp: { rows?: Array<{ id: string; name: string; status?: string }>; count?: number } = await licenseTypeService.list(params);
+      const mapped: LicenseTypeRow[] = (resp?.rows || []).map((r) => ({
         id: r.id,
         name: r.name,
         status: r.status === 'inactive' ? 'inactive' : 'active',

@@ -1,6 +1,7 @@
 import api from '@/lib/api';
 import { cachedFetch, invalidateEntity } from '@/lib/queryClient';
 import { PostSiteInput } from '@/lib/validators/post-site';
+import type { GuardAssignment } from '@/types';
 
 export interface PostSite {
   id: string;
@@ -22,7 +23,7 @@ export interface PostSite {
   stationSchedule?: string | null;
   startingTimeInDay?: string | null;
   finishTimeInDay?: string | null;
-  assignedGuards?: any[];
+  assignedGuards?: GuardAssignment[];
   guardsCount?: number;
   numberOfGuardsInStation?: string | number | null;
   serviceType?: string;
@@ -67,7 +68,12 @@ const getTenantId = (): string => {
     return local;
   }
   try {
-    const w: any = window as any;
+    const w = window as unknown as {
+      __APP_AUTH?: {
+        tenantId?: string;
+        user?: { tenants?: Array<{ tenantId?: string; tenant?: { id?: string; tenantId?: string } }> };
+      };
+    };
     const info = w.__APP_AUTH;
     if (info) {
       if (info.tenantId) {
@@ -99,7 +105,8 @@ const stationService = {
     if (filters.name) params.append('filter[name]', filters.name);
     if (filters.clientId) params.append('filter[clientId]', filters.clientId);
     // allow filtering stations by postSite id (station repository expects filter.postSite)
-    const postSiteId = (filters as any).postSite || (filters as any).postSiteId || undefined;
+    const filtersExt = filters as PostSiteFilters & { postSite?: string; postSiteId?: string };
+    const postSiteId = filtersExt.postSite || filtersExt.postSiteId || undefined;
     if (postSiteId) params.append('filter[postSite]', postSiteId);
     const categoryToUse = filters.categoryId ?? filters.category;
     if (categoryToUse) params.append('filter[categoryIds]', categoryToUse);
@@ -107,7 +114,7 @@ const stationService = {
       params.append('filter[email]', filters.email);
       params.append('filter[contactEmail]', filters.email);
     }
-    const phoneToUse = (filters as any).phone ?? (filters as any).phoneNumber;
+    const phoneToUse = filters.phone ?? filters.phoneNumber;
     if (phoneToUse) {
       params.append('filter[phone]', phoneToUse);
       params.append('filter[contactPhone]', phoneToUse);
@@ -124,7 +131,7 @@ const stationService = {
     // If caller asked for stations linked to a postSite, call the stations endpoint
     const useStationsEndpoint = !!postSiteId;
     const endpoint = useStationsEndpoint ? 'stations' : 'post-site';
-    const { data } = await api.get(`/tenant/${tenantId}/${endpoint}?${params.toString()}`, { toast: { silentError: true } } as any);
+    const { data } = await api.get(`/tenant/${tenantId}/${endpoint}?${params.toString()}`, { toast: { silentError: true } });
     const mappedRows: PostSite[] = (data.rows || []).map((r: any) => ({
       id: r.id,
       name: r.stationName ?? r.name ?? '',
@@ -162,7 +169,7 @@ const stationService = {
     // previously attempted `/stations/:id` first which produced noisy 404s
     // for valid post-site resources; remove that fallback.
     const postSiteUrl = `/tenant/${tenantId}/post-site/${id}`;
-    const { data } = await api.get(postSiteUrl, { toast: { silentError: true } } as any);
+    const { data } = await api.get(postSiteUrl, { toast: { silentError: true } });
     return data;
   },
 
@@ -209,7 +216,7 @@ const stationService = {
     } catch (err) {
       console.error(`stationService.update: failed to load existing station/post-site ${id}`, err);
       try {
-        const res = await api.get(`/tenant/${tenantId}/post-site/${id}`, { toast: { silentError: true } } as any);
+        const res = await api.get(`/tenant/${tenantId}/post-site/${id}`, { toast: { silentError: true } });
         existing = res.data || {};
       } catch (e) {
         console.error(`stationService.update: fallback direct post-site GET also failed for ${id}`, e);
@@ -256,13 +263,13 @@ const stationService = {
     const params = new URLSearchParams();
     if (filters.name) params.append('filter[name]', filters.name);
     if (filters.clientId) params.append('filter[clientId]', filters.clientId);
-    const categoryToUse = filters.categoryId ?? (filters as any).category;
+    const categoryToUse = filters.categoryId ?? filters.category;
     if (categoryToUse) params.append('filter[categoryIds]', categoryToUse);
     if (filters.email) {
       params.append('filter[email]', filters.email);
       params.append('filter[contactEmail]', filters.email);
     }
-    const phoneToUse = (filters as any).phone ?? (filters as any).phoneNumber;
+    const phoneToUse = filters.phone ?? filters.phoneNumber;
     if (phoneToUse) {
       params.append('filter[phone]', phoneToUse);
       params.append('filter[contactPhone]', phoneToUse);
@@ -279,13 +286,13 @@ const stationService = {
     const params = new URLSearchParams();
     if (filters.name) params.append('filter[name]', filters.name);
     if (filters.clientId) params.append('filter[clientId]', filters.clientId);
-    const categoryToUse = filters.categoryId ?? (filters as any).category;
+    const categoryToUse = filters.categoryId ?? filters.category;
     if (categoryToUse) params.append('filter[categoryIds]', categoryToUse);
     if (filters.email) {
       params.append('filter[email]', filters.email);
       params.append('filter[contactEmail]', filters.email);
     }
-    const phoneToUse = (filters as any).phone ?? (filters as any).phoneNumber;
+    const phoneToUse = filters.phone ?? filters.phoneNumber;
     if (phoneToUse) {
       params.append('filter[phone]', phoneToUse);
       params.append('filter[contactPhone]', phoneToUse);
@@ -301,7 +308,7 @@ const stationService = {
     const tenantId = getTenantId();
     const formData = new FormData();
     formData.append('file', file);
-    const { data } = await api.post(`/tenant/${tenantId}/post-site/import`, formData, { headers: { 'Content-Type': 'multipart/form-data' } } as any);
+    const { data } = await api.post(`/tenant/${tenantId}/post-site/import`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
     return data;
   },
 
@@ -317,7 +324,7 @@ const stationService = {
     }>;
   }> {
     const tenantId = getTenantId();
-    const { data } = await api.get(`/tenant/${tenantId}/post-site/${postSiteId}/active-status`, { toast: { silentError: true } } as any);
+    const { data } = await api.get(`/tenant/${tenantId}/post-site/${postSiteId}/active-status`, { toast: { silentError: true } });
     return data;
   },
 
@@ -341,7 +348,7 @@ const stationService = {
     const params = new URLSearchParams({ from, to });
     const { data } = await api.get(
       `/tenant/${tenantId}/post-site/${postSiteId}/coverage-gaps?${params}`,
-      { toast: { silentError: true } } as any
+      { toast: { silentError: true } }
     );
     return data;
   },

@@ -29,6 +29,7 @@ import {
   PanelRightClose,
   PanelRightOpen,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { StatusBadge } from "@/components/kit";
 import { ApiService } from "@/services/api/apiService";
 import { toast } from "sonner";
@@ -36,77 +37,55 @@ import { confirmDialog } from "@/components/ui/confirmDialog";
 import ScheduleTimeline, { dateToWall, wallToDate, startPan } from "./ScheduleTimeline";
 import RotationStyleSelect from "@/components/schedule/RotationStyleSelect";
 import ContextMenu, { CtxItem, CtxMenuState } from "./ContextMenu";
+import type {
+  RotationStyle,
+  StationPosition,
+  GuardAssignment,
+  GuardRef,
+  Station,
+  ShiftRecord,
+  GuardOption,
+  ScheduleOverride,
+} from "@/types";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-interface RotationStyle {
-  id: string;
-  name: string;
-  description?: string;
-  dayShifts: number;
-  nightShifts: number;
-  restDays: number;
-  isSystem: boolean;
+// Raw guard row shape as returned by securityGuardService / scheduler guard pool.
+interface RawGuardRow {
+  guardId?: string;
+  id?: string;
+  value?: string;
+  fullName?: string;
+  name?: string;
+  label?: string;
+  email?: string;
 }
 
-interface StationPosition {
-  id: string;
-  name: string;
-  type: 'fijo' | 'sacafranco';
-  startTime: string;
-  endTime: string;
-  guardsNeeded: number;
-  sortOrder: number;
-  platoonOffset: number;
+// Per-station staffing alert (uncovered fijo slots / SF rest-day gaps).
+interface StationAlert {
   stationId: string;
-}
-
-interface GuardAssignment {
-  id: string;
-  guardId: string;
-  stationId: string;
-  positionId: string;
-  rotationStyleId: string;
-  startDate: string;
-  endDate?: string;
-  platoonOffset: number;
-  isRelief: boolean;
-  status: string;
-  guard?: { id: string; firstName: string; lastName: string; email?: string };
-  position?: StationPosition;
-  rotationStyle?: RotationStyle;
-}
-
-interface Station {
-  id: string;
   stationName: string;
-  scheduleType?: string;
-  rotationStyleId?: string;
-  postSiteId?: string;
+  missingFijoCount: number;
+  sfUncoveredDays: number;
 }
 
-interface ShiftRecord {
-  id: string;
-  guardId: string;
-  stationId: string;
-  positionId?: string;
-  startTime: string;
-  endTime: string;
-  guard?: { id: string; firstName: string; lastName: string };
+// One row of the post-publish implementation plan (who was notified of what).
+interface PlanItem {
+  id?: string;
+  guardId?: string;
+  guardName?: string;
+  added?: number;
+  changed?: number;
+  removed?: number;
+  notifyStatus?: string;
 }
 
-interface GuardOption {
-  id: string;
-  label: string;
-}
-
-interface ScheduleOverride {
-  id: string;
-  guardId: string;
-  assignmentId?: string;
-  date: string;
-  type: string; // V, PM, F, 24, D, N, L
-  note?: string;
+// One proposed change in the AI scheduler draft.
+interface ProposalChange {
+  id?: string;
+  action?: string;
+  startTime?: string;
+  meta?: { shiftType?: string };
 }
 
 // A selectable grid row = one puesto (fijo or sacafranco) with its assignments.
@@ -159,7 +138,7 @@ type ViewMode = 'month' | 'week' | 'day';
 
 const VIEW_KEY = 'programador.horario.view';
 
-const POSITION_COLORS: Record<string, { bg: string; border: string; text: string; icon: any }> = {
+const POSITION_COLORS: Record<string, { bg: string; border: string; text: string; icon: LucideIcon }> = {
   fijo: { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-600', icon: Sun },
   sacafranco: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-500', icon: Shield },
 };
@@ -323,10 +302,10 @@ export default function Schedule() {
       setRotationStyles(rots);
 
       const guards = Array.isArray(guardsRes) ? guardsRes : (guardsRes?.rows || []);
-      setGuardsPool(guards.map((g: any) => ({
-        id: g.guardId || g.id || g.value,
+      setGuardsPool(guards.map((g: RawGuardRow) => ({
+        id: g.guardId || g.id || g.value || '',
         label: g.fullName || g.name || g.label || g.email || '',
-      })).filter((g: any) => g.id));
+      })).filter((g: { id: string; label: string }) => g.id));
 
       if (staffingRes) {
         const sd = staffingRes?.data || staffingRes;
@@ -497,7 +476,7 @@ export default function Schedule() {
     });
 
     // Group by guard (deduplicate — a sacafranco may have assignments at multiple stations)
-    const byGuard = new Map<string, { guard: any; assignments: GuardAssignment[]; availability: { date: Date; status: 'covering' | 'available'; stationName?: string }[] }>();
+    const byGuard = new Map<string, { guard: GuardRef | undefined; assignments: GuardAssignment[]; availability: { date: Date; status: 'covering' | 'available'; stationName?: string }[] }>();
 
     reliefAssignments.forEach(a => {
       if (!byGuard.has(a.guardId)) {
@@ -582,14 +561,14 @@ export default function Schedule() {
     return rows;
   }, [stations, positions, positionsById, assignments, monthDays, sfStationCoverage, isWorkDay]);
 
-  const stationAlerts = useMemo(() => {
+  const stationAlerts = useMemo<StationAlert[]>(() => {
     const apiAlerts = staffing?.stationAlerts;
     if (Array.isArray(apiAlerts)) return apiAlerts;
     return localStationAlerts;
   }, [staffing, localStationAlerts]);
 
   const stationAlertByStationId = useMemo(() => {
-    const map = new Map<string, any>();
+    const map = new Map<string, StationAlert>();
     for (const alert of stationAlerts || []) {
       if (alert?.stationId) map.set(alert.stationId, alert);
     }
@@ -1205,7 +1184,7 @@ export default function Schedule() {
             const fresh = await ApiService.get(
               `/tenant/${tenantId}/schedule-overrides?guardId=${guardId}&startDate=${winStart}&endDate=${winEnd}`,
             ).catch(() => null);
-            const freshRows: any[] = Array.isArray(fresh) ? fresh : (fresh?.rows || []);
+            const freshRows: ScheduleOverride[] = Array.isArray(fresh) ? fresh : (fresh?.rows || []);
             const toDelete = freshRows.filter(o => o.type === 'L' && blockDates.includes(String(o.date).slice(0, 10)));
             await Promise.all(
               toDelete.map(o => ApiService.delete(`/tenant/${tenantId}/schedule-overrides/${o.id}`).catch(() => {})),
@@ -1440,7 +1419,7 @@ export default function Schedule() {
     try {
       // When the year canvas isn't mounted (week/day view) keep its last saved
       // scroll instead of clobbering it with zeros.
-      let prev: any = {};
+      let prev: { sl?: number; st?: number } = {};
       try { prev = JSON.parse(sessionStorage.getItem(VIEW_KEY) || 'null') || {}; } catch { /* ignore */ }
       sessionStorage.setItem(VIEW_KEY, JSON.stringify({
         yr: todayYear,
@@ -2757,7 +2736,7 @@ export default function Schedule() {
                 </div>
                 {(planData?.items || []).length ? (
                   <div className="divide-y divide-border/20">
-                    {(planData.items || []).map((it: any) => {
+                    {(planData.items || []).map((it: PlanItem) => {
                       const ch: string[] = [];
                       if (it.added) ch.push(`+${it.added}`);
                       if (it.changed) ch.push(`~${it.changed}`);
@@ -2876,7 +2855,7 @@ export default function Schedule() {
             {/* Change list */}
             <div className="flex-1 overflow-auto px-5 py-3">
               {(() => {
-                const changes = (proposalData?.changes || []).filter((c: any) => c.action !== 'keep');
+                const changes = (proposalData?.changes || []).filter((c: ProposalChange) => c.action !== 'keep');
                 if (!changes.length) {
                   return (
                     <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -2897,11 +2876,11 @@ export default function Schedule() {
                 const label: Record<string, string> = { add: 'Nuevo', remove: 'Eliminar', change: 'Cambio' };
                 return (
                   <div className="divide-y divide-border/20">
-                    {changes.slice(0, 300).map((c: any) => (
+                    {changes.slice(0, 300).map((c: ProposalChange) => (
                       <div key={c.id} className="flex items-center gap-3 py-2">
-                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badge[c.action] || 'bg-muted text-foreground'}`}>{label[c.action] || c.action}</span>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badge[c.action || ''] || 'bg-muted text-foreground'}`}>{label[c.action || ''] || c.action}</span>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm text-foreground">{fmt(c.startTime)} {c.meta?.shiftType ? `· ${c.meta.shiftType === 'night' ? 'Nocturno' : c.meta.shiftType === 'day' ? 'Diurno' : c.meta.shiftType}` : ''}</p>
+                          <p className="truncate text-sm text-foreground">{fmt(c.startTime || '')} {c.meta?.shiftType ? `· ${c.meta.shiftType === 'night' ? 'Nocturno' : c.meta.shiftType === 'day' ? 'Diurno' : c.meta.shiftType}` : ''}</p>
                         </div>
                       </div>
                     ))}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { Client } from '@/types/client';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Pencil, Trash2, CheckCircle2, EllipsisVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,7 @@ import { Section, EmptyState, SkeletonCards } from '@/components/kit';
 import { FolderKanban } from 'lucide-react';
 
 interface Props {
-  client: any;
+  client: Client;
 }
 
 export default function ClientProjects({ client }: Props) {

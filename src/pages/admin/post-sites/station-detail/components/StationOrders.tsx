@@ -9,8 +9,9 @@ import {
 import { stationOrderService } from '@/lib/api/stationOrderService';
 import { Section, EmptyState, SkeletonCards } from '@/components/kit';
 import { Button } from '@/components/ui/button';
+import type { Station } from '@/types';
 
-type Props = { station: any; stationId: string; postSiteId: string };
+type Props = { station: Station; stationId: string; postSiteId: string };
 
 type Recurrence = 'daily' | 'weekdays' | 'weekend' | 'weekly' | 'monthly' | 'once';
 interface Order {

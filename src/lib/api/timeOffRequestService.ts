@@ -59,19 +59,19 @@ const timeOffRequestService = {
     const tenantId = getTenantId();
     const qs = buildQuery(params);
     const resp = await api.get(`/tenant/${tenantId}/time-off-request${qs}`);
-    return (resp as any)?.data ?? resp;
+    return resp.data ?? resp;
   },
 
   async create(data: TimeOffCreateInput): Promise<TimeOffRecord> {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/time-off-request`, { data });
-    return (resp as any)?.data ?? resp;
+    return resp.data ?? resp;
   },
 
   async updateStatus(id: string, status: "pending" | "approved" | "rejected", comment?: string): Promise<TimeOffRecord> {
     const tenantId = getTenantId();
     const resp = await api.patch(`/tenant/${tenantId}/time-off-request/${id}/status`, { data: { status, comment } });
-    return (resp as any)?.data ?? resp;
+    return resp.data ?? resp;
   },
 
   async destroy(id: string): Promise<void> {

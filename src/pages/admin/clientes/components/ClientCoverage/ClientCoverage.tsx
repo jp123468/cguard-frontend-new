@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Client } from '@/types/client';
 import { useNavigate } from 'react-router-dom';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
@@ -37,7 +38,7 @@ function Bar({ pct, status }: { pct: number; status: string }) {
   );
 }
 
-export default function ClientCoverage({ client }: { client: any }) {
+export default function ClientCoverage({ client }: { client: Client }) {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement | null>(null);
   useScrollToTopOnMount(containerRef);

@@ -218,6 +218,9 @@ const emptyPanelForm = (): PanelForm => ({
   notes: "",
 });
 
+/** PSAP/ASAP fields present on the API payload but not on the base AlarmPanel model. */
+type AlarmPanelWithPsap = AlarmPanel & { psapAgency?: string | null; psapPhone?: string | null; asapOri?: string | null };
+
 const panelToForm = (p: AlarmPanel): PanelForm => ({
   name: p.name ?? "",
   protocol: (p.protocol as AlarmProtocol) ?? "sia-dc09",
@@ -231,9 +234,9 @@ const panelToForm = (p: AlarmPanel): PanelForm => ({
   testIntervalHrs: p.testIntervalHrs != null ? String(p.testIntervalHrs) : "",
   make: p.make ?? "",
   model: p.model ?? "",
-  psapAgency: (p as any).psapAgency ?? "",
-  psapPhone: (p as any).psapPhone ?? "",
-  asapOri: (p as any).asapOri ?? "",
+  psapAgency: (p as AlarmPanelWithPsap).psapAgency ?? "",
+  psapPhone: (p as AlarmPanelWithPsap).psapPhone ?? "",
+  asapOri: (p as AlarmPanelWithPsap).asapOri ?? "",
   postSiteId: p.postSiteId ?? "",
   stationId: p.stationId ?? "",
   customerId: p.customerId ?? "",
@@ -326,8 +329,8 @@ function PanelModal({
       }
       onSaved();
       onClose();
-    } catch (err: any) {
-      toast.error(err?.message || "No se pudo guardar el panel");
+    } catch (err) {
+      toast.error((err as Error)?.message || "No se pudo guardar el panel");
     } finally {
       setSaving(false);
     }
@@ -681,8 +684,8 @@ function ZonesManager({ panelId }: { panelId: string }) {
     try {
       const list = await alarmService.zones(panelId);
       setZones(Array.isArray(list) ? list : []);
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudieron cargar las zonas");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudieron cargar las zonas");
     } finally {
       setLoading(false);
     }
@@ -734,8 +737,8 @@ function ZonesManager({ panelId }: { panelId: string }) {
       }
       resetForm();
       await load();
-    } catch (err: any) {
-      toast.error(err?.message || "No se pudo guardar la zona");
+    } catch (err) {
+      toast.error((err as Error)?.message || "No se pudo guardar la zona");
     } finally {
       setSaving(false);
     }
@@ -750,8 +753,8 @@ function ZonesManager({ panelId }: { panelId: string }) {
       setZones((prev) => prev.filter((z) => z.id !== deleteTarget.id));
       if (editingId === deleteTarget.id) resetForm();
       setDeleteTarget(null);
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudo eliminar la zona");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudo eliminar la zona");
     } finally {
       setDeleting(false);
     }
@@ -974,8 +977,8 @@ function ContactsManager({ panelId }: { panelId: string }) {
       const arr = Array.isArray(list) ? list : [];
       arr.sort((a, b) => (a.callOrder ?? 0) - (b.callOrder ?? 0));
       setContacts(arr);
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudieron cargar los contactos");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudieron cargar los contactos");
     } finally {
       setLoading(false);
     }
@@ -1034,8 +1037,8 @@ function ContactsManager({ panelId }: { panelId: string }) {
       }
       resetForm();
       await load();
-    } catch (err: any) {
-      toast.error(err?.message || "No se pudo guardar el contacto");
+    } catch (err) {
+      toast.error((err as Error)?.message || "No se pudo guardar el contacto");
     } finally {
       setSaving(false);
     }
@@ -1050,8 +1053,8 @@ function ContactsManager({ panelId }: { panelId: string }) {
       setContacts((prev) => prev.filter((c) => c.id !== deleteTarget.id));
       if (editingId === deleteTarget.id) resetForm();
       setDeleteTarget(null);
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudo eliminar el contacto");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudo eliminar el contacto");
     } finally {
       setDeleting(false);
     }
@@ -1291,8 +1294,8 @@ export default function AlarmPanels() {
     try {
       const list = await alarmService.panels();
       setPanels(Array.isArray(list) ? list : []);
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudieron cargar los paneles");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudieron cargar los paneles");
     } finally {
       setLoading(false);
     }
@@ -1323,8 +1326,8 @@ export default function AlarmPanels() {
       toast.success("Panel eliminado");
       setPanels((prev) => prev.filter((p) => p.id !== deleteTarget.id));
       setDeleteTarget(null);
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudo eliminar el panel");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudo eliminar el panel");
     } finally {
       setDeleting(false);
     }

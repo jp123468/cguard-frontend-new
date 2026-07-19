@@ -18,7 +18,7 @@ interface ExceptionRow {
   resolutionNotes?: string | null;
   detectedAt: string;
   resolvedAt?: string | null;
-  meta?: any;
+  meta?: unknown;
   guardShiftId?: string | null;
   guard?: { fullName?: string } | null;
   station?: { stationName?: string } | null;
@@ -92,8 +92,8 @@ export default function NominaExceptions() {
       toast.success(newStatus === "resolved" ? "Excepción resuelta" : "Excepción reconocida");
       setSelected(null);
       load();
-    } catch (e: any) {
-      toast.error(e?.message || "Error");
+    } catch (e) {
+      toast.error((e as { message?: string })?.message || "Error");
     } finally {
       setBusy(false);
     }

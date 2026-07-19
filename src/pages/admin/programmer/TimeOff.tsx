@@ -65,6 +65,13 @@ function formatDate(iso: string | null) {
 
 interface GuardOption { userId: string; fullName: string; }
 
+// Raw guard row as returned by securityGuardService.list.
+interface GuardListItem {
+  guard?: { id?: string; firstName?: string; lastName?: string; fullName?: string };
+  guardId?: string;
+  fullName?: string;
+}
+
 // ── component ────────────────────────────────────────────────────────────────
 
 export default function TimeOff() {
@@ -98,7 +105,7 @@ export default function TimeOff() {
   const fetchRecords = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, any> = { limit: 500 };
+      const params: Record<string, string | number> = { limit: 500 };
       if (statusFilter !== "all") params["filter[status]"] = statusFilter;
       const { rows } = await timeOffRequestService.list(params);
       setRecords(rows);
@@ -117,10 +124,10 @@ export default function TimeOff() {
     if (guards.length > 0) return;
     (async () => {
       try {
-        const resp: any = await securityGuardService.list({ limit: 200, offset: 0 } as any);
-        const items: any[] = Array.isArray(resp) ? resp : (resp.rows ?? []);
+        const resp = await securityGuardService.list({ limit: 200, offset: 0 });
+        const items: GuardListItem[] = Array.isArray(resp) ? resp : (resp.rows ?? []);
         const opts: GuardOption[] = items
-          .map((item: any) => {
+          .map((item: GuardListItem) => {
             const userId = item.guard?.id ?? item.guardId ?? null;
             const fullName =
               item.fullName ??
@@ -257,7 +264,7 @@ export default function TimeOff() {
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row justify-between gap-4">
           <div className="w-full md:w-52">
-            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v as any); setPage(1); }}>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v as "all" | "pending" | "approved" | "rejected"); setPage(1); }}>
               <SelectTrigger>
                 <SelectValue placeholder="Todos los estados" />
               </SelectTrigger>

@@ -13,8 +13,10 @@ export interface VisitorLogFilters {
   firstName?: string;
   visitDateRange?: [string | undefined | null, string | undefined | null];
   exitTimeRange?: [string | undefined | null, string | undefined | null];
+  query?: string;
   clientId?: string;
   postSiteId?: string;
+  stationId?: string;
   guardId?: string;
   placeType?: string;
   tag?: string;
@@ -41,16 +43,16 @@ export const visitorLogService = {
     if (filters.idNumber) params.append('filter[idNumber]', filters.idNumber);
     if (filters.lastName) params.append('filter[lastName]', filters.lastName);
     if (filters.firstName) params.append('filter[firstName]', filters.firstName);
-    if ((filters as any).query) params.append('filter[query]', (filters as any).query);
+    if (filters.query) params.append('filter[query]', filters.query);
 
-    if ((filters as any).clientId) params.append('filter[clientId]', (filters as any).clientId);
-    if ((filters as any).postSiteId) params.append('filter[postSiteId]', (filters as any).postSiteId);
-    if ((filters as any).guardId) params.append('filter[guardId]', (filters as any).guardId);
-    if ((filters as any).placeType) params.append('filter[placeType]', (filters as any).placeType);
-    if ((filters as any).stationId) params.append('filter[stationId]', (filters as any).stationId);
-    if ((filters as any).tag) params.append('filter[tag]', (filters as any).tag);
-    if (typeof (filters as any).archived === 'boolean') params.append('filter[archived]', (filters as any).archived ? 'true' : 'false');
-    if ((filters as any).withPhotos) params.append('withPhotos', '1');
+    if (filters.clientId) params.append('filter[clientId]', filters.clientId);
+    if (filters.postSiteId) params.append('filter[postSiteId]', filters.postSiteId);
+    if (filters.guardId) params.append('filter[guardId]', filters.guardId);
+    if (filters.placeType) params.append('filter[placeType]', filters.placeType);
+    if (filters.stationId) params.append('filter[stationId]', filters.stationId);
+    if (filters.tag) params.append('filter[tag]', filters.tag);
+    if (typeof filters.archived === 'boolean') params.append('filter[archived]', filters.archived ? 'true' : 'false');
+    if (filters.withPhotos) params.append('withPhotos', '1');
 
     if (filters.visitDateRange) {
       const [start, end] = filters.visitDateRange;
@@ -67,7 +69,7 @@ export const visitorLogService = {
     params.append('limit', String(options.limit));
     params.append('offset', String(options.offset));
 
-    const { data } = await api.get(`/tenant/${tenantId}/visitor-log?${params.toString()}`, { toast: { silentError: true } } as any);
+    const { data } = await api.get(`/tenant/${tenantId}/visitor-log?${params.toString()}`, { toast: { silentError: true } });
     return data;
   },
 
@@ -76,13 +78,13 @@ export const visitorLogService = {
     const qs = new URLSearchParams();
     if (query) qs.append('query', query);
     if (limit) qs.append('limit', String(limit));
-    const { data } = await api.get(`/tenant/${tenantId}/visitor-log/autocomplete?${qs.toString()}`, { toast: { silentError: true } } as any);
+    const { data } = await api.get(`/tenant/${tenantId}/visitor-log/autocomplete?${qs.toString()}`, { toast: { silentError: true } });
     return data;
   },
 
   async get(id: string) {
     const tenantId = getTenantId();
-    const { data } = await api.get(`/tenant/${tenantId}/visitor-log/${id}`, { toast: { silentError: true } } as any);
+    const { data } = await api.get(`/tenant/${tenantId}/visitor-log/${id}`, { toast: { silentError: true } });
     return data;
   },
 
@@ -103,7 +105,7 @@ export const visitorLogService = {
     const tenantId = getTenantId();
     // Try JSON body delete first
     try {
-      await api.delete(`/tenant/${tenantId}/visitor-log`, { data: { ids } } as any);
+      await api.delete(`/tenant/${tenantId}/visitor-log`, { data: { ids } });
       return;
     } catch (e) {
       // fallback endpoints

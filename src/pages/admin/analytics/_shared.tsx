@@ -43,7 +43,7 @@ export function useOpsAnalytics(initialDays = 30) {
   const load = async () => {
     setLoading(true); setError(null);
     try { setData(await analyticsService.operations(range)); }
-    catch (e: any) { setError(e?.message || "No se pudieron cargar las analíticas"); }
+    catch (e) { setError((e as Error)?.message || "No se pudieron cargar las analíticas"); }
     finally { setLoading(false); }
   };
 

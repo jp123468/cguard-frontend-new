@@ -55,13 +55,50 @@ import { cacheTenantLocation } from '@/utils/tenantLocation';
 
 // useEffect imported above
 
+// Payload sent to tenantService.update when saving company profile.
+type TenantUpdatePayload = {
+  name: string;
+  website?: string;
+  address: string;
+  billingAddress: string;
+  addressLine2: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  latitude: number | null;
+  longitude: number | null;
+  email: string;
+  licenseNumber: string;
+  taxNumber: string;
+  timezone: string;
+  phone: string | null;
+};
+
+// A legal document as returned on the tenant record.
+type TenantLegalDoc = {
+  id: string;
+  name: string;
+  downloadUrl?: string;
+  publicUrl?: string;
+  type?: string;
+  mimeType?: string;
+};
+
+// Minimal shapes for the Google Maps geocoder results consumed below.
+type GeocodeComponent = { types: string[]; long_name: string };
+type GeocodeResult = {
+  geometry?: { location: { lat: () => number; lng: () => number } };
+  formatted_address?: string;
+  address_components?: GeocodeComponent[];
+};
+
 export default function ProfileCompanyForm() {
   const { user } = useAuth();
   const { t } = useTranslation();
 
   const isAdmin = (() => {
     if (!user) return false;
-    const parseRoles = (r: any) => {
+    const parseRoles = (r: unknown): unknown[] => {
       if (!r) return [];
       if (Array.isArray(r)) return r;
       if (typeof r === 'string') {
@@ -161,7 +198,7 @@ export default function ProfileCompanyForm() {
         const tenantId = resolvedTenantId;
         if (!tenantId) throw new Error('Tenant no definido');
 
-        const payload: any = {
+        const payload: TenantUpdatePayload = {
           name: form.name,
           // website is optional: only include when non-empty
           // this prevents sending an empty string which some backends treat as a required field
@@ -184,9 +221,9 @@ export default function ProfileCompanyForm() {
         await tenantService.update(String(tenantId), payload);
         cacheTenantLocation(payload.latitude, payload.longitude);
         toast.success('Datos de la empresa guardados correctamente');
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error guardando tenant:', err);
-        toast.error('Error al guardar datos de la empresa: ' + (err?.message || ''));
+        toast.error('Error al guardar datos de la empresa: ' + ((err as { message?: string })?.message || ''));
       }
     })();
   };
@@ -216,8 +253,8 @@ export default function ProfileCompanyForm() {
           // ignore
         }
         setLogoFile(null);
-      } catch (err: any) {
-        if (!cancelled) toast.error('No se pudo subir el logo: ' + (err?.message || ''));
+      } catch (err) {
+        if (!cancelled) toast.error('No se pudo subir el logo: ' + ((err as { message?: string })?.message || ''));
       } finally {
         setUploadingLogo(false);
       }
@@ -274,7 +311,7 @@ export default function ProfileCompanyForm() {
         // Load company legal documents if present
         if (Array.isArray(t.legalDocuments)) {
           setCompanyDocuments(
-            t.legalDocuments.map((doc: any) => ({
+            t.legalDocuments.map((doc: TenantLegalDoc) => ({
               id: doc.id,
               name: doc.name,
               url: doc.downloadUrl || doc.publicUrl || '',
@@ -294,7 +331,7 @@ export default function ProfileCompanyForm() {
   // Geocode form.address to lat/lng when address changes and coordinates are missing
   useEffect(() => {
     let cancelled = false;
-    let timer: any;
+    let timer: ReturnType<typeof setTimeout>;
     const shouldGeocode = form.address && (!form.latitude || !form.longitude || form.latitude === '' || form.longitude === '');
     if (!shouldGeocode) return;
 
@@ -305,9 +342,9 @@ export default function ProfileCompanyForm() {
         const google = (window as any).google;
         if (!google?.maps) return;
         const geocoder = new google.maps.Geocoder();
-        const results: any[] = await new Promise((resolve) => {
-          geocoder.geocode({ address: q, region: 'ec' }, (res: any, status: string) => {
-            resolve(status === 'OK' ? res : []);
+        const results: GeocodeResult[] = await new Promise((resolve) => {
+          geocoder.geocode({ address: q, region: 'ec' }, (res: GeocodeResult[] | null, status: string) => {
+            resolve(status === 'OK' ? (res || []) : []);
           });
         });
         if (cancelled) return;
@@ -315,13 +352,13 @@ export default function ProfileCompanyForm() {
           const best = results[0];
           const loc = best.geometry?.location;
           const comps: Record<string, string> = {};
-          (best.address_components || []).forEach((c: any) =>
-            c.types.forEach((tp: string) => { comps[tp] = c.long_name; })
+          (best.address_components || []).forEach((c) =>
+            c.types.forEach((tp) => { comps[tp] = c.long_name; })
           );
           setForm((s) => ({
             ...s,
-            latitude: String(loc.lat()),
-            longitude: String(loc.lng()),
+            latitude: String(loc!.lat()),
+            longitude: String(loc!.lng()),
             address: best.formatted_address || s.address,
             city: comps.locality || comps.administrative_area_level_2 || comps.sublocality_level_1 || s.city,
             postalCode: comps.postal_code || s.postalCode,
@@ -347,7 +384,7 @@ export default function ProfileCompanyForm() {
       const res: any = await tenantService.findById(String(resolvedTenantId));
       if (Array.isArray(res.legalDocuments)) {
         setCompanyDocuments(
-          res.legalDocuments.map((doc: any) => ({
+          res.legalDocuments.map((doc: TenantLegalDoc) => ({
             id: doc.id,
             name: doc.name,
             url: doc.downloadUrl || doc.publicUrl || '',
@@ -355,8 +392,8 @@ export default function ProfileCompanyForm() {
           }))
         );
       }
-    } catch (err: any) {
-      toast.error('Error al subir documento: ' + (err?.message || ''));
+    } catch (err) {
+      toast.error('Error al subir documento: ' + ((err as { message?: string })?.message || ''));
     } finally {
       setUploadingDoc(false);
     }
@@ -542,7 +579,7 @@ export default function ProfileCompanyForm() {
                         zoom={form.latitude && form.longitude ? 17 : 6}
                         height="320px"
                         draggable={true}
-                        onMarkerMove={(lat: number, lng: number, address: string, addressDetails?: any) => {
+                        onMarkerMove={(lat, lng, address, addressDetails) => {
                           setForm((s) => ({
                             ...s,
                             latitude: String(lat),

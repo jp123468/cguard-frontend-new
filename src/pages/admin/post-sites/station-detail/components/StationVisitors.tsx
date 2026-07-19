@@ -17,8 +17,9 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Section, EmptyState, SkeletonCards, FadeIn } from '@/components/kit';
+import type { Station } from '@/types';
 
-type Props = { station: any; stationId: string; postSiteId: string };
+type Props = { station: Station; stationId: string; postSiteId: string };
 
 // ─── Constants ────────────────────────────────────────────────────────────
 

@@ -139,7 +139,7 @@ export default function Vehicles() {
             refetch();
         } catch (err) {
             console.error("Error creando vehículo", err);
-            toast.error(String((err as any)?.message || "Error creando vehículo"));
+            toast.error(String((err as { message?: string })?.message || "Error creando vehículo"));
         } finally {
             setSaving(false);
         }

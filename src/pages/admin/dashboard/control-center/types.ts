@@ -14,7 +14,7 @@ export interface MapEntity {
   label: string;
   sub?: string;
   status: LiveStatus;
-  meta?: Record<string, any>;
+  meta?: Record<string, unknown>;
 }
 
 export interface MonthPoint { month: string; value: number; }
@@ -62,7 +62,7 @@ export interface DashboardStats {
   revenue?: Array<{ month: string; revenue: number }>;
   clientPortfolio?: Array<{ type: string; count: number }>;
   serviceRevenue?: Array<{ service?: string; revenue: number }>;
-  guardPerformance?: Record<string, any>;
+  guardPerformance?: Record<string, unknown>;
   securityPerformance?: Array<{ month: string; incidents: number; responseTime: number }>;
   customerSatisfaction?: Array<{ month: string; satisfaction: number; quality: number }>;
 }

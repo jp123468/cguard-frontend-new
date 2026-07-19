@@ -17,6 +17,9 @@ function localParts(iso: string | Date): { dateKey: string; hour: number } {
 
 interface RosterCard { id: string; name: string; pattern: Record<string, 'day' | 'night'>; role?: { label: string; isRelief: boolean }; }
 
+/** Shape of the shift "events" this roster consumes (subset produced by StationShifts). */
+interface RosterEvent { guardId?: string; guardName?: string; start: string | Date; }
+
 /**
  * "Equipo del puesto" — a card per assigned vigilante (fijos + sacafranco) showing
  * their role and their actual turno/horario as a 14-day día/noche/descanso strip,
@@ -25,7 +28,7 @@ interface RosterCard { id: string; name: string; pattern: Record<string, 'day' |
 export default function StationRoster({ stationId, tenantId, events, guardColorMap }: {
   stationId: string;
   tenantId: string;
-  events: any[];
+  events: RosterEvent[];
   guardColorMap: Record<string, { accent: string; bg: string; text: string }>;
 }) {
   const [roles, setRoles] = useState<Record<string, { label: string; isRelief: boolean }>>({});

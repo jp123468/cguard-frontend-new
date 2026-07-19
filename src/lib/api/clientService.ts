@@ -98,7 +98,7 @@ export const clientService = {
         const { data } = await api.get<any>(
             `/tenant/${tenantId}/client-account?${params.toString()}`,
             // Prevent global interceptor from showing duplicate toasts; component will show one
-            { toast: { silentError: true } } as any
+            { toast: { silentError: true } }
         );
         // Mapear zipCode/addressComplement y normalizar active a boolean
         if (data.rows) {
@@ -128,7 +128,7 @@ export const clientService = {
             const { data } = await api.get<any>(
                 `/tenant/${tenantId}/client-account/${id}`,
                 // Prevent global interceptor from showing duplicate toasts; component will show one
-                { toast: { silentError: true } } as any
+                { toast: { silentError: true } }
             );
         // Mapear zipCode/addressComplement y normalizar active a boolean
         return {
@@ -279,7 +279,7 @@ export const clientService = {
         const tenantId = getTenantId();
         // Backend routes delete requests to the base path and expects ids via query or body.
         // axios supports sending a body with DELETE via the `data` config field.
-        await api.delete(`/tenant/${tenantId}/client-account`, { data: { ids: [id] }, toast: { silentError: true } } as any);
+        await api.delete(`/tenant/${tenantId}/client-account`, { data: { ids: [id] }, toast: { silentError: true } });
         invalidateEntity("clients");
     },
 
@@ -439,7 +439,7 @@ export const clientService = {
 
         const { data } = await api.get<any>(
             `/tenant/${tenantId}/client-account/${clientId}/post-sites?${params.toString()}`,
-            { toast: { silentError: true } } as any,
+            { toast: { silentError: true } },
         );
 
         return data;
@@ -456,7 +456,7 @@ export const clientService = {
 
         const { data } = await api.get<any>(
             `/tenant/${tenantId}/client-account/${clientId}/contacts?${params.toString()}`,
-            { toast: { silentError: true } } as any,
+            { toast: { silentError: true } },
         );
 
         return data;
@@ -501,7 +501,7 @@ export const clientService = {
 
         const { data } = await api.get<any>(
             `/tenant/${tenantId}/client-account/${clientId}/notes?${params.toString()}`,
-            { toast: { silentError: true } } as any,
+            { toast: { silentError: true } },
         );
 
         return data;
@@ -544,7 +544,7 @@ export const clientService = {
 
         const { data } = await api.get<any>(
             `/tenant/${tenantId}/client-account/${clientId}/guards?${params.toString()}`,
-            { toast: { silentError: true } } as any,
+            { toast: { silentError: true } },
         );
 
         return data;
@@ -557,7 +557,7 @@ export const clientService = {
         const tenantId = getTenantId();
         const { data } = await api.get<any>(
             `/tenant/${tenantId}/client-account/${clientId}/guards/count`,
-            { toast: { silentError: true } } as any,
+            { toast: { silentError: true } },
         );
         return Number(data?.count || 0);
     },
@@ -584,7 +584,7 @@ export const clientService = {
 
         const { data } = await api.get<any>(
             `/tenant/${tenantId}/client-account/${clientId}/incidents?${params.toString()}`,
-            { toast: { silentError: true } } as any,
+            { toast: { silentError: true } },
         );
         return data;
     },
@@ -598,7 +598,7 @@ export const clientService = {
         const tenantId = getTenantId();
         const { data: resp } = await api.get<any>(
             `/tenant/${tenantId}/client-account/card-meta?ids=${ids.join(",")}`,
-            { toast: { silentError: true } } as any,
+            { toast: { silentError: true } },
         );
         return resp?.data || resp || {};
     },
@@ -613,7 +613,7 @@ export const clientService = {
 
     async getClientOverview(clientId: string) {
         const tenantId = getTenantId();
-        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/overview`, { toast: { silentError: true } } as any);
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/overview`, { toast: { silentError: true } });
         return data;
     },
 
@@ -622,7 +622,7 @@ export const clientService = {
     async getClientActivity(clientId: string, params: { days?: number; limit?: number; before?: string } = {}) {
         const tenantId = getTenantId();
         const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v != null) as any).toString();
-        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/activity${qs ? `?${qs}` : ''}`, { toast: { silentError: true } } as any);
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/activity${qs ? `?${qs}` : ''}`, { toast: { silentError: true } });
         const p = data?.data ?? data;
         return { rows: Array.isArray(p?.rows) ? p.rows : [], hasMore: !!p?.hasMore, nextBefore: p?.nextBefore || null };
     },
@@ -630,7 +630,7 @@ export const clientService = {
     // ----- Accesos (usuarios con acceso a la app/portal) ------------------
     async getClientAccessUsers(clientId: string) {
         const tenantId = getTenantId();
-        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/access-users`, { toast: { silentError: true } } as any);
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/access-users`, { toast: { silentError: true } });
         return (data?.data ?? data)?.users || [];
     },
     async revokeClientAccess(clientId: string, pivotId: string) {
@@ -645,7 +645,7 @@ export const clientService = {
         const params = new URLSearchParams();
         Object.entries(opts).forEach(([k, v]) => { if (v !== undefined && v !== '' && v !== null) params.set(k, String(v)); });
         const qs = params.toString() ? `?${params.toString()}` : '';
-        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/reports${qs}`, { toast: { silentError: true } } as any);
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/reports${qs}`, { toast: { silentError: true } });
         return data?.data ?? data;
     },
     async exportClientReport(clientId: string, type: string, from?: string, to?: string) {
@@ -653,8 +653,8 @@ export const clientService = {
         const params = new URLSearchParams({ type });
         if (from) params.set('from', from);
         if (to) params.set('to', to);
-        const resp = await api.get<Blob>(`/tenant/${tenantId}/client-account/${clientId}/reports-export?${params.toString()}`, { responseType: 'blob' } as any);
-        const blob = resp.data as any;
+        const resp = await api.get<Blob>(`/tenant/${tenantId}/client-account/${clientId}/reports-export?${params.toString()}`, { responseType: 'blob' });
+        const blob = resp.data;
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url; a.download = `reporte-${type}.csv`;
@@ -678,7 +678,7 @@ export const clientService = {
         const params = new URLSearchParams();
         Object.entries(opts).forEach(([k, v]) => { if (v !== undefined && v !== '' && v !== null) params.set(k, String(v)); });
         const qs = params.toString() ? `?${params.toString()}` : '';
-        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/documents${qs}`, { toast: { silentError: true } } as any);
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/documents${qs}`, { toast: { silentError: true } });
         return data?.data ?? data;
     },
     async createClientDocument(clientId: string, payload: { name: string; mimeType: string; sizeInBytes: number; storageId: string; privateUrl?: string | null; publicUrl?: string | null; fileToken?: string | null; category?: string | null }) {
@@ -699,12 +699,12 @@ export const clientService = {
         const params = new URLSearchParams();
         Object.entries(opts).forEach(([k, v]) => { if (v !== undefined && v !== '' && v !== null) params.set(k, String(v)); });
         const qs = params.toString() ? `?${params.toString()}` : '';
-        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/incidents-board${qs}`, { toast: { silentError: true } } as any);
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/incidents-board${qs}`, { toast: { silentError: true } });
         return data?.data ?? data;
     },
     async getIncidentEvidence(clientId: string, incidentId: string) {
         const tenantId = getTenantId();
-        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/incident/${incidentId}/evidence`, { toast: { silentError: true } } as any);
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/incident/${incidentId}/evidence`, { toast: { silentError: true } });
         return (data?.data ?? data)?.items || [];
     },
     async updateIncidentStatus(clientId: string, incidentId: string, workStatus: string) {
@@ -719,7 +719,7 @@ export const clientService = {
         const params = new URLSearchParams();
         Object.entries(opts).forEach(([k, v]) => { if (v !== undefined && v !== '' && v !== null) params.set(k, String(v)); });
         const qs = params.toString() ? `?${params.toString()}` : '';
-        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/personnel${qs}`, { toast: { silentError: true } } as any);
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/personnel${qs}`, { toast: { silentError: true } });
         return data?.data ?? data;
     },
 
@@ -731,23 +731,23 @@ export const clientService = {
         if (opts.startDate) params.set('startDate', opts.startDate);
         if (opts.endDate) params.set('endDate', opts.endDate);
         const qs = params.toString() ? `?${params.toString()}` : '';
-        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/schedule${qs}`, { toast: { silentError: true } } as any);
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/schedule${qs}`, { toast: { silentError: true } });
         return data?.data ?? data;
     },
     async guardAutocomplete(query = '', limit = 200) {
         const tenantId = getTenantId();
-        const { data } = await api.get<any>(`/tenant/${tenantId}/security-guard/autocomplete?query=${encodeURIComponent(query)}&limit=${limit}`, { toast: { silentError: true } } as any);
+        const { data } = await api.get<any>(`/tenant/${tenantId}/security-guard/autocomplete?query=${encodeURIComponent(query)}&limit=${limit}`, { toast: { silentError: true } });
         const arr = (data?.data ?? data) || [];
         return Array.isArray(arr) ? arr.map((g: any) => ({ id: String(g.id ?? g.value), label: g.label ?? g.fullName ?? g.name ?? '' })) : [];
     },
     async assignGuardToPosition(payload: { guardId: string; stationId: string; positionId: string; startDate?: string; isRelief?: boolean }) {
         const tenantId = getTenantId();
-        const { data } = await api.post<any>(`/tenant/${tenantId}/guard-assignment`, { data: payload }, { toast: { silentError: true } } as any);
+        const { data } = await api.post<any>(`/tenant/${tenantId}/guard-assignment`, { data: payload }, { toast: { silentError: true } });
         return data?.data ?? data;
     },
     async removeGuardAssignment(assignmentId: string) {
         const tenantId = getTenantId();
-        const { data } = await api.delete<any>(`/tenant/${tenantId}/guard-assignment/${assignmentId}`, { toast: { silentError: true } } as any);
+        const { data } = await api.delete<any>(`/tenant/${tenantId}/guard-assignment/${assignmentId}`, { toast: { silentError: true } });
         return data?.data ?? data;
     },
 
@@ -758,7 +758,7 @@ export const clientService = {
         if (opts.postSiteId) params.set('postSiteId', opts.postSiteId);
         if (opts.horizonMin) params.set('horizonMin', String(opts.horizonMin));
         const qs = params.toString() ? `?${params.toString()}` : '';
-        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/coverage${qs}`, { toast: { silentError: true } } as any);
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/coverage${qs}`, { toast: { silentError: true } });
         return data?.data ?? data;
     },
     async setStationLocation(stationId: string, coords: { lat: number; lng: number; geofenceRadius?: number }) {
@@ -770,7 +770,7 @@ export const clientService = {
     // ----- Contrato y servicios -------------------------------------------
     async getClientContract(clientId: string) {
         const tenantId = getTenantId();
-        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/contract`, { toast: { silentError: true } } as any);
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/contract`, { toast: { silentError: true } });
         return data?.data ?? data;
     },
     async updateClientContract(clientId: string, payload: any) {

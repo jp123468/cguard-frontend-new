@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { X, Palette, MapPin, ShieldCheck, Save, RotateCcw } from "lucide-react";
 import type { DashboardPrefs } from "../prefs";
 import { DEFAULT_PREFS } from "../prefs";
@@ -36,7 +37,7 @@ export function CustomizePanel({
             <ColorInput value={p.accent} onChange={(v) => set({ accent: v })} />
           </Row>
           <Row label="Tema del mapa">
-            <select value={p.mapTheme} onChange={(e) => set({ mapTheme: e.target.value as any })} className={selCls}>
+            <select value={p.mapTheme} onChange={(e) => set({ mapTheme: e.target.value as DashboardPrefs["mapTheme"] })} className={selCls}>
               <option value="dark">Oscuro</option><option value="night">Noche</option><option value="roadmap">Estándar</option>
             </select>
           </Row>
@@ -119,7 +120,7 @@ export function CustomizePanel({
 }
 
 const selCls = "rounded-md border border-border/60 bg-white/[0.03] px-2 py-1 text-sm text-foreground";
-function Group({ icon, title, children }: any) {
+function Group({ icon, title, children }: { icon: ReactNode; title: ReactNode; children: ReactNode }) {
   return (
     <div className="mb-5">
       <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -129,7 +130,7 @@ function Group({ icon, title, children }: any) {
     </div>
   );
 }
-function Row({ label, children }: any) {
+function Row({ label, children }: { label: ReactNode; children: ReactNode }) {
   return <div className="flex items-center justify-between gap-3 py-1"><span className="text-sm text-foreground">{label}</span>{children}</div>;
 }
 function ColorInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {

@@ -4,6 +4,7 @@ import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { confirmDialog } from '@/components/ui/confirmDialog';
 import ContextMenu, { CtxMenuState } from './ContextMenu';
+import type { Station, ShiftRecord, GuardOption } from '@/types';
 
 /**
  * Semana/Día timeline for Programador › Horario, Google-Calendar style with a
@@ -16,29 +17,7 @@ import ContextMenu, { CtxMenuState } from './ContextMenu';
  * ad-hoc `shift` rows (same backend as the station "Turno único").
  */
 
-// ─── Types (structural copies of Schedule.tsx shapes) ───────────────────────
-
-interface Station {
-  id: string;
-  stationName: string;
-  scheduleType?: string;
-  postSiteId?: string;
-}
-
-interface ShiftRecord {
-  id: string;
-  guardId: string;
-  stationId: string;
-  positionId?: string;
-  startTime: string;
-  endTime: string;
-  guard?: { id: string; firstName: string; lastName: string };
-}
-
-interface GuardOption {
-  id: string;
-  label: string;
-}
+// ─── Types ──────────────────────────────────────────────────────────────────
 
 interface Props {
   tenantId: string;

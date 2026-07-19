@@ -34,7 +34,7 @@ function hueFor(name: string): number {
     return HUES[h % HUES.length];
 }
 
-function displayName(c: any): string {
+function displayName(c: Client): string {
     if (c.commercialName) return c.commercialName;
     const last = (c.lastName || "").toString().trim();
     return last && last.toLowerCase() !== "null" ? `${c.name} ${last}` : c.name;
@@ -79,8 +79,8 @@ export default function ClientCardsGrid({
                 const m = meta[c.id];
                 const name = displayName(c);
                 const hue = hueFor(name || "?");
-                const app = APP_BADGE[(c as any).onboardingStatus || "not_invited"] || APP_BADGE.not_invited;
-                const isActive = (c as any).active === true;
+                const app = APP_BADGE[c.onboardingStatus || "not_invited"] || APP_BADGE.not_invited;
+                const isActive = c.active === true;
                 const actions = rowActions(c);
                 return (
                     <div
@@ -158,10 +158,10 @@ export default function ClientCardsGrid({
                                     <span className="truncate">{c.phoneNumber}</span>
                                 </p>
                             )}
-                            {(c as any).address && (
+                            {c.address && (
                                 <p className="flex items-center gap-1.5 truncate">
                                     <MapPin className="h-3.5 w-3.5 shrink-0" />
-                                    <span className="truncate">{(c as any).address}</span>
+                                    <span className="truncate">{c.address}</span>
                                 </p>
                             )}
                         </div>

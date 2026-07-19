@@ -20,6 +20,9 @@ import inventoryItemService, {
 } from '@/lib/api/inventoryItemService';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
+// Shape of the errors thrown by the API layer (axios-style response envelope).
+type ApiError = { response?: { data?: { message?: string } }; message?: string };
+
 const ITEM_TYPES = Object.keys(ITEM_TYPE_LABELS) as ItemType[];
 const STATUSES = Object.keys(ITEM_STATUS_LABELS) as ItemStatus[];
 const CONDITIONS = Object.keys(ITEM_CONDITION_LABELS) as ItemCondition[];
@@ -79,7 +82,7 @@ export default function GlobalInventoryPage() {
   const load = async () => {
     try {
       setLoading(true);
-      const filter: Record<string, any> = {};
+      const filter: Record<string, string> = {};
       if (query) filter['name'] = query;
       if (filterType) filter['type'] = filterType;
       if (filterStatus) filter['status'] = filterStatus;
@@ -90,8 +93,8 @@ export default function GlobalInventoryPage() {
       });
       setItems(res.rows || []);
       setTotal(res.count || 0);
-    } catch (e: any) {
-      toast.error(e?.message || 'Error cargando inventario');
+    } catch (e) {
+      toast.error((e as ApiError)?.message || 'Error cargando inventario');
     } finally {
       setLoading(false);
     }
@@ -135,8 +138,8 @@ export default function GlobalInventoryPage() {
 
   const closeModal = () => { setShowModal(false); setEditingItem(null); };
 
-  const setField = (k: keyof InventoryItemInput, v: any) =>
-    setForm((f) => ({ ...f, [k]: v }));
+  const setField = <K extends keyof InventoryItemInput>(k: K, v: InventoryItemInput[K]) =>
+    setForm((f) => ({ ...f, [k]: v } as InventoryItemInput));
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('El nombre es obligatorio'); return; }
@@ -160,8 +163,8 @@ export default function GlobalInventoryPage() {
       }
       closeModal();
       load();
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || e?.message || 'Error al guardar');
+    } catch (e) {
+      toast.error((e as ApiError)?.response?.data?.message || (e as ApiError)?.message || 'Error al guardar');
     } finally {
       setSaving(false);
     }
@@ -181,8 +184,8 @@ export default function GlobalInventoryPage() {
         files.map((f) => inventoryItemService.uploadPhoto(f)),
       );
       setForm((prev) => ({ ...prev, photos: [...(prev.photos || []), ...uploaded] }));
-    } catch (err: any) {
-      toast.error(err?.message || 'Error subiendo imagen');
+    } catch (err) {
+      toast.error((err as ApiError)?.message || 'Error subiendo imagen');
     } finally {
       setUploadingPhoto(false);
       if (photoInputRef.current) photoInputRef.current.value = '';
@@ -203,8 +206,8 @@ export default function GlobalInventoryPage() {
       toast.success('Artículo eliminado');
       setDeleteTarget(null);
       load();
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || e?.message || 'Error al eliminar');
+    } catch (e) {
+      toast.error((e as ApiError)?.response?.data?.message || (e as ApiError)?.message || 'Error al eliminar');
     } finally {
       setDeleting(false);
     }

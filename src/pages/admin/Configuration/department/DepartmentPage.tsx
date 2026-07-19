@@ -49,7 +49,7 @@ export default function DepartmentPage() {
       .then((users) => {
         setManagers(
           users
-            .map((u: any) => ({
+            .map((u: { id: string; fullName?: string; firstName?: string; lastName?: string; email?: string }) => ({
               id: u.id,
               name:
                 u.fullName ||

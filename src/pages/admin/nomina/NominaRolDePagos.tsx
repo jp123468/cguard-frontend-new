@@ -79,7 +79,7 @@ export default function NominaRolDePagos() {
 
   const printPdf = () => {
     if (!roster) return;
-    const esc = (s: any) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const head = COLS.map((c) => `<th>${esc(c[0])}</th>`).join("");
     const rows = roster.rows
       .map((r) => `<tr>${COLS.map((c, i) => `<td class="${i === 0 || i === COLS.length - 1 ? "l" : "r"}">${i === 0 || i === COLS.length - 1 ? esc(c[1](r)) : money(Number(c[1](r)) || 0)}</td>`).join("")}</tr>`)

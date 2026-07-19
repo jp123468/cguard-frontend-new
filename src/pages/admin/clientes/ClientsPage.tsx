@@ -53,7 +53,7 @@ import { toast } from "sonner";
 import { clientService } from "@/lib/api/clientService";
 import ClientCardsGrid, { type ClientCardMeta } from "./components/ClientCardsGrid";
 import { LayoutGrid, List as ListIcon } from "lucide-react";
-type Client = any;
+import type { Client } from "@/types/client";
 
 type ClientFilters = {
   active?: boolean;
@@ -95,7 +95,7 @@ function useDebouncedValue<T>(value: T, delay = 300): T {
 
 // Guard against the literal string 'undefined' that some legacy records persisted
 // for lastName (from a String(undefined) concat on save). Hides bad data until cleaned.
-const cleanLastName = (lastName: any): string =>
+const cleanLastName = (lastName: unknown): string =>
   lastName && lastName !== 'undefined' ? String(lastName) : '';
 
 const getServerErrorMessage = (error: any, defaultMessage = "Error") => {
@@ -533,7 +533,7 @@ export default function ClientesPage() {
         header: t('clients.columns.name'),
         className: "font-medium",
         render: (value, row) => {
-          if ((row as any).commercialName) return (row as any).commercialName;
+          if (row.commercialName) return row.commercialName;
           const lastName = cleanLastName(row.lastName);
           return lastName ? `${row.name} ${lastName}` : row.name;
         }
@@ -557,7 +557,7 @@ export default function ClientesPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-3 py-2 text-sm">
-                  <div className="font-medium truncate">{(row as any).commercialName || (cleanLastName(row.lastName) ? `${row.name} ${cleanLastName(row.lastName)}` : row.name)}</div>
+                  <div className="font-medium truncate">{row.commercialName || (cleanLastName(row.lastName) ? `${row.name} ${cleanLastName(row.lastName)}` : row.name)}</div>
                   <div className="text-xs text-muted-foreground truncate">{row.email || '-'}</div>
                   <div className="text-xs text-muted-foreground truncate">{row.phoneNumber || '-'}</div>
                   <div className="mt-2">
@@ -586,7 +586,7 @@ export default function ClientesPage() {
         key: "onboardingStatus",
         header: t('clients.columns.appAccess', 'App'),
         render: (_value: any, row: Client) => {
-          const status = (row as any).onboardingStatus || 'not_invited';
+          const status = row.onboardingStatus || 'not_invited';
           const map: Record<string, { label: string; tone: 'slate' | 'orange' | 'green' | 'red' }> = {
             not_invited: { label: t('clients.onboarding.not_invited', 'Sin acceso'), tone: 'slate' },
             invited:     { label: t('clients.onboarding.invited',     'Invitado'),   tone: 'orange' },
@@ -679,7 +679,7 @@ export default function ClientesPage() {
 
     if (hasPermission('clientAccountEdit')) {
       actions.push({
-        label: (client as any).onboardingStatus === 'invited' || (client as any).onboardingStatus === 'active'
+        label: client.onboardingStatus === 'invited' || client.onboardingStatus === 'active'
           ? t('clients.resendAppAccess', 'Reenviar invitación')
           : t('clients.sendAppAccess', 'Enviar acceso a la app'),
         icon: <Smartphone className="h-4 w-4" />,
@@ -977,7 +977,7 @@ export default function ClientesPage() {
             items={clients}
             loading={loading}
             emptyMessage={t('clients.empty.title') as string}
-            renderCard={(client: any) => (
+            renderCard={(client: Client) => (
               <div className="p-4 bg-card border rounded-lg">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
@@ -990,7 +990,7 @@ export default function ClientesPage() {
                       {client.active ? t('clients.status.active') : t('clients.status.archived')}
                     </StatusBadge>
                     {(() => {
-                      const s = (client as any).onboardingStatus || 'not_invited';
+                      const s = client.onboardingStatus || 'not_invited';
                       const mobileMap: Record<string, { label: string; tone: 'slate' | 'orange' | 'green' | 'red' }> = {
                         not_invited: { label: t('clients.onboarding.not_invited', 'Sin acceso'), tone: 'slate' },
                         invited:     { label: t('clients.onboarding.invited', 'Invitado'),      tone: 'orange' },
@@ -1270,7 +1270,7 @@ export default function ClientesPage() {
                 <Smartphone className="h-5 w-5 text-primary" />
               </div>
               <AlertDialogTitle className="text-base">
-                {(sendAccessClient as any)?.onboardingStatus === 'invited' || (sendAccessClient as any)?.onboardingStatus === 'active'
+                {sendAccessClient?.onboardingStatus === 'invited' || sendAccessClient?.onboardingStatus === 'active'
                   ? t('clients.resendAppAccess', 'Reenviar invitación')
                   : t('clients.sendAppAccess', 'Enviar acceso a la app')}
               </AlertDialogTitle>

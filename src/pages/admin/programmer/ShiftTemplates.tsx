@@ -110,10 +110,10 @@ export default function ShiftTemplates() {
   useEffect(() => {
     securityGuardService
       .list({ limit: "500" })
-      .then((res: any) => {
+      .then((res) => {
         const rows = Array.isArray(res) ? res : res?.rows ?? [];
         setGuards(
-          rows.map((g: any) => ({
+          rows.map((g: { id: string; fullName?: string; name?: string; email?: string }) => ({
             id: g.id,
             name: g.fullName || g.name || g.email || "—",
           })),

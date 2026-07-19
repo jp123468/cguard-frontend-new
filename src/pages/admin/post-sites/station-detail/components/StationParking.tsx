@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Car } from 'lucide-react';
 import { visitorLogService } from '@/lib/api/visitorLogService';
 import { Section, EmptyState, SkeletonCards, FadeIn } from '@/components/kit';
+import type { Station } from '@/types';
 
-type Props = { station: any; stationId: string; postSiteId: string };
+type Props = { station: Station; stationId: string; postSiteId: string };
 
 const PARKING_PLACE_TYPES = ['Parking', 'Parqueadero', 'Estacionamiento', 'Vehículo', 'Vehiculo'];
 

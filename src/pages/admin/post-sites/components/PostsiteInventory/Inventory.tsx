@@ -17,6 +17,7 @@ import inventoryItemService, {
 import inventoryAssignmentService, { InventoryAssignment } from '@/lib/api/inventoryAssignmentService';
 import { securityGuardService } from '@/lib/api/securityGuardService';
 import { EmptyState } from '@/components/kit';
+import type { PostSite } from '@/types';
 
 type ConditionKey = 'bueno' | 'regular' | 'danado';
 const CONDITIONS: ConditionKey[] = ['bueno', 'regular', 'danado'];
@@ -264,7 +265,7 @@ function ReturnModal({ assignment, onClose, onDone }: ReturnModalProps) {
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
-export default function Inventory({ site }: { site?: any }) {
+export default function Inventory({ site }: { site?: PostSite }) {
   const { t } = useTranslation();
   const params = useParams();
   const containerRef = useRef<HTMLDivElement>(null);

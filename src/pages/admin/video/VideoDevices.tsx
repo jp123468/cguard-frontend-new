@@ -204,8 +204,8 @@ export default function VideoDevices() {
     try {
       const list = await videoService.devices();
       setDevices(Array.isArray(list) ? list : []);
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudieron cargar los dispositivos");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudieron cargar los dispositivos");
     } finally {
       setLoading(false);
     }
@@ -275,8 +275,8 @@ export default function VideoDevices() {
       }
       setDialogOpen(false);
       await load();
-    } catch (err: any) {
-      toast.error(err?.message || "No se pudo guardar el dispositivo");
+    } catch (err) {
+      toast.error((err as Error)?.message || "No se pudo guardar el dispositivo");
     } finally {
       setSaving(false);
     }
@@ -285,7 +285,7 @@ export default function VideoDevices() {
   const onTest = async (d: Device) => {
     setBusy((b) => ({ ...b, [d.id]: "test" }));
     try {
-      const res: any = await videoService.testDevice(d.id);
+      const res = await videoService.testDevice(d.id) as { status?: string; message?: string };
       const status = (res?.status as DeviceStatus) ?? "unknown";
       const message = res?.message as string | undefined;
       setDevices((prev) =>
@@ -300,8 +300,8 @@ export default function VideoDevices() {
       else if (status === "unreachable") toast.error(`${d.name}: ${message || "no se pudo leer el stream"}`, { duration: 9000 });
       else if (status === "offline") toast.error(`${d.name}: ${message || "sin conexión"}`);
       else toast(`${d.name}: estado desconocido`);
-    } catch (e: any) {
-      toast.error(e?.message || "Falló la prueba de conexión");
+    } catch (e) {
+      toast.error((e as Error)?.message || "Falló la prueba de conexión");
     } finally {
       setBusy((b) => ({ ...b, [d.id]: undefined }));
     }
@@ -313,8 +313,8 @@ export default function VideoDevices() {
       const cams = await videoService.syncCameras(d.id);
       const n = Array.isArray(cams) ? cams.length : 0;
       toast.success(`${d.name}: ${n} cámara(s) sincronizada(s)`);
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudieron sincronizar las cámaras");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudieron sincronizar las cámaras");
     } finally {
       setBusy((b) => ({ ...b, [d.id]: undefined }));
     }
@@ -328,8 +328,8 @@ export default function VideoDevices() {
       toast.success("Dispositivo eliminado");
       setDevices((prev) => prev.filter((x) => x.id !== deleteTarget.id));
       setDeleteTarget(null);
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudo eliminar el dispositivo");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudo eliminar el dispositivo");
     } finally {
       setDeleting(false);
     }

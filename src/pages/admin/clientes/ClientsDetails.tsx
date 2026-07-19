@@ -3,6 +3,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import AppLayout from '@/layouts/app-layout';
 import ClientsLayout from '@/layouts/ClientsLayout';
 import { clientService } from '@/lib/api/clientService';
+import type { Client } from '@/types/client';
 import ClientOverview from './components/ClientOverview/ClientOverview';
 import ClientContacts from './components/ClientContacts/ClientContacts';
 import ClientNotes from './components/ClientNotes/ClientNotes';
@@ -23,7 +24,7 @@ import { Building2 } from 'lucide-react';
 export default function ClientsDetails() {
   const { id } = useParams();
   const location = useLocation();
-  const [client, setClient] = useState<any>(null);
+  const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('overview');
 
@@ -62,7 +63,7 @@ export default function ClientsDetails() {
     const allowed = ['overview', 'profile', 'contacts', 'notes', 'files', 'post-sites', 'portal', 'user-access', 'email-reports', 'projects', 'contract', 'coverage', 'staff', 'incidents', 'reports', 'documents'];
     if (allowed.includes(last)) {
       // normalize URL segments -> internal tab keys
-      const map: any = {
+      const map: Record<string, string> = {
         'post-sites': 'postSites',
         'user-access': 'userAccess',
         'email-reports': 'emailReports',

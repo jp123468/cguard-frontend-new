@@ -47,8 +47,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { EmptyState, StatusBadge, SkeletonCards } from '@/components/kit';
+import type { PostSite } from '@/types';
 
-export default function Incidents({ site }: { site?: any }) {
+interface SiteProp extends PostSite {
+  tenantId?: string;
+  clientAccountId?: string;
+}
+
+export default function Incidents({ site }: { site?: SiteProp }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -692,7 +698,7 @@ export default function Incidents({ site }: { site?: any }) {
                             {/* Client as informer option */}
                             {site && (site.client || site.clientId) ? (
                               <>
-                                <SelectItem value={`client:${site.client?.id || site.clientId}`}>{(site.client && (site.client.name || site.client.companyName)) || String(site.clientId)}</SelectItem>
+                                <SelectItem value={`client:${site.client?.id || site.clientId}`}>{(site.client && (site.client.name || (site.client as { companyName?: string }).companyName)) || String(site.clientId)}</SelectItem>
                               </>
                             ) : null}
                             {/* Client admins */}

@@ -5,8 +5,9 @@ import { clientService } from '@/lib/api/clientService';
 import { Search, UserPlus, Users, Trash2, Mail, Smartphone, Loader2 } from 'lucide-react';
 import { Section, EmptyState, StatusBadge, Modal } from '@/components/kit';
 import { Button } from '@/components/ui/button';
+import type { Client } from '@/types/client';
 
-type Props = { client?: any };
+type Props = { client: Client };
 const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-all placeholder:text-muted-foreground hover:border-ring/40 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]';
 
 export default function ClientUserAccess({ client }: Props) {

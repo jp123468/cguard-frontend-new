@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Client } from '@/types/client';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
 import { Section, EmptyState, StatusBadge, Modal } from '@/components/kit';
@@ -86,7 +87,7 @@ function Kpi({ icon, k }: { icon: any; k: any }) {
   );
 }
 
-export default function ClientReports({ client }: { client: any }) {
+export default function ClientReports({ client }: { client: Client & { companyName?: string } }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   useScrollToTopOnMount(containerRef);
 

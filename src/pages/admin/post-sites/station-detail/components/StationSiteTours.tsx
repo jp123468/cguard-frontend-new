@@ -10,8 +10,15 @@ import RondaSettingsForm from '@/pages/admin/Configuration/rondas-settings/Ronda
 import CheckpointLocationPicker from '@/components/maps/CheckpointLocationPicker';
 import { Section, EmptyState, SkeletonCards, StatusBadge } from '@/components/kit';
 import { Button } from '@/components/ui/button';
+import type { Station } from '@/types';
 
-type Props = { station: any; stationId: string; postSiteId: string };
+interface StationDetail extends Station {
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  geofenceRadius?: number | string | null;
+}
+
+type Props = { station: StationDetail; stationId: string; postSiteId: string };
 
 interface Checkpoint {
   id: string;

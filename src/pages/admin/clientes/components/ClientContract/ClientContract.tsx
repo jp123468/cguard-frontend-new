@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Client } from '@/types/client';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
 import { Section, EmptyState, StatCard, StatusBadge, Modal, Field } from '@/components/kit';
@@ -42,7 +43,7 @@ function Bar({ pct, tone = 'ok' }: { pct: number; tone?: 'ok' | 'warn' | 'crit' 
   );
 }
 
-export default function ClientContract({ client }: { client: any }) {
+export default function ClientContract({ client }: { client: Client }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   useScrollToTopOnMount(containerRef);
 

@@ -15,34 +15,34 @@ export const securityGuardService = {
   async create(input: any) {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/security-guard`, input);
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   async invite(entries: any[]) {
     const tenantId = getTenantId();
     // Use the dedicated invite endpoint so the server sends invitation emails/SMS
     const resp = await api.post(`/tenant/${tenantId}/security-guard/invite`, { entries });
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   async resendInvite(input: any) {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/security-guard/invite`, input);
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   async joinByCode(code: string, entries: any[]) {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/security-guard`, { code, entries });
 
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   async inviteByLink(link: string, entries: any[]) {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/security-guard`, { link, entries });
 
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   async import(file: File | Blob, filename?: string) {
@@ -53,14 +53,14 @@ export const securityGuardService = {
     formData.append("file", file as Blob, nameToUse);
     const resp = await api.post(`/tenant/${tenantId}/security-guard/import`, formData);
 
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   async update(id: string, input: any) {
     const tenantId = getTenantId();
     const resp = await api.patch(`/tenant/${tenantId}/security-guard/${id}`, input);
 
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   /** Admin-trigger a password reset for a guard → { email, emailed, pushed, link }. */
@@ -68,34 +68,34 @@ export const securityGuardService = {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/security-guard/${id}/send-password-reset`, {});
 
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   async destroy(ids: string[]) {
     const tenantId = getTenantId();
-    const resp = await api.delete(`/tenant/${tenantId}/security-guard`, { data: { ids }, toast: { silentError: true } } as any);
+    const resp = await api.delete(`/tenant/${tenantId}/security-guard`, { data: { ids }, toast: { silentError: true } });
 
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   async archive(ids: string[]) {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/security-guard/archive`, { ids }, { toast: { silentError: true } });
 
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
   async restore(ids: string[]) {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/security-guard/restore`, { ids }, { toast: { silentError: true } });
 
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   async autocomplete(query: string, limit = 10) {
     const tenantId = getTenantId();
     const resp = await api.get(`/tenant/${tenantId}/security-guard/autocomplete?query=${encodeURIComponent(query)}&limit=${limit}`);
 
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   async list(params?: Record<string, any>) {
@@ -103,13 +103,13 @@ export const securityGuardService = {
     const qs = params ? `?${new URLSearchParams(params).toString()}` : "";
     const resp = await api.get(`/tenant/${tenantId}/security-guard${qs}`);
 
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   async activeLocations() {
     const tenantId = getTenantId();
     const resp = await api.get(`/tenant/${tenantId}/security-guard/active-locations`);
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   /** Walked GPS trail (breadcrumb polyline) for a guard over a time window. */
@@ -121,7 +121,7 @@ export const securityGuardService = {
     if (params?.limit) qs.set("limit", String(params.limit));
     const q = qs.toString();
     const resp = await api.get(`/tenant/${tenantId}/security-guard/${guardId}/trail${q ? `?${q}` : ""}`);
-    const data = resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    const data = resp && resp.data !== undefined ? resp.data : resp;
     return (data?.points || []) as Array<{ lat: number; lng: number; at: string; speed?: number; accuracy?: number; battery?: number }>;
   },
 
@@ -132,8 +132,8 @@ export const securityGuardService = {
       responseType: "blob",
       // prevent global error toast; page will show its own
       toast: { silentError: true },
-    } as any);
-    return response && (response as any).data !== undefined ? (response as any).data : response;
+    });
+    return response && response.data !== undefined ? response.data : response;
   },
 
   async find(id: string) {
@@ -142,8 +142,8 @@ export const securityGuardService = {
       // Prevent the global API interceptor from showing its own toast for this call.
       // The component will display a user-friendly toast once.
       toast: { silentError: true },
-    } as any);
-    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    });
+    return resp && resp.data !== undefined ? resp.data : resp;
   },
 
   // Alias para compatibilidad
@@ -208,8 +208,8 @@ export const securityGuardService = {
     const response = await api.get(`/tenant/${tenantId}/security-guard/${guardId}/licenses/${licenseId}/download?format=pdf`, {
       responseType: 'blob',
       toast: { silentError: true },
-    } as any);
-    return response && (response as any).data !== undefined ? (response as any).data : response;
+    });
+    return response && response.data !== undefined ? response.data : response;
   },
 
   async updateSecurityGuardLicense(guardId: string, licenseId: string, payload: any) {
@@ -258,7 +258,7 @@ export const securityGuardService = {
     const tenantId = getTenantId();
     const filename = file.name;
     const credsResp: any = await api.get(`/tenant/${tenantId}/file/credentials?filename=${encodeURIComponent(filename)}&storageId=${encodeURIComponent(storageId)}`);
-    const creds = credsResp && (credsResp as any).data ? credsResp.data : credsResp;
+    const creds = credsResp && credsResp.data ? credsResp.data : credsResp;
 
     const uploadUrl = creds?.uploadCredentials?.url ?? creds?.url ?? creds.uploadCredentials?.url;
     const fields = creds?.uploadCredentials?.fields ?? creds?.fields;
@@ -313,7 +313,7 @@ export const securityGuardService = {
     const tenantId = getTenantId();
     const filename = file.name;
     const credsResp: any = await api.get(`/tenant/${tenantId}/file/credentials?filename=${encodeURIComponent(filename)}&storageId=${encodeURIComponent(storageId)}`);
-    const creds = credsResp && (credsResp as any).data ? credsResp.data : credsResp;
+    const creds = credsResp && credsResp.data ? credsResp.data : credsResp;
 
     const uploadUrl = creds?.uploadCredentials?.url ?? creds?.url ?? creds.uploadCredentials?.url;
     const fields = creds?.uploadCredentials?.fields ?? creds?.fields;
@@ -380,7 +380,7 @@ export const securityGuardService = {
   async getAssignments(guardId: string) {
     const tenantId = getTenantId();
     const resp = await api.get(`/tenant/${tenantId}/security-guard/${guardId}/assignments`);
-    const p: any = (resp as any)?.data ?? resp;
+    const p: any = resp?.data ?? resp;
     return { rows: Array.isArray(p?.rows) ? p.rows : [], count: p?.count ?? 0 };
   },
 
@@ -389,21 +389,21 @@ export const securityGuardService = {
     const tenantId = getTenantId();
     const qs = params ? `?${new URLSearchParams(Object.entries(params).filter(([, v]) => v) as any).toString()}` : '';
     const resp = await api.get(`/tenant/${tenantId}/security-guard/${guardId}/schedule${qs}`);
-    return (resp as any)?.data ?? resp;
+    return resp?.data ?? resp;
   },
 
   /** 8-factor performance score for the guard. */
   async getPerformance(guardId: string, period = 30) {
     const tenantId = getTenantId();
     const resp = await api.get(`/tenant/${tenantId}/security-guard/${guardId}/performance?period=${period}`);
-    return (resp as any)?.data ?? resp;
+    return resp?.data ?? resp;
   },
 
   /** Documents linked to the guard. */
   async getDocuments(guardId: string) {
     const tenantId = getTenantId();
     const resp = await api.get(`/tenant/${tenantId}/security-guard/${guardId}/documents`);
-    const p: any = (resp as any)?.data ?? resp;
+    const p: any = resp?.data ?? resp;
     return { rows: Array.isArray(p?.rows) ? p.rows : [], count: p?.count ?? 0 };
   },
 
@@ -411,13 +411,13 @@ export const securityGuardService = {
   async addDocuments(guardId: string, documents: any[]) {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/security-guard/${guardId}/documents`, { data: { documents } });
-    return (resp as any)?.data ?? resp;
+    return resp?.data ?? resp;
   },
 
   async deleteDocument(guardId: string, docId: string) {
     const tenantId = getTenantId();
     const resp = await api.delete(`/tenant/${tenantId}/security-guard/${guardId}/documents/${docId}`);
-    return (resp as any)?.data ?? resp;
+    return resp?.data ?? resp;
   },
 };
 

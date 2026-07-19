@@ -151,7 +151,7 @@ export default function CustomerRequests() {
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row justify-between gap-4">
           <div className="w-full md:w-52">
-            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v as any); setPage(1); }}>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v as "all" | "abierto" | "cerrado"); setPage(1); }}>
               <SelectTrigger>
                 <SelectValue placeholder="Todos los estados" />
               </SelectTrigger>

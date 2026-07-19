@@ -14,7 +14,7 @@ type Section = { label?: string; items: SubItem[] };
 export default function SettingsHome() {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
-  const nav = (NAVS as any).configuracion as { title?: string; sections: Section[] };
+  const nav = (NAVS as Record<string, { title?: string; sections: Section[] }>).configuracion;
 
   const sections = useMemo(() => {
     const q = query.trim().toLowerCase();

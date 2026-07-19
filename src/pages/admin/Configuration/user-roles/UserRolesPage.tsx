@@ -24,6 +24,18 @@ const FULLY_LOCKED_ROLE_SLUGS = ['superadmin', 'customer'];
 const slugOf = (role: { slug?: string; name?: string; id?: string }) =>
   String(role.slug ?? role.name ?? role.id ?? '').toLowerCase();
 
+// A role record as returned by the API, tolerating legacy id/label field names.
+type RawRole = {
+  id?: string;
+  _id?: string;
+  name?: string;
+  label?: string;
+  description?: string;
+  desc?: string;
+  isSystem?: boolean;
+  slug?: string;
+};
+
 export default function UserRolesPage() {
   // Built-in role names/descriptions come from the backend as raw English
   // identifiers; render them via roleLabels in the chosen language and
@@ -69,7 +81,7 @@ export default function UserRolesPage() {
           : [];
         if (!mounted) return;
         // map to UserRoleRow shape, tolerate different id fields
-        const mapped: UserRoleRow[] = data.map((r: any) => {
+        const mapped: UserRoleRow[] = data.map((r: RawRole) => {
           const slug = slugOf(r);
           const fullyLocked = FULLY_LOCKED_ROLE_SLUGS.includes(slug);
           // A built-in/system role (per the API flag, falling back to the

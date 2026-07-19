@@ -21,12 +21,13 @@ import IncidentMap from '@/components/IncidentMap/IncidentMap';
 import { toast } from 'sonner';
 import { PageContainer, PageHeader } from '@/components/kit';
 import { Printer } from 'lucide-react';
+import type { DirectoryOption, NamedEntity, DispatchComment, CommentAttachment } from './types';
 
 export function DispatchDetailsContent({ requestId }: { requestId?: string | null }) {
   const { t } = useTranslation();
-  const [clients, setClients] = useState<any[]>([]);
-  const [postSites, setPostSites] = useState<any[]>([]);
-  const [incidentTypes, setIncidentTypes] = useState<any[]>([]);
+  const [clients, setClients] = useState<DirectoryOption[]>([]);
+  const [postSites, setPostSites] = useState<DirectoryOption[]>([]);
+  const [incidentTypes, setIncidentTypes] = useState<NamedEntity[]>([]);
   const [clientId, setClientId] = useState<string | undefined>(undefined);
   const [siteId, setSiteId] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<string>('abierto');
@@ -34,7 +35,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
   const [incidentDate, setIncidentDate] = useState<string | undefined>(undefined);
   const [includeArchived, setIncludeArchived] = useState<boolean>(false);
   const [requestPayload, setRequestPayload] = useState<any | null>(null);
-  const [comments, setComments] = useState<any[]>([]);
+  const [comments, setComments] = useState<DispatchComment[]>([]);
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -51,7 +52,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
       setCommentsLoading(true);
       const api = (await import('@/lib/api')).default;
 
-      let attachment: any = null;
+      let attachment: CommentAttachment | null = null;
       if (selectedFile) {
         try {
           setFileUploading(true);
@@ -65,7 +66,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
           form.append('file', selectedFile);
 
           const uploadResp = await fetch(uploadUrl, { method: 'POST', body: form });
-          let downloadUrl: any = null;
+          let downloadUrl: unknown = null;
           try {
             const json = await uploadResp.json();
             downloadUrl = json?.downloadUrl || json?.url || json;
@@ -73,7 +74,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
             downloadUrl = await uploadResp.text();
           }
           if (typeof downloadUrl === 'object' && downloadUrl !== null) downloadUrl = JSON.stringify(downloadUrl);
-          attachment = { url: downloadUrl, name: selectedFile.name };
+          attachment = { url: downloadUrl == null ? undefined : String(downloadUrl), name: selectedFile.name };
           } catch (err) {
           console.error('File upload failed', err);
           toast.error(t('dispatcher.comment.file_upload_failed') || 'No se pudo subir el archivo, comentario enviado sin adjunto');
@@ -82,7 +83,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
         }
       }
 
-      let author: any = null;
+      let author: { id?: string; name?: string } | null = null;
       try {
         const possibleKeys = ['currentUser', 'user', 'me', 'profile', 'authUser'];
         for (const k of possibleKeys) {
@@ -110,7 +111,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
         // ignore
       }
 
-      const body: any = { data: { text: newComment } };
+      const body: { data: { text: string; attachment?: CommentAttachment; author?: { id?: string; name?: string } } } = { data: { text: newComment } };
       if (attachment) body.data.attachment = attachment;
       if (author) body.data.author = author;
       try {
@@ -146,14 +147,16 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
           postSiteService.list({}, { limit: 1000, offset: 0 }),
         ]);
 
-        if (clientsResp && Array.isArray((clientsResp as any).rows)) {
-          setClients((clientsResp as any).rows);
+        const clientRows = (clientsResp as { rows?: DirectoryOption[] })?.rows;
+        const siteRows = (sitesResp as { rows?: DirectoryOption[] })?.rows;
+        if (clientsResp && Array.isArray(clientRows)) {
+          setClients(clientRows);
         }
-        if (sitesResp && Array.isArray((sitesResp as any).rows)) {
-          setPostSites((sitesResp as any).rows);
+        if (sitesResp && Array.isArray(siteRows)) {
+          setPostSites(siteRows);
         }
         try {
-          const itResp: any = await IncidentTypesService.list('', 1, 1000);
+          const itResp = await IncidentTypesService.list('', 1, 1000) as { rows?: NamedEntity[] };
           if (itResp && Array.isArray(itResp.rows)) setIncidentTypes(itResp.rows);
         } catch (e) {
           // ignore

@@ -52,7 +52,7 @@ const customerRequestService = {
     const tenantId = getTenantId();
     const qs = buildQuery(params);
     const resp = await api.get(`/tenant/${tenantId}/request${qs}`);
-    const payload = (resp as any)?.data ?? resp;
+    const payload = resp.data ?? resp;
     const rows: CustomerRequestRecord[] = Array.isArray(payload)
       ? payload
       : Array.isArray(payload?.rows)
@@ -65,7 +65,7 @@ const customerRequestService = {
   async updateStatus(id: string, status: string): Promise<CustomerRequestRecord> {
     const tenantId = getTenantId();
     const resp = await api.put(`/tenant/${tenantId}/request/${id}`, { data: { status } });
-    return (resp as any)?.data ?? resp;
+    return resp.data ?? resp;
   },
 };
 

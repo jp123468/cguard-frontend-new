@@ -52,6 +52,9 @@ type Message = {
   receipt?: { deliveryStatus: string; readAt?: string | null } | null;
 };
 
+// Autocomplete result row (clients / guards / post-sites all share this shape).
+type AcRow = { id: string; label?: string; name?: string; companyName?: string };
+
 const fmtTime = (d?: string | null) => { try { return new Date(d as string).toLocaleString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } };
 
 export default function MessengerPage({ scope = "operational" }: { scope?: "operational" | "client" }) {
@@ -385,7 +388,7 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
   );
 }
 
-function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "client"; onClose: () => void; onSent: (conv: any) => void }) {
+function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "client"; onClose: () => void; onSent: (conv: unknown) => void }) {
   const isClient = scope === "client";
   const [mode, setMode] = useState<"direct" | "group">("direct");
   // Direct mode
@@ -410,11 +413,11 @@ function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "cli
         if (isClient) {
           const res: any = await clientService.autocomplete(q.trim(), 15);
           const rows = Array.isArray(res) ? res : (res?.rows || []);
-          if (active) setResults(rows.filter((r: any) => r && r.id).map((r: any) => ({ id: r.id, label: r.label || r.name || "Cliente" })));
+          if (active) setResults(rows.filter((r: AcRow) => r && r.id).map((r: AcRow) => ({ id: r.id, label: r.label || r.name || "Cliente" })));
         } else {
           const res = await securityGuardService.autocomplete(q.trim(), 15);
           const rows = Array.isArray(res) ? res : (res?.rows || []);
-          if (active) setResults(rows.filter((r: any) => r && r.id && !String(r.id).startsWith("sg:")).map((r: any) => ({ id: r.id, label: r.label || r.name || "Vigilante" })));
+          if (active) setResults(rows.filter((r: AcRow) => r && r.id && !String(r.id).startsWith("sg:")).map((r: AcRow) => ({ id: r.id, label: r.label || r.name || "Vigilante" })));
         }
       } catch { /* ignore */ }
     }, 300);
@@ -429,7 +432,7 @@ function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "cli
       try {
         const res: any = await postSiteService.autocomplete(siteQ.trim());
         const rows = Array.isArray(res) ? res : (res?.rows || res?.data || []);
-        if (active) setSiteResults(rows.filter((r: any) => r && r.id).map((r: any) => ({ id: r.id, label: r.label || r.companyName || r.name || "Puesto" })));
+        if (active) setSiteResults(rows.filter((r: AcRow) => r && r.id).map((r: AcRow) => ({ id: r.id, label: r.label || r.companyName || r.name || "Puesto" })));
       } catch { /* ignore */ }
     }, 300);
     return () => { active = false; clearTimeout(t); };
@@ -584,7 +587,7 @@ function MembersPanel({ conversation, onClose, onChanged }: { conversation: Conv
       try {
         const res = await securityGuardService.autocomplete(q.trim(), 15);
         const rows = Array.isArray(res) ? res : (res?.rows || []);
-        if (active) setResults(rows.filter((r: any) => r && r.id && !String(r.id).startsWith("sg:")).map((r: any) => ({ id: r.id, label: r.label || r.name || "Vigilante" })));
+        if (active) setResults(rows.filter((r: AcRow) => r && r.id && !String(r.id).startsWith("sg:")).map((r: AcRow) => ({ id: r.id, label: r.label || r.name || "Vigilante" })));
       } catch { /* ignore */ }
     }, 300);
     return () => { active = false; clearTimeout(t); };

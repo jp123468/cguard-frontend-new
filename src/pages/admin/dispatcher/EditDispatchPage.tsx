@@ -110,7 +110,7 @@ export default function EditDispatchPage() {
         let rows: any[] | undefined;
         for (const path of tryPaths) {
           try {
-            const resp = await api.get(path, { toast: { silentError: true } } as any);
+            const resp = await api.get(path, { toast: { silentError: true } });
             const body = resp.data ?? resp;
             if (Array.isArray(body)) {
               rows = body;
@@ -216,7 +216,7 @@ export default function EditDispatchPage() {
         const tenantId = localStorage.getItem("tenantId");
         if (!tenantId) return;
         const resp = await api.get(`/tenant/${tenantId}/request/${editId}`);
-        const data = (resp && (resp as any).data) || resp;
+        const data = (resp && resp.data) || resp;
         if (!data) return;
 
         let incidentDate = "";
@@ -332,7 +332,7 @@ export default function EditDispatchPage() {
         ? new Date(`${data.incidentDate}T${data.incidentTime}:00`).toISOString()
         : null;
 
-    const payload: any = {
+    const payload: Record<string, string | null> = {
       clientId: data.clientId || null,
       siteId: data.siteId || null,
       guardId: data.guardId || null,
@@ -347,7 +347,7 @@ export default function EditDispatchPage() {
       actionsTaken: data.actionsTaken || null,
       internalNotes: data.internalNotes || null,
       subject:
-        (data as any).subject ||
+        (data as DispatchCreateSchema & { subject?: string }).subject ||
         `${data.location || ''}${data.incidentDetails ? ' - ' + String(data.incidentDetails).slice(0, 80) : ''}`,
     };
 
@@ -364,7 +364,7 @@ export default function EditDispatchPage() {
     } catch (error) {
       console.error('Error actualizando Incidente:', error);
       try {
-        const msg = (error && (error as any).message) || 'Error al actualizar Incidente';
+        const msg = ((error as { message?: string } | null)?.message) || 'Error al actualizar Incidente';
         toast.error(msg);
       } catch (e) {
         toast.error('Error al actualizar Incidente');
@@ -635,9 +635,9 @@ export default function EditDispatchPage() {
                         onClick={() => {  
                           const el = incidentDateRef.current;
                           if (!el) return;
-                          if (typeof (el as any).showPicker === "function") {
+                          if (typeof (el as HTMLInputElement & { showPicker?: () => void }).showPicker === "function") {
                             try {
-                              (el as any).showPicker();
+                              (el as HTMLInputElement & { showPicker?: () => void }).showPicker();
                             } catch (err) {
                               el.focus();
                             }
@@ -672,9 +672,9 @@ export default function EditDispatchPage() {
                         onClick={() => {
                           const el = incidentTimeRef.current;
                           if (!el) return;
-                          if (typeof (el as any).showPicker === "function") {
+                          if (typeof (el as HTMLInputElement & { showPicker?: () => void }).showPicker === "function") {
                             try {
-                              (el as any).showPicker();
+                              (el as HTMLInputElement & { showPicker?: () => void }).showPicker();
                             } catch (err) {
                               el.focus();
                             }

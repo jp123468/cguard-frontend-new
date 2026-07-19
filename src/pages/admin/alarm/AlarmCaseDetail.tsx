@@ -105,6 +105,9 @@ const DISPATCH_TYPES: { value: AlarmDispatchType; label: string }[] = [
   { value: "medical", label: "Médico" },
 ];
 
+/** Fields present on the case payload but not on the base AlarmCase model. */
+type AlarmCaseWithEcv = AlarmCase & { alarmPanelId?: string | null; ecvSatisfied?: boolean; calls?: unknown[] };
+
 const DISPOSITIONS: { value: AlarmCaseDisposition; label: string }[] = [
   { value: "real", label: "Real" },
   { value: "false", label: "Falsa" },
@@ -251,8 +254,9 @@ export default function AlarmCaseDetail() {
       try {
         const c = await alarmService.case(id);
         setData(c || null);
-      } catch (e: any) {
-        toast.error(e?.data?.message || e?.message || "No se pudo cargar el caso");
+      } catch (e) {
+        const err = e as { data?: { message?: string }; message?: string };
+        toast.error(err?.data?.message || err?.message || "No se pudo cargar el caso");
       } finally {
         setLoading(false);
       }
@@ -273,8 +277,9 @@ export default function AlarmCaseDetail() {
       toast.success(okMsg);
       await refetch();
       return true;
-    } catch (e: any) {
-      toast.error(e?.data?.message || e?.message || "No se pudo completar la acción");
+    } catch (e) {
+      const err = e as { data?: { message?: string }; message?: string };
+      toast.error(err?.data?.message || err?.message || "No se pudo completar la acción");
       return false;
     } finally {
       setBusy(false);
@@ -534,10 +539,10 @@ export default function AlarmCaseDetail() {
         <div className="mb-5">
           <AlarmECV
             caseId={id}
-            panelId={(data as any).alarmPanelId}
+            panelId={(data as AlarmCaseWithEcv).alarmPanelId}
             category={data.category || undefined}
-            ecvSatisfied={(data as any).ecvSatisfied}
-            calls={(data as any).calls || []}
+            ecvSatisfied={(data as AlarmCaseWithEcv).ecvSatisfied}
+            calls={(data as AlarmCaseWithEcv).calls || []}
             status={data.status || undefined}
             onChanged={() => load()}
           />

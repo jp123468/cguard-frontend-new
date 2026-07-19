@@ -18,15 +18,65 @@ import {
   Plus,
 } from "lucide-react";
 
-function set<T extends object>(obj: T, path: string, value: any): T {
-  const next: any = { ...obj };
+interface ExtraHourType {
+  key?: string;
+  label?: string;
+  multiplier?: number;
+}
+
+interface NominaSettings {
+  general?: {
+    timeClockEnabled?: boolean;
+    requireSelfie?: boolean;
+    requireNotesOnException?: boolean;
+  };
+  windows?: {
+    earlyClockInMin?: number;
+    lateGraceMin?: number;
+    earlyClockoutThresholdMin?: number;
+    missedClockoutThresholdMin?: number;
+    noShowThresholdMin?: number;
+  };
+  geofence?: {
+    defaultRadiusM?: number;
+    requireValidation?: boolean;
+    allowOutsideWithApproval?: boolean;
+  };
+  notifications?: {
+    assignedSupervisorsOnly?: boolean;
+  };
+  approval?: {
+    autoApproveNormal?: boolean;
+    requireApprovalForExceptions?: boolean;
+    lockAfterPayrollClose?: boolean;
+  };
+  payroll?: {
+    periodType?: string;
+    overtimeThresholdHours?: number;
+    currency?: string;
+    defaultHourlyRate?: number;
+    overtimeMultiplier?: number;
+    salaryBasis?: string;
+    defaultMonthlySalary?: number;
+    unworkedDayPolicy?: string;
+    extraHourTypes?: ExtraHourType[];
+  };
+}
+
+// The Num/Toggle inputs address nested settings by a dotted string path, so a
+// record view is used for the dynamic index (the typed interface can't be
+// indexed by an arbitrary string).
+type SettingsRecord = Record<string, Record<string, unknown> | undefined>;
+
+function set<T extends object>(obj: T, path: string, value: unknown): T {
+  const next = { ...obj } as Record<string, Record<string, unknown>>;
   const [a, b] = path.split(".");
   next[a] = { ...(next[a] || {}), [b]: value };
-  return next;
+  return next as unknown as T;
 }
 
 export default function NominaSettings() {
-  const [s, setS] = useState<any>(null);
+  const [s, setS] = useState<NominaSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -44,8 +94,8 @@ export default function NominaSettings() {
       const saved = await attendanceService.saveSettings(s);
       setS(saved);
       toast.success("Configuración guardada");
-    } catch (e: any) {
-      toast.error(e?.message || "Error al guardar");
+    } catch (e) {
+      toast.error((e as { message?: string })?.message || "Error al guardar");
     } finally {
       setSaving(false);
     }
@@ -58,8 +108,8 @@ export default function NominaSettings() {
         <span className="text-xs font-medium text-muted-foreground">{label}</span>
         <input
           type="number"
-          value={s?.[a]?.[b] ?? 0}
-          onChange={(e) => setS((prev: any) => set(prev, path, Number(e.target.value)))}
+          value={((s as unknown as SettingsRecord | null)?.[a]?.[b] as number | undefined) ?? 0}
+          onChange={(e) => setS((prev) => set(prev as NominaSettings, path, Number(e.target.value)))}
           className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
         />
       </label>
@@ -72,8 +122,8 @@ export default function NominaSettings() {
       <label className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-muted/30 px-3 py-2.5 transition hover:border-primary/40">
         <input
           type="checkbox"
-          checked={!!s?.[a]?.[b]}
-          onChange={(e) => setS((prev: any) => set(prev, path, e.target.checked))}
+          checked={!!(s as unknown as SettingsRecord | null)?.[a]?.[b]}
+          onChange={(e) => setS((prev) => set(prev as NominaSettings, path, e.target.checked))}
           className="size-4 accent-primary"
         />
         <span className="text-sm text-foreground">{label}</span>
@@ -88,7 +138,7 @@ export default function NominaSettings() {
   }: {
     title: string;
     icon: React.ReactNode;
-    children: any;
+    children: React.ReactNode;
   }) => (
     <Section title={title} icon={icon}>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>
@@ -137,7 +187,7 @@ export default function NominaSettings() {
                 <span className="text-xs font-medium text-muted-foreground">Periodo de nómina</span>
                 <select
                   value={s.payroll?.periodType || "biweekly"}
-                  onChange={(e) => setS((p: any) => set(p, "payroll.periodType", e.target.value))}
+                  onChange={(e) => setS((p) => set(p as NominaSettings, "payroll.periodType", e.target.value))}
                   className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="weekly">Semanal</option>
@@ -151,7 +201,7 @@ export default function NominaSettings() {
                 <span className="text-xs font-medium text-muted-foreground">Moneda</span>
                 <input
                   value={s.payroll?.currency || "USD"}
-                  onChange={(e) => setS((p: any) => set(p, "payroll.currency", e.target.value))}
+                  onChange={(e) => setS((p) => set(p as NominaSettings, "payroll.currency", e.target.value))}
                   className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                 />
               </label>
@@ -166,7 +216,7 @@ export default function NominaSettings() {
                 <span className="text-xs font-medium text-muted-foreground">Base del salario</span>
                 <select
                   value={s.payroll?.salaryBasis || "hourly"}
-                  onChange={(e) => setS((p: any) => set(p, "payroll.salaryBasis", e.target.value))}
+                  onChange={(e) => setS((p) => set(p as NominaSettings, "payroll.salaryBasis", e.target.value))}
                   className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="hourly">Por hora</option>
@@ -181,7 +231,7 @@ export default function NominaSettings() {
                   <span className="text-xs font-medium text-muted-foreground">Días no trabajados</span>
                   <select
                     value={s.payroll?.unworkedDayPolicy || "full"}
-                    onChange={(e) => setS((p: any) => set(p, "payroll.unworkedDayPolicy", e.target.value))}
+                    onChange={(e) => setS((p) => set(p as NominaSettings, "payroll.unworkedDayPolicy", e.target.value))}
                     className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="full">Pagar sueldo completo</option>
@@ -199,14 +249,15 @@ export default function NominaSettings() {
                 Define las categorías de horas extra que tu país/empresa reconoce. El multiplicador se aplica sobre la tarifa base por hora.
               </p>
               <div className="space-y-2">
-                {(s.payroll?.extraHourTypes || []).map((t: any, i: number) => (
+                {(s.payroll?.extraHourTypes || []).map((t, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <input
                       value={t.label || ""}
                       placeholder="Nombre (ej. Horas suplementarias)"
                       onChange={(e) =>
-                        setS((p: any) => {
-                          const arr = [...(p.payroll?.extraHourTypes || [])];
+                        setS((prev) => {
+                          const p = prev as NominaSettings;
+                          const arr = [...((p as NominaSettings).payroll?.extraHourTypes || [])];
                           arr[i] = { ...arr[i], label: e.target.value, key: arr[i].key || `t${i}` };
                           return set(p, "payroll.extraHourTypes", arr);
                         })
@@ -218,8 +269,9 @@ export default function NominaSettings() {
                       step="0.05"
                       value={t.multiplier ?? 1}
                       onChange={(e) =>
-                        setS((p: any) => {
-                          const arr = [...(p.payroll?.extraHourTypes || [])];
+                        setS((prev) => {
+                          const p = prev as NominaSettings;
+                          const arr = [...((p as NominaSettings).payroll?.extraHourTypes || [])];
                           arr[i] = { ...arr[i], multiplier: Number(e.target.value) };
                           return set(p, "payroll.extraHourTypes", arr);
                         })
@@ -228,7 +280,7 @@ export default function NominaSettings() {
                     />
                     <span className="text-xs text-muted-foreground">×</span>
                     <button
-                      onClick={() => setS((p: any) => set(p, "payroll.extraHourTypes", (p.payroll?.extraHourTypes || []).filter((_: any, j: number) => j !== i)))}
+                      onClick={() => setS((p) => set(p as NominaSettings, "payroll.extraHourTypes", ((p as NominaSettings).payroll?.extraHourTypes || []).filter((_, j) => j !== i)))}
                       className="p-2 text-muted-foreground hover:text-red-500"
                       aria-label="Eliminar"
                     >
@@ -237,7 +289,7 @@ export default function NominaSettings() {
                   </div>
                 ))}
                 <button
-                  onClick={() => setS((p: any) => set(p, "payroll.extraHourTypes", [...(p.payroll?.extraHourTypes || []), { key: `t${Date.now()}`, label: "", multiplier: 1.5 }]))}
+                  onClick={() => setS((p) => set(p as NominaSettings, "payroll.extraHourTypes", [...((p as NominaSettings).payroll?.extraHourTypes || []), { key: `t${Date.now()}`, label: "", multiplier: 1.5 }]))}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-1.5 text-sm text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
                 >
                   <Plus className="size-4" /> Agregar tipo

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Mail, Phone, Globe } from "lucide-react";
-import AccountService from "@/services/accountService";
+import AccountService, { ProfilePayload } from "@/services/accountService";
 import { useAuth } from "@/contexts/AuthContext";
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import AvatarUploader from "./profile/AvatarUploader";
@@ -22,8 +22,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Section, Modal } from "@/components/kit";
 
 type MeTenantSetting = { theme?: string; logoUrl?: string | null };
-type MeTenant = { name?: string; settings?: MeTenantSetting[] };
-type MeAvatar = { downloadUrl?: string } | string;
+type MeTenant = { name?: string; phone?: string; settings?: MeTenantSetting[] };
+type MeAvatar = { downloadUrl?: string; privateUrl?: string; url?: string; src?: string } | string;
 
 type MeResponse = {
   id: string;
@@ -39,30 +39,37 @@ type MeResponse = {
   emailVerified?: boolean;
 };
 
+// Raw /auth/me payload before normalization: fields may live at the top level or
+// be wrapped under `user`/`data`.
+type MeRaw = Partial<MeResponse> & { user?: MeRaw; data?: MeRaw };
+
+// Shape of the errors thrown by the API layer (axios-style response envelope).
+type ApiError = { response?: { data?: { message?: string } }; message?: string };
+
 function pickAvatarUrl(avatars?: MeAvatar[] | null): string | null {
   if (!avatars || avatars.length === 0) return null;
   const a = avatars[0];
   if (typeof a === "string") return a;
   // Prefer the token-based download URL the backend attaches (fillDownloadUrl).
-  if ((a as any).downloadUrl) return String((a as any).downloadUrl);
+  if (a.downloadUrl) return String(a.downloadUrl);
   // Transitional fallback only: a legacy avatar object that carries just a raw
   // privateUrl (no token downloadUrl). This is a plain helper (not a React
   // component), so the useFileUrl hook can't be used; the raw download path
   // remains until the backend guarantees a downloadUrl on every avatar object.
-  if ((a as any).privateUrl) {
-    const privateUrl = String((a as any).privateUrl);
+  if (a.privateUrl) {
+    const privateUrl = String(a.privateUrl);
     // If it's already an absolute URL, return it; otherwise construct download path
     if (/^https?:\/\//i.test(privateUrl)) return privateUrl;
     return `/file/download?privateUrl=${encodeURIComponent(privateUrl)}`;
   }
   // Fallback to other common fields
-  if ((a as any).url) return String((a as any).url);
-  if ((a as any).src) return String((a as any).src);
+  if (a.url) return String(a.url);
+  if (a.src) return String(a.src);
   return null;
 }
 
-function normalizeMe(raw: any): MeResponse {
-  const base: any = raw?.user ?? raw?.data ?? raw;
+function normalizeMe(raw: MeRaw | null | undefined): MeResponse {
+  const base: MeRaw | null | undefined = raw?.user ?? raw?.data ?? raw;
   const firstName = base?.firstName ?? "";
   const lastName = base?.lastName ?? "";
   const fullName = (base?.fullName ?? `${firstName} ${lastName}`).trim();
@@ -83,7 +90,7 @@ function normalizeMe(raw: any): MeResponse {
   const emailVerified = base?.emailVerified ?? false;
 
   return {
-    id: base?.id,
+    id: base?.id as string,
     firstName,
     lastName,
     fullName,
@@ -169,8 +176,8 @@ export default function ProfileUserForm() {
         setAvatar(me.avatarUrl ?? null);
 
         // phoneNumber may be stored on the user or on the tenant object
-        const tenantPhone = (me.tenants && Array.isArray(me.tenants) && me.tenants[0] && me.tenants[0].tenant && (me.tenants[0].tenant as any).phone)
-          ? (me.tenants[0].tenant as any).phone
+        const tenantPhone = (me.tenants && Array.isArray(me.tenants) && me.tenants[0] && me.tenants[0].tenant && me.tenants[0].tenant.phone)
+          ? me.tenants[0].tenant.phone
           : null;
         // Treat empty string as absent: prefer explicit non-empty user phone, otherwise tenant phone
         const phoneSource = (me.phoneNumber && String(me.phoneNumber).trim() !== "")
@@ -203,7 +210,7 @@ export default function ProfileUserForm() {
             }
           }
         }
-      } catch (e: any) {
+      } catch {
         toast.error("No se pudo cargar tu perfil.");
       } finally {
         if (mounted) setLoading(false);
@@ -247,7 +254,7 @@ export default function ProfileUserForm() {
       const { firstName, lastName } = splitFullName(fullName);
 
       // Build payload only with non-empty values to avoid overwriting DB with empty strings
-      const payload: any = {};
+      const payload: ProfilePayload = {};
       const trimmedFull = fullName.trim();
       if (trimmedFull) payload.fullName = trimmedFull;
       if (firstName && String(firstName).trim() !== "") payload.firstName = firstName;
@@ -283,7 +290,7 @@ export default function ProfileUserForm() {
 
           const dataUrl = await toDataUrl(avatarFile);
 
-          await AccountService.updateProfile({ avatars: [{ data: dataUrl, name: avatarFile.name, sizeInBytes: avatarFile.size, mimeType: avatarFile.type }] } as any);
+          await AccountService.updateProfile({ avatars: [{ data: dataUrl, name: avatarFile.name, sizeInBytes: avatarFile.size, mimeType: avatarFile.type }] });
 
           const refreshed = await AccountService.getMe();
           const refreshedMe = normalizeMe(refreshed);
@@ -304,8 +311,8 @@ export default function ProfileUserForm() {
       } else {
         toast.success("No hubo cambios para guardar.");
       }
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? "Error al guardar el perfil.");
+    } catch (e) {
+      toast.error((e as ApiError)?.response?.data?.message ?? "Error al guardar el perfil.");
     } finally {
       setSaving(false);
     }
@@ -344,8 +351,8 @@ export default function ProfileUserForm() {
       setShowEmailModal(false);
       setPassword("");
       setNewEmail("");
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? "Error al cambiar el correo.");
+    } catch (e) {
+      toast.error((e as ApiError)?.response?.data?.message ?? "Error al cambiar el correo.");
     }
   };
 
@@ -359,8 +366,8 @@ export default function ProfileUserForm() {
       toast.success("Número verificado correctamente.");
       setShowPhoneVerifyModal(false);
       setVerificationCode("");
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? "Error al verificar el número.");
+    } catch (e) {
+      toast.error((e as ApiError)?.response?.data?.message ?? "Error al verificar el número.");
     }
   };
 
@@ -368,8 +375,8 @@ export default function ProfileUserForm() {
     try {
       toast.success("Código de verificación enviado.");
       setShowPhoneVerifyModal(true);
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? "Error al enviar el código.");
+    } catch (e) {
+      toast.error((e as ApiError)?.response?.data?.message ?? "Error al enviar el código.");
     }
   };
 

@@ -22,6 +22,15 @@ export interface MapCenter {
 
 const FINAL_FALLBACK: MapCenter = { lat: -0.18, lng: -78.46, zoom: 11, source: "fallback" };
 
+/** Loose shape of the tenant record used only for map-center resolution. */
+interface TenantLike {
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  address?: string | null;
+  country?: string | null;
+  name?: string | null;
+}
+
 const num = (v: any): number | null => {
   const n = parseFloat(v);
   return Number.isFinite(n) ? n : null;
@@ -39,7 +48,7 @@ function readCache<T>(key: string, maxAgeMs: number): T | null {
   }
 }
 
-function writeCache(key: string, v: any): void {
+function writeCache(key: string, v: unknown): void {
   try {
     localStorage.setItem(key, JSON.stringify({ t: Date.now(), v }));
   } catch {
@@ -107,14 +116,14 @@ async function addressCenter(address: string, country?: string): Promise<MapCent
 }
 
 /** Synchronous company-coordinate center (no network), or undefined when unset. */
-export function companyCenter(tenant: any): MapCenter | undefined {
+export function companyCenter(tenant: TenantLike | null | undefined): MapCenter | undefined {
   const lat = num(tenant?.latitude);
   const lng = num(tenant?.longitude);
   return lat != null && lng != null ? { lat, lng, zoom: 13, source: "company" } : undefined;
 }
 
 /** Full async resolution following the priority order above. Never rejects. */
-export async function resolveDefaultCenter(tenant: any): Promise<MapCenter> {
+export async function resolveDefaultCenter(tenant: TenantLike | null | undefined): Promise<MapCenter> {
   const direct = companyCenter(tenant);
   if (direct) return direct;
   const byAddress = tenant?.address

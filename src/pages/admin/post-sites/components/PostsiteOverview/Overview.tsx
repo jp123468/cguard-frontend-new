@@ -16,8 +16,27 @@ import {
   Building2, MapPin, Phone, Mail, Briefcase, Pencil, MapIcon,
   ExternalLink, Activity, SlidersHorizontal,
 } from 'lucide-react';
+import type { PostSite } from '@/types';
 
-export default function PostSiteOverview({ site }: { site?: any }) {
+interface SiteProp extends PostSite {
+  active?: boolean;
+  businessName?: string;
+  city?: string;
+  country?: string;
+  clientAccountName?: string;
+  clientAccount?: { name?: string } | null;
+  companyAddress?: string;
+  secondAddress?: string;
+  serviceType?: string;
+  lat?: number | string | null;
+  lng?: number | string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  location?: { lat?: number | string; lng?: number | string } | null;
+  tenantId?: string;
+}
+
+export default function PostSiteOverview({ site }: { site?: SiteProp }) {
   const { t } = useTranslation();
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);

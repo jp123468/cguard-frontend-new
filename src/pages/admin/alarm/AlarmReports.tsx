@@ -16,9 +16,23 @@ import {
 
 const PERIODS = [7, 30, 90, 365];
 
+interface FalseAlarmOverall {
+  total: number; real: number; false: number; test: number;
+  runaway: number; cancelled: number; falseRate: number;
+}
+interface FalseAlarmPanelRow {
+  panelId: string; panelName: string; accountNumber?: string;
+  total: number; real: number; false: number; runaway: number; falseRate: number;
+}
+interface FalseAlarmReport {
+  days: number;
+  overall: FalseAlarmOverall;
+  panels: FalseAlarmPanelRow[];
+}
+
 export default function AlarmReports() {
   const [days, setDays] = useState(30);
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<FalseAlarmReport | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -90,7 +104,7 @@ export default function AlarmReports() {
                       </tr>
                     </thead>
                     <tbody>
-                      {data.panels.map((p: any) => (
+                      {data.panels.map((p) => (
                         <tr key={p.panelId} className="border-b border-border/50 transition-colors hover:bg-muted/30">
                           <td className="px-4 py-2 font-medium text-foreground">{p.panelName}</td>
                           <td className="px-3 py-2 text-muted-foreground">{p.accountNumber || "—"}</td>

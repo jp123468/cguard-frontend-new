@@ -9,6 +9,9 @@ import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { getTenantTimezone } from '@/utils/tenantLocation';
 import { Button } from '@/components/ui/button';
+import type { Station } from '@/types';
+
+interface StationDetail extends Station { stationSchedule?: string | null }
 
 // Minutes-of-day of a UTC instant rendered in the tenant timezone. Shift times
 // are stored as UTC; the jornada window is the station's local wall-clock. We
@@ -27,7 +30,7 @@ function minutesInTenantTz(d: Date): number {
   }
 }
 
-type Props = { station: any; stationId: string; postSiteId: string };
+type Props = { station: StationDetail; stationId: string; postSiteId: string };
 
 const GUARD_COLORS = [
   { bg: 'rgba(200, 134, 10, 0.15)', accent: '#C8860A', text: '#C8860A' },
@@ -759,7 +762,7 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
   selectedDate: string | null;
   onSelectDate: (d: string) => void;
   onAssign: (d: string) => void;
-  station: any;
+  station: StationDetail;
   jornadas: Jornada[];
 }) {
   void station; void jornadas;

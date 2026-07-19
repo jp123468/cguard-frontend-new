@@ -9,8 +9,14 @@ import { Section, EmptyState, SkeletonCards, StatusBadge } from '@/components/ki
 import { Button } from '@/components/ui/button';
 import ShiftAssignModal from './ShiftAssignModal';
 import { localToday } from '@/lib/utils';
+import type { Station } from '@/types';
 
-type Props = { station: any; stationId: string; postSiteId: string };
+interface StationDetail extends Station {
+  startingTimeInDay?: string | null;
+  finishTimeInDay?: string | null;
+}
+
+type Props = { station: StationDetail; stationId: string; postSiteId: string };
 type PosType = 'fijo' | 'sacafranco';
 
 interface Assignment {

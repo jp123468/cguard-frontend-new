@@ -23,6 +23,31 @@ export type AdminUserCardAction = {
     disabled?: boolean;
 };
 
+type RoleLike = string | { name?: string; role?: string };
+type PhotoLike = string | { downloadUrl?: string; publicUrl?: string };
+
+/** Loose administrative-user row as returned by the tenant-user list endpoint. */
+export interface AdminUserRow {
+    id?: string;
+    _id?: string;
+    fullName?: string;
+    firstName?: string;
+    lastName?: string;
+    name?: string;
+    email?: string;
+    avatars?: PhotoLike | PhotoLike[];
+    avatar?: PhotoLike | PhotoLike[];
+    profileImage?: PhotoLike | PhotoLike[];
+    photoUrl?: string;
+    roles?: RoleLike | RoleLike[];
+    role?: RoleLike | RoleLike[];
+    _rolesDisplay?: string;
+    status?: string;
+    active?: boolean;
+    raw?: { id?: string; [key: string]: unknown };
+    [key: string]: unknown;
+}
+
 const HUES = [28, 205, 150, 265, 340, 95, 180, 12];
 function hueFor(name: string): number {
     let h = 0;
@@ -30,7 +55,7 @@ function hueFor(name: string): number {
     return HUES[h % HUES.length];
 }
 
-function nameOf(u: any): string {
+function nameOf(u: AdminUserRow): string {
     return u.fullName || [u.firstName, u.lastName].filter(Boolean).join(" ") || u.name || u.email || "—";
 }
 function photoOf(u: any): string | null {
@@ -38,15 +63,15 @@ function photoOf(u: any): string | null {
     const f = Array.isArray(a) ? a[0] : a;
     return (f?.downloadUrl || f?.publicUrl || (typeof f === "string" ? f : null)) || u.photoUrl || null;
 }
-function rolesOf(u: any): string {
+function rolesOf(u: AdminUserRow): string {
     if (u._rolesDisplay) return u._rolesDisplay;
     const roles = u.roles ?? u.role ?? [];
-    if (Array.isArray(roles)) return roles.map((r: any) => (typeof r === "string" ? r : (r && (r.name || r.role)) || "")).filter(Boolean).join(", ");
+    if (Array.isArray(roles)) return roles.map((r: RoleLike) => (typeof r === "string" ? r : (r && (r.name || r.role)) || "")).filter(Boolean).join(", ");
     if (typeof roles === "string") return roles;
     if (roles && typeof roles === "object") return roles.name || roles.role || "";
     return "";
 }
-function statusOf(u: any): { label: string; tone: "green" | "orange" | "red" | "slate" } {
+function statusOf(u: AdminUserRow): { label: string; tone: "green" | "orange" | "red" | "slate" } {
     const s = (u.status || "").toString().toLowerCase();
     if (s === "archived" || s === "archivado") return { label: "Archivado", tone: "red" };
     if (s === "invited" || s === "pending") return { label: "Pendiente", tone: "orange" };
@@ -63,13 +88,13 @@ export default function AdminUserCardsGrid({
     onOpen,
     actions,
 }: {
-    users: any[];
+    users: AdminUserRow[];
     loading: boolean;
     selectedIds: string[];
-    canSelect: (u: any) => boolean;
+    canSelect: (u: AdminUserRow) => boolean;
     onSelect: (id: string, checked: boolean) => void;
-    onOpen: (u: any) => void;
-    actions: (u: any) => AdminUserCardAction[];
+    onOpen: (u: AdminUserRow) => void;
+    actions: (u: AdminUserRow) => AdminUserCardAction[];
 }) {
     if (loading) return <SkeletonCards count={8} className="sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" />;
     if (!users.length) {

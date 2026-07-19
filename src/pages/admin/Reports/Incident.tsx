@@ -54,7 +54,7 @@ export default function Incident() {
         params.append("filter[createdAtRange][]", end);
         params.append("orderBy", "createdAt_DESC");
         params.append("limit", "5000");
-        const res: any = await ApiService.get(
+        const res: Incident[] | { rows?: Incident[] } = await ApiService.get(
           `/tenant/${tenantId}/incident?${params.toString()}`,
         );
         const rows: Incident[] = Array.isArray(res) ? res : res?.rows || [];

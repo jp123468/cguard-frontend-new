@@ -51,6 +51,92 @@ import { stationService } from '@/lib/api/stationService';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from "sonner";
 import { confirmDialog } from '@/components/ui/confirmDialog';
+import type { SecurityGuard } from "@/types";
+import { VisitorLogFilters } from "@/lib/api/visitorLogService";
+
+// Loose client shape covering the various name/id fields the association may carry.
+type ClientLike = {
+    id: string;
+    _id?: string;
+    name?: string;
+    firstName?: string;
+    lastName?: string;
+    displayName?: string;
+    companyName?: string;
+};
+
+// Post-site option/lookup shape (extends canonical model with legacy nested fields).
+type PostSiteLike = {
+    id: string;
+    _id?: string;
+    name?: string;
+    companyName?: string;
+    postSiteName?: string;
+    company?: { name?: string; companyName?: string };
+};
+
+// Station option shape (station list reuses the post-site list response envelope).
+type StationOption = { id: string; stationName?: string; name?: string };
+
+// Guard option carries fallback name fields not present on the canonical model.
+type GuardOption = SecurityGuard & { displayName?: string; name?: string };
+
+// A single visitor-log (bitácora) record with the many optional fallback fields the UI reads.
+type VisitLogRow = {
+    id: string;
+    visitDate?: string;
+    exitTime?: string;
+    exitAt?: string;
+    leaveTime?: string;
+    firstName?: string;
+    lastName?: string;
+    idNumber?: string;
+    reason?: string;
+    visitReason?: string;
+    numPeople?: number;
+    peopleCount?: number;
+    numberPeople?: number;
+    placeType?: string;
+    client?: ClientLike | string | number;
+    clientId?: string;
+    clientAccountId?: string;
+    clientAccount?: string;
+    client_id?: string;
+    clientIdAccount?: string;
+    clientName?: string;
+    clientAccountName?: string;
+    postSite?: {
+        companyName?: string;
+        name?: string;
+        postSiteName?: string;
+        company?: { name?: string; companyName?: string };
+        clientAccountName?: string;
+        clientName?: string;
+    };
+    postSiteId?: string;
+    postSite_id?: string;
+    postSiteIdValue?: string;
+    postSiteName?: string;
+    postSiteTitle?: string;
+    station?: { stationName?: string; name?: string };
+    stationName?: string;
+};
+
+// Payload sent to create a visitor-log entry.
+type VisitorLogCreatePayload = {
+    visitDate: string;
+    firstName: string;
+    lastName: string;
+    idNumber: string;
+    mobile: string;
+    numPeople: number;
+    reason?: string;
+    clientId: string;
+    postSiteId: string;
+    stationId?: string;
+    guardId: string;
+    placeType?: string;
+};
 
 type VisitorFilters = {
     client: string;
@@ -115,20 +201,20 @@ export default function Visitors() {
     const [logsSearch, setLogsSearch] = useState("");
     const [selectedLogs, setSelectedLogs] = useState<Record<string, boolean>>({});
     const [viewLogOpen, setViewLogOpen] = useState(false);
-    const [selectedLog, setSelectedLog] = useState<any | null>(null);
+    const [selectedLog, setSelectedLog] = useState<VisitLogRow | null>(null);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[]>([]);
-    const [clients, setClients] = useState<any[]>([]);
-    const [postSites, setPostSites] = useState<any[]>([]);
-    const [postSitesForFilter, setPostSitesForFilter] = useState<any[]>([]);
-    const [postSitesForNewVisitor, setPostSitesForNewVisitor] = useState<any[]>([]);
-    const [stationsForNewVisitor, setStationsForNewVisitor] = useState<any[]>([]);
-    const [guards, setGuards] = useState<any[]>([]);
-    const [guardsForFilter, setGuardsForFilter] = useState<any[]>([]);
-    const [guardsForNewVisitor, setGuardsForNewVisitor] = useState<any[]>([]);
+    const [clients, setClients] = useState<ClientLike[]>([]);
+    const [postSites, setPostSites] = useState<PostSiteLike[]>([]);
+    const [postSitesForFilter, setPostSitesForFilter] = useState<PostSiteLike[]>([]);
+    const [postSitesForNewVisitor, setPostSitesForNewVisitor] = useState<PostSiteLike[]>([]);
+    const [stationsForNewVisitor, setStationsForNewVisitor] = useState<StationOption[]>([]);
+    const [guards, setGuards] = useState<GuardOption[]>([]);
+    const [guardsForFilter, setGuardsForFilter] = useState<GuardOption[]>([]);
+    const [guardsForNewVisitor, setGuardsForNewVisitor] = useState<GuardOption[]>([]);
     const { t } = useTranslation();
 
-    const clientDisplayName = (c: any) => {
+    const clientDisplayName = (c: ClientLike | null | undefined) => {
         if (!c) return '';
         if (c.displayName) return c.displayName;
         if (c.companyName) return c.companyName;
@@ -140,7 +226,7 @@ export default function Visitors() {
         return c.name || c.id || '';
     };
 
-    const getClientLabelFromRecord = (rec: any) => {
+    const getClientLabelFromRecord = (rec: VisitLogRow | null | undefined) => {
         if (!rec) return '-';
         if (rec.client) {
             if (typeof rec.client === 'string' || typeof rec.client === 'number') return String(rec.client);
@@ -159,7 +245,7 @@ export default function Visitors() {
         return '-';
     };
 
-    const getPostSiteLabelFromRecord = (rec: any) => {
+    const getPostSiteLabelFromRecord = (rec: VisitLogRow | null | undefined) => {
         if (!rec) return '-';
         if (rec.postSite && typeof rec.postSite === 'object') {
                 return rec.postSite.companyName || rec.postSite.name || (rec.postSite.company && (rec.postSite.company.name || rec.postSite.company.companyName)) || rec.postSite.postSiteName || '-';
@@ -381,7 +467,7 @@ export default function Visitors() {
 
     // Shared builder for PDF/print: escapes every cell once and opens a print window.
     const buildAndPrint = (
-        rowsToPrint: any[],
+        rowsToPrint: VisitLogRow[],
         opts: { title: string; headers: string[] },
     ) => {
         const tableRows = rowsToPrint.map((r) => `
@@ -489,7 +575,7 @@ export default function Visitors() {
     // latest-response-wins, unmount-safe. refetch() reloads after a mutation.
     const { data: logsData, loading: logsLoading, refetch: fetchLogs } = useAsyncList(
         () => {
-            const f: any = {};
+            const f: VisitorLogFilters & { query?: string } = {};
             if (logsSearch) {
                 const s = String(logsSearch).trim();
                 if (/^[0-9]+$/.test(s)) f.idNumber = s;
@@ -509,7 +595,7 @@ export default function Visitors() {
         ],
         { debounceMs: 300, onError: (err) => console.error('Error fetching visitor logs', err) },
     );
-    const logs: any[] = logsData?.rows || [];
+    const logs: VisitLogRow[] = logsData?.rows || [];
     const logsCount = logsData?.count || 0;
 
     // when filter client changes, load postSites for that client
@@ -679,7 +765,7 @@ export default function Visitors() {
         try {
             // Build payload. Set visitDate to now (ISO)
             const now = new Date();
-            const payload: any = {
+            const payload: VisitorLogCreatePayload = {
                 visitDate: now.toISOString(),
                 firstName: newVisitor.firstName,
                 lastName: newVisitor.lastName,
@@ -709,7 +795,16 @@ export default function Visitors() {
 
                     const tenantId = localStorage.getItem('tenantId');
                     if (tenantId) {
-                        const attPayload: any = {
+                        const attPayload: {
+                            name: string;
+                            mimeType: string;
+                            sizeInBytes: number;
+                            storageId: string;
+                            fileToken: string | null;
+                            publicUrl: string | null;
+                            notableType: string;
+                            notableId: string;
+                        } = {
                             name: uploaded.name || idImageFile.name,
                             mimeType: idImageFile.type || 'image/*',
                             sizeInBytes: uploaded.sizeInBytes || idImageFile.size,
@@ -733,7 +828,7 @@ export default function Visitors() {
 
             toast.success(t('visitantes.created') || 'Visitante creado');
             setOpenAddVisitor(false);
-            setNewVisitor((s) => ({ ...s, firstName: '', lastName: '', idNumber: '', mobile: '', client: '', site: '', guard: '', placeTypeKind: '', placeTypeValue: '', numPeople: 1, reason: '' } as any));
+            setNewVisitor((s) => ({ ...s, firstName: '', lastName: '', idNumber: '', mobile: '', client: '', site: '', guard: '', placeTypeKind: '', placeTypeValue: '', numPeople: 1, reason: '' }));
             fetchLogs();
 
             // Internal logging only: do not display visitDate information to the user

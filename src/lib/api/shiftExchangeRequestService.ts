@@ -51,19 +51,19 @@ const shiftExchangeRequestService = {
     const tenantId = getTenantId();
     const qs = buildQuery(params);
     const resp = await api.get(`/tenant/${tenantId}/shift-exchange-request${qs}`);
-    return (resp as any)?.data ?? resp;
+    return resp.data ?? resp;
   },
 
   async create(data: ShiftExchangeCreateInput): Promise<ShiftExchangeRecord> {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/shift-exchange-request`, { data });
-    return (resp as any)?.data ?? resp;
+    return resp.data ?? resp;
   },
 
   async updateStatus(id: string, status: "approved" | "rejected"): Promise<ShiftExchangeRecord> {
     const tenantId = getTenantId();
     const resp = await api.patch(`/tenant/${tenantId}/shift-exchange-request/${id}/status`, { data: { status } });
-    return (resp as any)?.data ?? resp;
+    return resp.data ?? resp;
   },
 
   async destroy(id: string): Promise<void> {

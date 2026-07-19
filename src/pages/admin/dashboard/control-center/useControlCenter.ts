@@ -18,7 +18,43 @@ function socketOrigin(): string {
   try { return new URL(apiUrl || window.location.origin, window.location.origin).origin; }
   catch { return window.location.origin; }
 }
-const num = (v: any) => (typeof v === "number" ? v : Number(v) || 0);
+// ── loosely-typed rows returned by the dashboard/stats + list endpoints ──
+interface StationRow {
+  id?: string | number;
+  latitud?: number | string; latitude?: number | string;
+  longitud?: number | string; longitude?: number | string;
+  stationName?: string; name?: string; postSiteName?: string;
+  geofenceRadius?: number;
+}
+interface ActiveGuardRow {
+  id?: string | number; guardId?: string | number;
+  latitude?: number | string; lat?: number | string; punchInLatitude?: number | string;
+  longitude?: number | string; lng?: number | string; punchInLongitude?: number | string;
+  fullName?: string; name?: string; postSiteName?: string;
+  punchInTime?: string; punchInBattery?: number;
+}
+interface IncidentRow {
+  id?: string | number; status?: string;
+  title?: string; subject?: string; location?: string; stationName?: string;
+  incidentAt?: string; createdAt?: string;
+}
+interface UserRow {
+  roles?: string[]; role?: string[] | string;
+  tenants?: Array<{ roles?: string[] }>;
+}
+interface EventRow {
+  id?: string | number; eventType?: string; type?: string;
+  payload?: { stationName?: string; siteName?: string; guardName?: string; visitorName?: string; [k: string]: unknown };
+  title?: string; body?: string; createdAt?: string; severity?: string;
+  sourceEntityType?: string; sourceEntityId?: string | number;
+}
+interface LocationUpdate {
+  id?: string | number; lat?: number | string; lng?: number | string;
+  kind?: string; status?: LiveStatus; label?: string; sub?: string;
+  meta?: Record<string, unknown>;
+}
+
+const num = (v: unknown) => (typeof v === "number" ? v : Number(v) || 0);
 const count = (r: any) => (!r ? 0 : r.total ?? r.count ?? (Array.isArray(r.rows) ? r.rows.length : Array.isArray(r) ? r.length : 0));
 const rows = (r: any): any[] => (Array.isArray(r) ? r : r?.rows ?? r?.data ?? []);
 const coord = (v: any) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
@@ -83,7 +119,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
           label: tenant?.name || "Sede central", sub: tenant?.address || "Oficina principal" });
       } else gaps.push("Tenant sin coordenadas (latitude/longitude) — pin de sede oculto.");
 
-      stationRows.forEach((s: any) => {
+      stationRows.forEach((s: StationRow) => {
         const la = coord(s.latitud ?? s.latitude), ln = coord(s.longitud ?? s.longitude);
         if (la == null || ln == null) return;
         entities.push({ id: `st-${s.id}`, kind: "station", lat: la, lng: ln, status: "online",
@@ -91,7 +127,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
       });
 
       let onDuty = 0;
-      activeRows.forEach((g: any) => {
+      activeRows.forEach((g: ActiveGuardRow) => {
         const la = coord(g.latitude ?? g.lat ?? g.punchInLatitude), ln = coord(g.longitude ?? g.lng ?? g.punchInLongitude);
         onDuty++;
         if (la == null || ln == null) return;
@@ -117,12 +153,12 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
 
       // ── counts ──
       const openFromApi = count(openIncR);
-      const openIncidents = openFromApi || incidentRows.filter((i: any) => (i.status || "").toLowerCase() === "abierto").length;
+      const openIncidents = openFromApi || incidentRows.filter((i: IncidentRow) => (i.status || "").toLowerCase() === "abierto").length;
       // Only REAL security supervisors — the old match also counted
       // dispatchers/ops managers and disagreed with /supervisors.
-      const supervisors = userRows.filter((u: any) => {
-        const roles = ([] as string[]).concat(u.roles || u.role || [], ...((u.tenants || []).map((t: any) => t.roles || [])));
-        return roles.map((r: any) => String(r).toLowerCase()).some((r: string) => r === "securitysupervisor");
+      const supervisors = userRows.filter((u: UserRow) => {
+        const roles = ([] as string[]).concat(u.roles || u.role || [], ...((u.tenants || []).map((t) => t.roles || [])));
+        return roles.map((r) => String(r).toLowerCase()).some((r: string) => r === "securitysupervisor");
       }).length;
       const counts = {
         clients: count(clientsR), postSites: postRows.length || count(postsR),
@@ -147,9 +183,9 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
       // Primary feed: recent platform events (the rich activity stream). Falls back
       // to incidents only when there are no events yet.
       const eventRows = rows(eventsR);
-      const eventActivity: ActivityItem[] = eventRows.map((e: any) => {
+      const eventActivity: ActivityItem[] = eventRows.map((e: EventRow) => {
         const type = String(e.eventType || e.type || "");
-        const p = e.payload || {};
+        const p: NonNullable<EventRow["payload"]> = e.payload || {};
         return {
           id: `ev-${e.id}`,
           kind: mapEventKind(type),
@@ -160,7 +196,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
           to: e.sourceEntityType === "incident" && e.sourceEntityId ? `/reports/incident/${e.sourceEntityId}` : undefined,
         } as ActivityItem;
       });
-      const incidentActivity: ActivityItem[] = incidentRows.slice(0, 8).map((i: any) => ({
+      const incidentActivity: ActivityItem[] = incidentRows.slice(0, 8).map((i: IncidentRow) => ({
         id: `inc-${i.id}`, kind: "incident",
         title: i.title || i.subject || "Incidente",
         sub: i.location || i.stationName || "",
@@ -203,7 +239,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
         const others = s.entities.filter((e) => e.kind !== "guard");
         const guards: MapEntity[] = [];
         let onDuty = 0;
-        activeRows.forEach((g: any) => {
+        activeRows.forEach((g: ActiveGuardRow) => {
           onDuty++;
           const la = coord(g.latitude ?? g.punchInLatitude), ln = coord(g.longitude ?? g.punchInLongitude);
           if (la == null || ln == null) return;
@@ -255,7 +291,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
       withCredentials: true,
       auth: { token: getAuthToken(), tenantId: tid },
     });
-    const onLocation = (e: any) => {
+    const onLocation = (e: LocationUpdate) => {
       const la = coord(e?.lat), ln = coord(e?.lng);
       if (la == null || ln == null || !e?.id) return;
       setState((s) => {

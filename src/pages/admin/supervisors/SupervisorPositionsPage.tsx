@@ -9,6 +9,7 @@ import RotationStyleSelect from "@/components/schedule/RotationStyleSelect";
 import { supervisorPositionService, type SupervisorPosition } from "@/lib/api/supervisorPositionService";
 import { supervisorService, type Supervisor } from "@/lib/api/supervisorService";
 import { stationService } from "@/lib/api/stationService";
+import type { PostSite } from "@/types";
 
 const SCHEDULE_TYPES = [
   { value: "12h-day", label: "Diurno (12h)" },
@@ -48,7 +49,7 @@ export default function SupervisorPositionsPage() {
   useEffect(() => { supervisorService.list().then((r) => setSups(r.rows || [])).catch(() => {}); }, []);
   useEffect(() => {
     stationService.list({}, { limit: 300, offset: 0 })
-      .then((r) => setStations((r.rows || []).map((s: any) => ({ id: String(s.id), name: s.name || s.companyName || "—" }))))
+      .then((r) => setStations((r.rows || []).map((s: PostSite) => ({ id: String(s.id), name: s.name || s.companyName || "—" }))))
       .catch(() => setStations([]));
   }, []);
 

@@ -12,6 +12,7 @@ import { EllipsisVertical, Pencil, Trash, Plus, X, Users } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { Button } from '@/components/ui/button';
 import { Section, EmptyState } from '@/components/kit';
+import type { PostSite } from '@/types';
 
 
 type Contact = {
@@ -24,7 +25,12 @@ type Contact = {
   allowGuard?: boolean;
 };
 
-export default function PostSiteContacts({ site }: { site?: any }) {
+interface SiteProp extends PostSite {
+  contacts?: Contact[];
+  postSiteId?: string;
+}
+
+export default function PostSiteContacts({ site }: { site?: SiteProp }) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const initial: Contact[] = Array.isArray(site?.contacts) ? site.contacts : [];

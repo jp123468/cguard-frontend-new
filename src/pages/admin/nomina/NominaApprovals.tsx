@@ -93,8 +93,8 @@ export default function NominaApprovals() {
       await attendanceService.approveCorrection(id, { decision });
       toast.success(decision === "approved" ? "Corrección aplicada" : "Corrección rechazada");
       load();
-    } catch (e: any) {
-      toast.error(e?.message || "Error");
+    } catch (e) {
+      toast.error((e as { message?: string })?.message || "Error");
     } finally {
       setBusy(false);
     }
@@ -106,8 +106,8 @@ export default function NominaApprovals() {
       await attendanceService.decideClockOutRequest(id, { status });
       toast.success(status === "approved" ? "Salida aprobada" : "Salida rechazada");
       load();
-    } catch (e: any) {
-      toast.error(e?.message || "Error");
+    } catch (e) {
+      toast.error((e as { message?: string })?.message || "Error");
     } finally {
       setBusy(false);
     }
@@ -119,8 +119,8 @@ export default function NominaApprovals() {
       await attendanceService.decideClockInRequest(id, { status });
       toast.success(status === "approved" ? "Entrada aprobada" : "Entrada rechazada");
       load();
-    } catch (e: any) {
-      toast.error(e?.message || "Error");
+    } catch (e) {
+      toast.error((e as { message?: string })?.message || "Error");
     } finally {
       setBusy(false);
     }

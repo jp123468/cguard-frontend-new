@@ -74,6 +74,13 @@ interface GuardOption {
   fullName: string;
 }
 
+// Raw guard row as returned by securityGuardService.list.
+interface GuardListItem {
+  guard?: { id?: string; firstName?: string; lastName?: string; fullName?: string };
+  guardId?: string;
+  fullName?: string;
+}
+
 // ── component ────────────────────────────────────────────────────────────────
 
 export default function OpenShifts() {
@@ -133,10 +140,10 @@ export default function OpenShifts() {
     if (allGuards.length > 0) return; // already loaded
     (async () => {
       try {
-        const resp: any = await securityGuardService.list({ limit: 200, offset: 0 } as any);
-        const items: any[] = Array.isArray(resp) ? resp : (resp.rows ?? []);
+        const resp = await securityGuardService.list({ limit: 200, offset: 0 });
+        const items: GuardListItem[] = Array.isArray(resp) ? resp : (resp.rows ?? []);
         const opts: GuardOption[] = items
-          .map((item: any) => {
+          .map((item: GuardListItem) => {
             const userId = item.guard?.id ?? item.guardId ?? null;
             const fullName =
               item.fullName ??

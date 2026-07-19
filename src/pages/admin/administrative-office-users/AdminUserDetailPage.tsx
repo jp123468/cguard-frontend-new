@@ -15,6 +15,7 @@ import {
   ChevronRight, Pencil, Mail, Phone, MapPin, ShieldCheck, IdCard,
   UserCog, KeyRound, CheckCircle2, XCircle, Loader2,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 const HUES = [28, 205, 150, 265, 340, 95, 180, 12];
 const hueFor = (s: string) => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return HUES[h % HUES.length]; };
@@ -91,7 +92,7 @@ export default function AdminUserDetailPage() {
 
   const isSupervisor = String(roleName || '').toLowerCase().includes('supervisor');
 
-  const TABS: Array<{ id: 'perfil' | 'permisos'; label: string; icon: any }> = [
+  const TABS: Array<{ id: 'perfil' | 'permisos'; label: string; icon: LucideIcon }> = [
     { id: 'perfil', label: 'Perfil', icon: IdCard },
     { id: 'permisos', label: 'Permisos', icon: KeyRound },
   ];

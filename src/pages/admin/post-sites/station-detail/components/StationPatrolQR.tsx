@@ -5,8 +5,15 @@ import { ApiService, ApiError } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { Section, EmptyState, SkeletonCards, Stagger } from '@/components/kit';
 import { Button } from '@/components/ui/button';
+import type { Station } from '@/types';
 
-type Props = { station: any; stationId: string; postSiteId: string };
+interface StationDetail extends Station {
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  geofenceRadius?: number | string | null;
+}
+
+type Props = { station: StationDetail; stationId: string; postSiteId: string };
 
 interface Checkpoint {
   id: string;

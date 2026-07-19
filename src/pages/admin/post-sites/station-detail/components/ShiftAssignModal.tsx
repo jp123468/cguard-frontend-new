@@ -4,16 +4,22 @@ import { createPortal } from 'react-dom';
 import { Loader2, X, UserPlus, Repeat, CalendarRange } from 'lucide-react';
 import { toast } from 'sonner';
 import { ApiService } from '@/services/api/apiService';
+import type { Station } from '@/types';
 
 // Local YYYY-MM-DD (avoid toISOString — it shifts day in negative-UTC zones).
 const dateKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+interface StationDetail extends Station {
+  startingTimeInDay?: string | null;
+  finishTimeInDay?: string | null;
+}
 
 type Props = {
   open: boolean;
   onClose: () => void;
   /** Called after a successful save. firstDate = the first created turno's date. */
   onSaved: (firstDate?: Date) => void;
-  station: any;
+  station: StationDetail;
   stationId: string;
   postSiteId: string;
   presetGuardId?: string;

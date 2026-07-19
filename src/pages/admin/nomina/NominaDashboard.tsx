@@ -14,6 +14,7 @@ import {
   Percent,
   RefreshCw,
   ClipboardList,
+  type LucideIcon,
 } from "lucide-react";
 
 interface Summary {
@@ -29,7 +30,7 @@ interface Summary {
 
 type Accent = "primary" | "green" | "blue" | "red" | "orange" | "slate";
 
-const CARDS: { key: keyof Summary; label: string; icon: any; accent: Accent }[] = [
+const CARDS: { key: keyof Summary; label: string; icon: LucideIcon; accent: Accent }[] = [
   { key: "scheduledToday", label: "Programados hoy", icon: CalendarCheck, accent: "primary" },
   { key: "clockedInNow", label: "En servicio ahora", icon: UserCheck, accent: "green" },
   { key: "lateToday", label: "Llegadas tarde", icon: Clock, accent: "orange" },

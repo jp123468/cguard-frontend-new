@@ -10,6 +10,7 @@ import attendanceService from "@/lib/api/attendanceService";
 import { PageContainer, PageHeader, Section, StatCard, Stagger } from "@/components/kit";
 
 interface SummaryRow {
+  id: string;
   guardId: string;
   guardName: string;
   shifts: number;
@@ -32,11 +33,20 @@ function isoDay(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
+interface PayrollTotals {
+  shifts: number;
+  totalHours: number;
+  overtimeHours: number;
+  grossPay: number;
+  lateCount: number;
+  noShows: number;
+}
+
 export default function NominaPayrollSummary() {
   const [from, setFrom] = useState(isoDay(new Date(Date.now() - 14 * 864e5)));
   const [to, setTo] = useState(isoDay(new Date()));
   const [rows, setRows] = useState<SummaryRow[]>([]);
-  const [totals, setTotals] = useState<any>(null);
+  const [totals, setTotals] = useState<PayrollTotals | null>(null);
   const [loading, setLoading] = useState(false);
   const [ratesEnabled, setRatesEnabled] = useState(false);
   const [salaryBasis, setSalaryBasis] = useState<"hourly" | "monthly">("hourly");
@@ -51,7 +61,7 @@ export default function NominaPayrollSummary() {
     attendanceService
       .payrollSummary({ from: `${from}T00:00:00`, to: `${to}T23:59:59` })
       .then((d) => {
-        const rws: SummaryRow[] = d.rows || [];
+        const rws: SummaryRow[] = (d.rows || []).map((r: SummaryRow) => ({ ...r, id: r.id ?? r.guardId }));
         setRows(rws);
         setTotals(d.totals || null);
         setRatesEnabled(!!d.ratesEnabled);
@@ -75,8 +85,8 @@ export default function NominaPayrollSummary() {
     try {
       const r = await attendanceService.closePeriod(`${to}T23:59:59`);
       toast.success(`Periodo cerrado · ${r.lockedCount} registro(s) bloqueado(s)`);
-    } catch (e: any) {
-      toast.error(e?.message || "Error al cerrar el periodo");
+    } catch (e) {
+      toast.error((e as { message?: string })?.message || "Error al cerrar el periodo");
     } finally {
       setClosing(false);
     }
@@ -89,8 +99,8 @@ export default function NominaPayrollSummary() {
       toast.success("Tarifas guardadas");
       setEditRates(false);
       load();
-    } catch (e: any) {
-      toast.error(e?.message || "Error al guardar tarifas");
+    } catch (e) {
+      toast.error((e as { message?: string })?.message || "Error al guardar tarifas");
     } finally {
       setSavingRates(false);
     }
@@ -118,7 +128,7 @@ export default function NominaPayrollSummary() {
   };
 
   const exportPdf = () => {
-    const esc = (s: any) =>
+    const esc = (s: unknown) =>
       String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
     const head = ["Vigilante", "Turnos", "H. reg.", "H. extra", "H. tot.", "Tardanzas", "Inasist.", "Correc."]
       .concat(ratesEnabled ? ["Pago bruto"] : []);
@@ -161,11 +171,11 @@ export default function NominaPayrollSummary() {
     link.click();
   };
 
-  const columns: Column<any>[] = [
+  const columns: Column<SummaryRow>[] = [
     {
       key: "guardName",
       header: "Vigilante",
-      render: (_v: any, r: SummaryRow) => (
+      render: (_v, r) => (
         <span className="inline-flex items-center gap-1.5">
           {r.guardName}
           {r.role === "supervisor" && (
@@ -195,7 +205,7 @@ export default function NominaPayrollSummary() {
       ? [{
           key: "hourlyRate",
           header: "Tarifa/h",
-          render: (_v: any, r: SummaryRow) =>
+          render: (_v, r) =>
             editRates ? (
               <input
                 type="number"
@@ -208,14 +218,14 @@ export default function NominaPayrollSummary() {
             ) : (
               <span className="text-muted-foreground">{r.hourlyRate ? `${currency} ${r.hourlyRate}` : "—"}</span>
             ),
-        } as Column<any>]
+        } as Column<SummaryRow>]
       : [{
           key: "monthlySalary",
           header: "Sueldo mensual",
-          render: (_v: any, r: SummaryRow) => <span className="text-muted-foreground">{r.monthlySalary != null ? money(r.monthlySalary) : "—"}</span>,
-        } as Column<any>]),
+          render: (_v, r) => <span className="text-muted-foreground">{r.monthlySalary != null ? money(r.monthlySalary) : "—"}</span>,
+        } as Column<SummaryRow>]),
     ...(ratesEnabled
-      ? [{ key: "grossPay", header: salaryBasis === "monthly" ? "Total a pagar" : "Pago bruto", render: (_v: any, r: SummaryRow) => <span className="font-semibold text-primary">{money(r.grossPay)}</span> } as Column<any>]
+      ? [{ key: "grossPay", header: salaryBasis === "monthly" ? "Total a pagar" : "Pago bruto", render: (_v, r) => <span className="font-semibold text-primary">{money(r.grossPay)}</span> } as Column<SummaryRow>]
       : []),
   ];
 

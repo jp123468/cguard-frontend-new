@@ -57,15 +57,17 @@ const tiposLlamador = [
 type AssignedGuard = {
   id?: string | number | null;
   name?: string | null;
+  // `raw` is the untouched backend guard row, probed via deep arbitrary paths
+  // (e.g. raw.station?.id); it is genuinely dynamic so stays `any`.
   raw?: any;
-  stationId?: any;
-  stationIdCanonical?: any;
-  stationName?: any;
-  postSiteId?: any;
-  guardId?: any;
-  guardIdCanonical?: any;
-  securityGuardId?: any;
-  securityGuardRecordId?: any;
+  stationId?: string | number | null;
+  stationIdCanonical?: string | number | null;
+  stationName?: string | null;
+  postSiteId?: string | number | null;
+  guardId?: string | number | null;
+  guardIdCanonical?: string | number | null;
+  securityGuardId?: string | number | null;
+  securityGuardRecordId?: string | number | null;
 };
 
 // tiposIncidente se carga desde backend en el estado `tiposIncidente`
@@ -145,7 +147,7 @@ export default function NewDispatchPage() {
         let rows: any[] | undefined;
         for (const path of tryPaths) {
           try {
-            const resp = await api.get(path, { toast: { silentError: true } } as any);
+            const resp = await api.get(path, { toast: { silentError: true } });
             const body = resp.data ?? resp; // axios returns { data }
             // Log response for debugging guard list endpoints
             // eslint-disable-next-line no-console
@@ -207,7 +209,7 @@ export default function NewDispatchPage() {
   }, []);
 
   // Determine if we were opened with a duplicate that includes a siteId (from Incidents)
-  const dup = (location && (location as any).state && (location as any).state.duplicate) || null;
+  const dup = (location?.state as { duplicate?: { siteId?: string; postSiteId?: string; site?: string; stationId?: string } } | null)?.duplicate || null;
   const dupSiteId = dup ? (dup.siteId || dup.postSiteId || dup.site || null) : null;
   const isFromPostSite = Boolean(dupSiteId);
 
@@ -257,7 +259,7 @@ export default function NewDispatchPage() {
 
       // Preferred endpoint (singular 'station' with postSiteId filter)
       try {
-        const res = await api.get(`/tenant/${tenantId}/station?postSiteId=${encodeURIComponent(String(siteToLoad))}&limit=999`, { toast: { silentError: true } } as any);
+        const res = await api.get(`/tenant/${tenantId}/station?postSiteId=${encodeURIComponent(String(siteToLoad))}&limit=999`, { toast: { silentError: true } });
         const body = res && (res.data ?? res);
         // eslint-disable-next-line no-console
         let rows: any[] = [];
@@ -302,7 +304,7 @@ export default function NewDispatchPage() {
       }
 
       try {
-        const res2 = await api.get(`/tenant/${tenantId}/post-site/${siteToLoad}/stations`, { toast: { silentError: true } } as any);
+        const res2 = await api.get(`/tenant/${tenantId}/post-site/${siteToLoad}/stations`, { toast: { silentError: true } });
         const body2 = res2 && (res2.data ?? res2);
         let rows2: any[] = [];
         if (Array.isArray(body2)) rows2 = body2;
@@ -345,7 +347,7 @@ export default function NewDispatchPage() {
       }
 
       try {
-        const res3 = await api.get(`/tenant/${tenantId}/stations?postSiteId=${encodeURIComponent(String(siteToLoad))}`, { toast: { silentError: true } } as any);
+        const res3 = await api.get(`/tenant/${tenantId}/stations?postSiteId=${encodeURIComponent(String(siteToLoad))}`, { toast: { silentError: true } });
         const body3 = res3 && (res3.data ?? res3);
         let rows3: any[] = [];
         if (Array.isArray(body3)) rows3 = body3;
@@ -394,7 +396,7 @@ export default function NewDispatchPage() {
 
   useEffect(() => {
     const siteToLoad = dupSiteId || watchedSiteId;
-    fetchStationsFor(siteToLoad);
+    fetchStationsFor(siteToLoad ?? null);
   }, [dupSiteId, watchedSiteId, location]);
 
   // Load assigned guards for selected post-site (so we can filter by station)
@@ -412,7 +414,7 @@ export default function NewDispatchPage() {
         // If station is selected, try the precise POSTSITE+STATION endpoint first (returns canonical assigned guards)
         if (selectedStationId) {
           try {
-            const resp = await api.get(`/tenant/${tenantId}/post-site/${siteToLoad}/station/${selectedStationId}/assigned-guards?activeOnly=1`, { toast: { silentError: true } } as any);
+            const resp = await api.get(`/tenant/${tenantId}/post-site/${siteToLoad}/station/${selectedStationId}/assigned-guards?activeOnly=1`, { toast: { silentError: true } });
             const body = resp && (resp.data ?? resp);
             let exactRows: any[] = [];
             if (Array.isArray(body)) exactRows = body;
@@ -448,7 +450,7 @@ export default function NewDispatchPage() {
 
         for (const path of preferredPaths) {
           try {
-            const resp = await api.get(path, { toast: { silentError: true } } as any);
+            const resp = await api.get(path, { toast: { silentError: true } });
             const body = resp && (resp.data ?? resp);
             // eslint-disable-next-line no-console
             if (Array.isArray(body)) rows = body;
@@ -483,7 +485,7 @@ export default function NewDispatchPage() {
         // Fallback to security-guard endpoint with postSiteId filter
         if ((!rows || !rows.length)) {
           try {
-            const resp = await api.get(`/tenant/${tenantId}/security-guard?postSiteId=${encodeURIComponent(siteToLoad)}&limit=999`, { toast: { silentError: true } } as any);
+            const resp = await api.get(`/tenant/${tenantId}/security-guard?postSiteId=${encodeURIComponent(siteToLoad)}&limit=999`, { toast: { silentError: true } });
             const body = resp && (resp.data ?? resp);
             // eslint-disable-next-line no-console
             if (Array.isArray(body)) rows = body;
@@ -506,7 +508,7 @@ export default function NewDispatchPage() {
             let shiftRows: any[] = [];
             for (const sp of shiftPaths) {
               try {
-                const r = await api.get(sp, { toast: { silentError: true } } as any);
+                const r = await api.get(sp, { toast: { silentError: true } });
                 const b = r && (r.data ?? r);
                 // eslint-disable-next-line no-console
                 let sarr: any[] = [];
@@ -659,7 +661,7 @@ export default function NewDispatchPage() {
         if ((!mapped || mapped.length === 0) && selectedStationId) {
           // First try canonical assigned-guards endpoint which should include station linkage
           try {
-            const respCanon = await api.get(`/tenant/${tenantId}/post-site/${siteToLoad}/assigned-guards`, { toast: { silentError: true } } as any);
+            const respCanon = await api.get(`/tenant/${tenantId}/post-site/${siteToLoad}/assigned-guards`, { toast: { silentError: true } });
             const bodyCanon = respCanon && (respCanon.data ?? respCanon);
             let canonRows: any[] = [];
             if (Array.isArray(bodyCanon)) canonRows = bodyCanon;
@@ -683,7 +685,7 @@ export default function NewDispatchPage() {
           // Next fallback: try station-scoped shift endpoints
           try {
             // Try fetching shifts by stationId which often include guard assignments
-            const spResp = await api.get(`/tenant/${tenantId}/shift?stationId=${encodeURIComponent(String(selectedStationId))}&limit=999`, { toast: { silentError: true } } as any);
+            const spResp = await api.get(`/tenant/${tenantId}/shift?stationId=${encodeURIComponent(String(selectedStationId))}&limit=999`, { toast: { silentError: true } });
             const spBody = spResp && (spResp.data ?? spResp);
             let spRows: any[] = [];
             if (Array.isArray(spBody)) spRows = spBody;
@@ -762,7 +764,7 @@ export default function NewDispatchPage() {
   // If navigated with a duplicate state, prefill the form
   useEffect(() => {
     try {
-      const dup = (location && (location as any).state && (location as any).state.duplicate) || null;
+      const dup = (location?.state as { duplicate?: unknown } | null)?.duplicate || null;
       if (!dup) return;
 
       const data: any = dup;
@@ -918,10 +920,10 @@ export default function NewDispatchPage() {
         : null;
 
     // Build explicit payload mapping form fields to backend field names
-    const payload: any = {
+    const payload: Record<string, string | null> = {
       clientId: data.clientId || null,
       siteId: data.siteId || null,
-      stationId: (data as any).stationId || selectedStationId || null,
+      stationId: data.stationId || selectedStationId || null,
       guardId: data.guardId || null,
       priority: data.priority || null,
       // default to 'abierto' when creating a new dispatch
@@ -941,7 +943,7 @@ export default function NewDispatchPage() {
       internalNotes: data.internalNotes || null,
       // Derive a subject if not provided
       subject:
-        (data as any).subject ||
+        (data as DispatchCreateSchema & { subject?: string }).subject ||
         `${data.location || ''}${data.incidentDetails ? ' - ' + String(data.incidentDetails).slice(0, 80) : ''}`,
     };
 
@@ -960,7 +962,7 @@ export default function NewDispatchPage() {
       // Note: attachments are not uploaded in this flow. Send payload to `incident` endpoint
       // Normalize payload keys to backend expectations
       // Try to resolve selected guard to a securityGuard record id (guardNameId) when possible
-      let resolvedGuardNameId: any = null;
+      let resolvedGuardNameId: string | null = null;
       try {
         const sel = payload.guardId;
         if (sel) {
@@ -1008,7 +1010,7 @@ export default function NewDispatchPage() {
           for (const f of attachments) {
             try {
               const uploaded = await securityGuardService.uploadFileToStorage(f, 'notesImages');
-              const attPayload: any = {
+              const attPayload: Record<string, string | number | null> = {
                 name: uploaded.name || f.name,
                 mimeType: f.type || 'application/octet-stream',
                 sizeInBytes: uploaded.sizeInBytes || f.size,
@@ -1033,7 +1035,7 @@ export default function NewDispatchPage() {
 
       // Clear attachments and navigate back
       setAttachments([]);
-      const targetSiteId = incidentPayload.postSiteId || incidentPayload.siteId || dupSiteId || null;
+      const targetSiteId = incidentPayload.postSiteId || payload.siteId || dupSiteId || null;
       if (targetSiteId) {
         navigate(`/post-sites/${targetSiteId}/incidents`);
       } else {
@@ -1042,7 +1044,7 @@ export default function NewDispatchPage() {
     } catch (error) {
       console.error('Error creating request:', error);
       try {
-        const msg = (error && (error as any).message) || 'Error al crear Incidente';
+        const msg = ((error as { message?: string } | null)?.message) || 'Error al crear Incidente';
         toast.error(msg);
       } catch (e) {
         toast.error('Error al crear Incidente');
@@ -1073,7 +1075,7 @@ export default function NewDispatchPage() {
         // include canonical ids from raw rows
         if (r.stationIdCanonical) candidateIds.push(r.stationIdCanonical);
         if (m.stationIdCanonical) candidateIds.push(m.stationIdCanonical);
-        if (candidateIds.some((c: any) => c && String(c) === sid)) return true;
+        if (candidateIds.some((c: unknown) => c && String(c) === sid)) return true;
 
         // Match by station name if provided in the raw row
         const candStationName = (r.stationName || r.station?.stationName || r.station?.name || r.postSiteStationName || r.post_site_station_name || r.station?.stationName || '').trim();
@@ -1486,9 +1488,9 @@ export default function NewDispatchPage() {
                           const el = incidentDateRef.current;
                           if (!el) return;
                           // Prefer showPicker() when available (Chromium), otherwise focus.
-                          if (typeof (el as any).showPicker === "function") {
+                          if (typeof (el as HTMLInputElement & { showPicker?: () => void }).showPicker === "function") {
                             try {
-                              (el as any).showPicker();
+                              (el as HTMLInputElement & { showPicker?: () => void }).showPicker();
                             } catch (err) {
                               el.focus();
                             }
@@ -1523,9 +1525,9 @@ export default function NewDispatchPage() {
                         onClick={() => {
                           const el = incidentTimeRef.current;
                           if (!el) return;
-                          if (typeof (el as any).showPicker === "function") {
+                          if (typeof (el as HTMLInputElement & { showPicker?: () => void }).showPicker === "function") {
                             try {
-                              (el as any).showPicker();
+                              (el as HTMLInputElement & { showPicker?: () => void }).showPicker();
                             } catch (err) {
                               el.focus();
                             }

@@ -37,10 +37,10 @@ function toItems(obj: Record<string, number>, labeler?: (k: string) => string) {
     .sort((a, b) => b.count - a.count);
 }
 
-function downloadCsv(rows: any[], filename: string) {
+function downloadCsv(rows: Record<string, unknown>[], filename: string) {
   if (!rows.length) { toast.info("Sin registros para exportar"); return; }
   const cols = Object.keys(rows[0]);
-  const esc = (v: any) => {
+  const esc = (v: unknown) => {
     const s = v == null ? "" : String(v);
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
@@ -52,9 +52,21 @@ function downloadCsv(rows: any[], filename: string) {
   URL.revokeObjectURL(url);
 }
 
+interface AlarmAnalyticsData {
+  total: number; open: number;
+  avgTtaSec: number; avgTtdSec: number; avgTtrSec: number;
+  slaAckCompliance: number; escalationRate: number; falseRate: number;
+  ecvSatisfiedCases: number; totalCalls: number;
+  trend?: Array<{ k: string; v: number }>;
+  byCategory: Record<string, number>;
+  byPriority: Record<string, number>;
+  dispatchByType: Record<string, number>;
+  operators?: Array<{ operatorId: string; name: string; handled: number; avgTtaSec: number; avgTtdSec: number }>;
+}
+
 export default function AlarmAnalytics() {
   const [days, setDays] = useState(30);
-  const [d, setD] = useState<any>(null);
+  const [d, setD] = useState<AlarmAnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
@@ -69,8 +81,8 @@ export default function AlarmAnalytics() {
       const r = await alarmService.auditExport({ days });
       downloadCsv(r.rows || [], `auditoria-alarmas-${days}d.csv`);
       toast.success(`${r.count} registros exportados`);
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudo exportar la auditoría");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudo exportar la auditoría");
     } finally {
       setExporting(false);
     }
@@ -118,7 +130,7 @@ export default function AlarmAnalytics() {
             </Stagger>
 
             <div className="mt-5">
-              <DayBars title="Casos de alarma por día" color={GOLD} points={(d.trend || []).map((t: any) => ({ k: t.k, v: t.v }))} />
+              <DayBars title="Casos de alarma por día" color={GOLD} points={(d.trend || []).map((t) => ({ k: t.k, v: t.v }))} />
             </div>
 
             <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
@@ -155,7 +167,7 @@ export default function AlarmAnalytics() {
                         </tr>
                       </thead>
                       <tbody>
-                        {d.operators.map((o: any) => (
+                        {d.operators.map((o) => (
                           <tr key={o.operatorId} className="border-b border-border/50">
                             <td className="px-2 py-2 font-medium text-foreground">{o.name}</td>
                             <td className="px-2 py-2 text-right">{o.handled}</td>

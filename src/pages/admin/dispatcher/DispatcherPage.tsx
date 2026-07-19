@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -82,6 +82,7 @@ import { ApiService } from "@/services/api/apiService";
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTranslation } from 'react-i18next';
 import api from "@/lib/api";
+import type { DispatchRow, DirectoryOption, DispatchApiError } from "./types";
 
 // The list is paginated client-side over what we load. The backend hard-caps a
 // no-limit /request query at 1000 rows, which silently truncated tenants past
@@ -92,7 +93,7 @@ const DISPATCH_FETCH_LIMIT = 5000;
 
 export default function DispatcherPage() {
   const { t } = useTranslation();
-  const resolveServerMessage = (msg: any) => {
+  const resolveServerMessage = (msg: unknown) => {
     if (!msg) return null;
     const s = String(msg);
     const translated = t(s);
@@ -108,14 +109,14 @@ export default function DispatcherPage() {
   );
 
   // Tabla: datos cargados desde backend
-  const [rows, setRows] = useState<any[]>([]);
-  const [clients, setClients] = useState<any[]>([]);
-  const [postSites, setPostSites] = useState<any[]>([]);
-  const [stations, setStations] = useState<any[]>([]);
+  const [rows, setRows] = useState<DispatchRow[]>([]);
+  const [clients, setClients] = useState<DirectoryOption[]>([]);
+  const [postSites, setPostSites] = useState<DirectoryOption[]>([]);
+  const [stations, setStations] = useState<DirectoryOption[]>([]);
   const [stationFilter, setStationFilter] = useState("");
   const stationInputRef = useRef<HTMLInputElement | null>(null);
-  const [allClients, setAllClients] = useState<any[] | null>(null);
-  const [allPostSites, setAllPostSites] = useState<any[] | null>(null);
+  const [allClients, setAllClients] = useState<DirectoryOption[] | null>(null);
+  const [allPostSites, setAllPostSites] = useState<DirectoryOption[] | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [page, setPage] = useState(1);
@@ -125,7 +126,7 @@ export default function DispatcherPage() {
   const [forbiddenRead, setForbiddenRead] = useState(false);
   const [forbiddenMessage, setForbiddenMessage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const searchTimeoutRef = useRef<any>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Shared monotonic guard across ALL row-loading paths (initial load, apply
   // filters, clear filters, search, refresh). Each captures a ticket before its
   // await and only applies its result if still the latest — so a slow filter
@@ -154,7 +155,7 @@ export default function DispatcherPage() {
   // do NOT fall back to a hardcoded localhost origin to avoid pointing prod at a dev host.
   const getApiOrigin = (): string | null => {
     try {
-      const configured = (import.meta as any).env?.VITE_API_URL as string | undefined;
+      const configured = (import.meta as unknown as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL;
       if (configured) return configured.replace(/\/$/, '');
     } catch (e) { /* ignore */ }
     return import.meta.env.DEV ? 'http://localhost:3001' : null;
@@ -204,7 +205,7 @@ export default function DispatcherPage() {
         if (mine !== loadSeqRef.current) return; // superseded
         const payload = resp && resp.data ? resp.data : resp;
 
-        let rowsData: any[] = [];
+        let rowsData: DispatchRow[] = [];
         let count = 0;
 
         if (payload && Array.isArray(payload.rows)) {
@@ -219,14 +220,15 @@ export default function DispatcherPage() {
 
         setRows(rowsData);
         setTotalCount(count);
-      } catch (e: any) {
+      } catch (e) {
         if (mine !== loadSeqRef.current) return;
         console.error('Error cargando Incidentes:', e);
         // detect 403 forbidden and surface a friendly UI state
-        const status = e?.status || e?.response?.status || e?.data?.status || (e && e.statusCode);
+        const err = e as DispatchApiError;
+        const status = err?.status || err?.response?.status || err?.data?.status || err?.statusCode;
         if (status === 403) {
           setForbiddenRead(true);
-          const serverMsg = e?.response?.data?.message || e?.message;
+          const serverMsg = err?.response?.data?.message || err?.message;
           setForbiddenMessage(serverMsg || null);
           try { toast.error(serverMsg ? resolveServerMessage(serverMsg) : t('dispatcher.noPermissionViewToast')); } catch (err) {}
         } else {
@@ -255,11 +257,13 @@ export default function DispatcherPage() {
           postSiteService.list({}, { limit: 1000, offset: 0 }),
         ]);
 
-        if (clientsResp && Array.isArray((clientsResp as any).rows)) {
-          setAllClients((clientsResp as any).rows);
+        const clientRows = (clientsResp as { rows?: DirectoryOption[] })?.rows;
+        const siteRows = (sitesResp as { rows?: DirectoryOption[] })?.rows;
+        if (clientsResp && Array.isArray(clientRows)) {
+          setAllClients(clientRows);
         }
-        if (sitesResp && Array.isArray((sitesResp as any).rows)) {
-          setAllPostSites((sitesResp as any).rows);
+        if (sitesResp && Array.isArray(siteRows)) {
+          setAllPostSites(siteRows);
         }
 
         return;
@@ -275,7 +279,7 @@ export default function DispatcherPage() {
         const resp = await api.get(`/tenant/${tenantId}/request`);
         const payload = resp && resp.data ? resp.data : resp;
 
-        let rowsData: any[] = [];
+        let rowsData: DispatchRow[] = [];
         if (payload && Array.isArray(payload.rows)) {
           rowsData = payload.rows;
         } else if (Array.isArray(payload)) {
@@ -388,7 +392,7 @@ export default function DispatcherPage() {
     // Until a client is selected, do not show any post sites
     if (!filters || !filters.clientId) return [];
     const cid = String(filters.clientId);
-    return list.filter((s: any) => {
+    return list.filter((s: DirectoryOption) => {
       if (!s) return false;
       // support various shapes: s.clientId, s.client?.id, s.client?.clientId
       if (s.clientId && String(s.clientId) === cid) return true;
@@ -405,7 +409,7 @@ export default function DispatcherPage() {
   // Load stations whenever the selected site in filters changes
   useEffect(() => {
     try {
-      const sid = (filters as any).siteId;
+      const sid = filters.siteId;
       fetchStationsFor(sid);
       // clear station filter when site changes
       setFilters((s) => ({ ...s, stationId: undefined }));
@@ -443,33 +447,33 @@ export default function DispatcherPage() {
       if (usedFilters && usedFilters.siteId) {
         params.append('filter[siteId]', String(usedFilters.siteId));
       }
-      if (filters && (filters as any).stationId) {
-        params.append('filter[stationId]', String((filters as any).stationId));
+      if (filters && filters.stationId) {
+        params.append('filter[stationId]', String(filters.stationId));
       }
       // single-date filters -> convert to ranges backend expects
-      if (filters && (filters as any).createdDate) {
+      if (filters && filters.createdDate) {
         try {
-          const d = (filters as any).createdDate;
+          const d = filters.createdDate;
           const start = new Date(`${d}T00:00:00`).toISOString();
           const end = new Date(`${d}T23:59:59`).toISOString();
           // append twice so backend receives an array: filter[createdAtRange]=start&filter[createdAtRange]=end
           params.append('filter[createdAtRange][]', start);
           params.append('filter[createdAtRange][]', end);
         } catch (e) {
-          console.warn('Invalid createdDate format', (filters as any).createdDate);
+          console.warn('Invalid createdDate format', filters.createdDate);
         }
       }
 
-      if (filters && (filters as any).incidentDate) {
+      if (filters && filters.incidentDate) {
         try {
-          const d = (filters as any).incidentDate;
+          const d = filters.incidentDate;
           const start = new Date(`${d}T00:00:00`).toISOString();
           const end = new Date(`${d}T23:59:59`).toISOString();
           // append twice so backend receives an array: filter[dateTimeRange]=start&filter[dateTimeRange]=end
           params.append('filter[dateTimeRange][]', start);
           params.append('filter[dateTimeRange][]', end);
         } catch (e) {
-          console.warn('Invalid incidentDate format', (filters as any).incidentDate);
+          console.warn('Invalid incidentDate format', filters.incidentDate);
         }
       }
 
@@ -482,7 +486,7 @@ export default function DispatcherPage() {
       if (mine !== loadSeqRef.current) return; // superseded
       const payload = resp && resp.data ? resp.data : resp;
 
-      let rowsData: any[] = [];
+      let rowsData: DispatchRow[] = [];
       let count = 0;
 
       if (payload && Array.isArray(payload.rows)) {
@@ -517,7 +521,7 @@ export default function DispatcherPage() {
       // Try preferred stations endpoint with postSite/postSiteId query
       try {
         const url = `/tenant/${tenantId}/stations?postSite=${encodeURIComponent(String(siteToLoad))}&postSiteId=${encodeURIComponent(String(siteToLoad))}&limit=999`;
-        const res = await api.get(url, { toast: { silentError: true } } as any);
+        const res = await api.get(url, { toast: { silentError: true } });
         const body = res && (res.data ?? res);
         let rows: any[] = [];
         if (Array.isArray(body)) rows = body;
@@ -542,7 +546,7 @@ export default function DispatcherPage() {
       }
 
       try {
-        const res2 = await api.get(`/tenant/${tenantId}/post-site/${siteToLoad}/stations`, { toast: { silentError: true } } as any);
+        const res2 = await api.get(`/tenant/${tenantId}/post-site/${siteToLoad}/stations`, { toast: { silentError: true } });
         const body2 = res2 && (res2.data ?? res2);
         let rows2: any[] = [];
         if (Array.isArray(body2)) rows2 = body2;
@@ -556,7 +560,7 @@ export default function DispatcherPage() {
       }
 
       try {
-        const res3 = await api.get(`/tenant/${tenantId}/stations?postSite=${encodeURIComponent(String(siteToLoad))}&postSiteId=${encodeURIComponent(String(siteToLoad))}`, { toast: { silentError: true } } as any);
+        const res3 = await api.get(`/tenant/${tenantId}/stations?postSite=${encodeURIComponent(String(siteToLoad))}&postSiteId=${encodeURIComponent(String(siteToLoad))}`, { toast: { silentError: true } });
         const body3 = res3 && (res3.data ?? res3);
         let rows3: any[] = [];
         if (Array.isArray(body3)) rows3 = body3;
@@ -598,7 +602,7 @@ export default function DispatcherPage() {
       if (mine !== loadSeqRef.current) return; // superseded
       const payload = resp && resp.data ? resp.data : resp;
 
-      let rowsData: any[] = [];
+      let rowsData: DispatchRow[] = [];
       let count = 0;
 
       if (payload && Array.isArray(payload.rows)) {
@@ -638,7 +642,7 @@ export default function DispatcherPage() {
   }, [rows, page, limit]);
 
   // Helper to resolve a client's display name from various shapes
-  const getClientDisplay = (r: any) => {
+  const getClientDisplay = (r: DispatchRow) => {
     try {
       if (!r) return '-';
       // If client is an object with an explicit name, prefer that
@@ -660,11 +664,11 @@ export default function DispatcherPage() {
       const list = (allClients && allClients.length > 0 ? allClients : clients) || [];
       for (const cid of candidates) {
         if (!cid) continue;
-        const found = list.find((c: any) => {
+        const found = list.find((c: DirectoryOption) => {
           try {
             if (!c) return false;
             const keys = [c.id, c.clientId, c.clientAccountId, c.uuid, c._id, c.externalId, c.code];
-            return keys.some((k: any) => typeof k !== 'undefined' && String(k) === String(cid));
+            return keys.some((k) => typeof k !== 'undefined' && String(k) === String(cid));
           } catch (e) {
             return false;
           }
@@ -697,12 +701,12 @@ export default function DispatcherPage() {
       try {
         const resp = await api.delete(
           `/tenant/${tenantId}/request`,
-          { params: { ids: selectedIds } } as any,
+          { params: { ids: selectedIds } },
         );
-        const r = resp && (resp as any).data ? (resp as any).data : resp;
+        const r = resp && resp.data ? resp.data : resp;
         if (r && r.message) lastSuccessMessage = String(r.message);
-      } catch (err: any) {
-        lastErrorMessage = err?.response?.data?.message || err?.message || null;
+      } catch (err) {
+        lastErrorMessage = (err as DispatchApiError)?.response?.data?.message || (err as DispatchApiError)?.message || null;
         console.error('Error deleting ids', selectedIds, err);
       }
 
@@ -714,7 +718,7 @@ export default function DispatcherPage() {
         const resp = await api.get(`/tenant/${tenantId}/request`);
         const payload = resp && resp.data ? resp.data : resp;
 
-        let rowsData: any[] = [];
+        let rowsData: DispatchRow[] = [];
         let count = 0;
 
         if (payload && Array.isArray(payload.rows)) {
@@ -744,7 +748,7 @@ export default function DispatcherPage() {
       }
     } catch (e) {
       console.error('Error eliminando Incidentes:', e);
-      const msg = (e as any)?.response?.data?.message || (e as any)?.message;
+      const msg = (e as DispatchApiError)?.response?.data?.message || (e as DispatchApiError)?.message;
       toast.error(msg || t('dispatcher.deleted_error'));
     }
   };
@@ -769,14 +773,14 @@ export default function DispatcherPage() {
       // backend pattern in this file uses { data: { ... } }
       // Some backends may expect expiresAt at root instead of inside `data`.
       // Send both to maximize compatibility so the value reaches the server/db.
-      const payloadBody: any = { data: {} };
+      const payloadBody: { data: Record<string, string>; expiresAt?: string } = { data: {} };
       if (expiresAt) {
-        (payloadBody.data as any).expiresAt = expiresAt;
-        (payloadBody as any).expiresAt = expiresAt;
+        payloadBody.data.expiresAt = expiresAt;
+        payloadBody.expiresAt = expiresAt;
       }
 
       const resp = await api.post(`/tenant/${tenantId}/request/${shareTargetId}/share`, payloadBody);
-      const payload = resp && (resp as any).data ? (resp as any).data : resp;
+      const payload = resp && resp.data ? resp.data : resp;
 
       const url = payload && payload.token
         ? `${window.location.origin}/public/dispatch/${payload.token}`
@@ -817,7 +821,7 @@ export default function DispatcherPage() {
         // Fetch full details for each selected id to ensure all fields are present
         const promises = selectedIds.map((id) => api.get(`/tenant/${tenantId}/request/${id}`));
         const responses = await Promise.all(promises);
-        const records = responses.map((r) => (r && (r as any).data ? (r as any).data : r));
+        const records = responses.map((r) => (r && r.data ? r.data : r));
 
         const rows = records.map((r: any) => ({
           'Client Name': getClientDisplay(r),
@@ -873,7 +877,7 @@ export default function DispatcherPage() {
         const idsParam = selectedIds.join(',');
         const url = `${apiOrigin}${apiPrefix}/tenant/${tenantId}/request/${id}/export/pdf?ids=${encodeURIComponent(idsParam)}`;
 
-        const headers: any = getAuthHeaders();
+        const headers = getAuthHeaders();
 
         const resp = await fetch(url, { method: 'GET', credentials: 'include', headers });
         if (!resp.ok) {
@@ -967,7 +971,7 @@ export default function DispatcherPage() {
 
           const toList = emailTo ? emailTo.split(',').map((s) => s.trim()).filter(Boolean) : [];
 
-          const payload: any = {
+          const payload = {
             data: {
               ids: selectedIds,
               format: emailFormat,
@@ -979,13 +983,13 @@ export default function DispatcherPage() {
           };
 
           const resp = await api.post(`/tenant/${tenantId}/request/email`, payload);
-          const result = resp && (resp as any).data ? (resp as any).data : resp;
+          const result = resp && resp.data ? resp.data : resp;
           if (result && result.message) toast.success(resolveServerMessage(result.message) || t('dispatcher.email_sent'));
           else toast.success(t('dispatcher.email_sent'));
           setSendDialogOpen(false);
         } catch (err) {
           console.error('Error enviando correo:', err);
-          const serverMsg = (err as any)?.response?.data?.message || (err as any)?.message;
+          const serverMsg = (err as DispatchApiError)?.response?.data?.message || (err as DispatchApiError)?.message;
           toast.error(serverMsg ? resolveServerMessage(serverMsg) : t('dispatcher.email_send_error'));
         } finally {
           setSendingEmail(false);
@@ -1074,32 +1078,32 @@ export default function DispatcherPage() {
                         params.append('filter[siteId]', String(filters.siteId));
                       }
 
-                      if (filters && (filters as any).createdDate) {
+                      if (filters && filters.createdDate) {
                         try {
-                          const d = (filters as any).createdDate;
+                          const d = filters.createdDate;
                           const start = new Date(`${d}T00:00:00`).toISOString();
                           const end = new Date(`${d}T23:59:59`).toISOString();
                           params.append('filter[createdAtRange][]', start);
                           params.append('filter[createdAtRange][]', end);
                         } catch (e) {
-                          console.warn('Invalid createdDate format', (filters as any).createdDate);
+                          console.warn('Invalid createdDate format', filters.createdDate);
                         }
                       }
 
-                      if (filters && (filters as any).incidentDate) {
+                      if (filters && filters.incidentDate) {
                         try {
-                          const d = (filters as any).incidentDate;
+                          const d = filters.incidentDate;
                           const start = new Date(`${d}T00:00:00`).toISOString();
                           const end = new Date(`${d}T23:59:59`).toISOString();
                           params.append('filter[dateTimeRange][]', start);
                           params.append('filter[dateTimeRange][]', end);
                         } catch (e) {
-                          console.warn('Invalid incidentDate format', (filters as any).incidentDate);
+                          console.warn('Invalid incidentDate format', filters.incidentDate);
                         }
                       }
 
                       // archived
-                      if (filters && (filters as any).includeArchived) {
+                      if (filters && filters.includeArchived) {
                         params.append('filter[archived]', 'true');
                       }
 
@@ -1112,7 +1116,7 @@ export default function DispatcherPage() {
                       if (mine !== loadSeqRef.current) return; // superseded
                       const payload = resp && resp.data ? resp.data : resp;
 
-                      let rowsData: any[] = [];
+                      let rowsData: DispatchRow[] = [];
                       let count = 0;
 
                       if (payload && Array.isArray(payload.rows)) {
@@ -1228,7 +1232,7 @@ export default function DispatcherPage() {
                   <div className="space-y-2">
                     <Label>{t('dispatcher.station')}</Label>
                     <Select
-                      value={(filters as any).stationId ?? ""}
+                      value={filters.stationId ?? ""}
                       onValueChange={(v) => setFilters((s) => ({ ...s, stationId: v }))}
                       onOpenChange={(open) => {
                         if (open) setTimeout(() => stationInputRef.current?.focus(), 50);
@@ -1249,8 +1253,8 @@ export default function DispatcherPage() {
                           />
                         </div>
                         {stations && stations.length > 0 ? stations
-                          .filter((s: any) => String((s.name || s.stationName || s.businessName || s.id) || '').toLowerCase().includes(stationFilter.trim().toLowerCase()))
-                          .map((s: any) => (
+                          .filter((s: DirectoryOption) => String((s.name || s.stationName || s.businessName || s.id) || '').toLowerCase().includes(stationFilter.trim().toLowerCase()))
+                          .map((s: DirectoryOption) => (
                             <SelectItem key={s.id} value={s.id}>{s.name || s.stationName || s.businessName || s.id}</SelectItem>
                           )) : (
                             <SelectItem key="__no_stations" value="__no_stations" disabled>{filters.siteId ? t('dispatcher.no_stations') || 'Sin estaciones' : t('dispatcher.select_site_first') || 'Seleccione un puesto primero'}</SelectItem>
@@ -1288,7 +1292,7 @@ export default function DispatcherPage() {
                       <Label>{t('dispatcher.created_date')}</Label>
                       <Input
                         type="date"
-                        value={(filters as any).createdDate ?? ""}
+                        value={filters.createdDate ?? ""}
                         onChange={(e) =>
                           setFilters((s) => ({ ...s, createdDate: e.target.value }))
                         }
@@ -1299,7 +1303,7 @@ export default function DispatcherPage() {
                       <Label>{t('dispatcher.incident_date')}</Label>
                       <Input
                         type="date"
-                        value={(filters as any).incidentDate ?? ""}
+                        value={filters.incidentDate ?? ""}
                         onChange={(e) =>
                           setFilters((s) => ({ ...s, incidentDate: e.target.value }))
                         }
@@ -1375,7 +1379,7 @@ export default function DispatcherPage() {
 
                     // Always fetch the PDF with credentials to ensure auth cookies or CORS credentials are sent.
                     // This avoids relying on `window.open(url)` which cannot attach Authorization headers.
-                    const headers: any = getAuthHeaders();
+                    const headers = getAuthHeaders();
 
                     const resp = await fetch(url, { method: 'GET', credentials: 'include', headers });
                     if (!resp.ok) {
@@ -1563,7 +1567,7 @@ export default function DispatcherPage() {
                               {t('dispatcher.open_new_tab')}
                             </div>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e: any) => {
+                          <DropdownMenuItem onClick={(e: ReactMouseEvent) => {
                             // open modal to choose expiry before creating share
                             try { e?.preventDefault(); e?.stopPropagation(); } catch (_) { }
                             setShareTargetId(r.id);
@@ -1682,7 +1686,7 @@ export default function DispatcherPage() {
             <div className="space-y-3 mt-4">
               <div>
                 <Label>Formato</Label>
-                <Select value={emailFormat} onValueChange={(v) => setEmailFormat(v as any)}>
+                <Select value={emailFormat} onValueChange={(v) => setEmailFormat(v as 'pdf' | 'xlsx')}>
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pdf">PDF</SelectItem>

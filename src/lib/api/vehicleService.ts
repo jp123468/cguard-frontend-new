@@ -14,7 +14,7 @@ const vehicleService = {
     const tenantId = getTenantId();
     const qs = params ? `?${new URLSearchParams(params as any).toString()}` : '';
     try {
-      const { data: resp } = await api.get<any>(`/tenant/${tenantId}/vehicle${qs}`, { toast: { silentError: true } } as any);
+      const { data: resp } = await api.get<any>(`/tenant/${tenantId}/vehicle${qs}`, { toast: { silentError: true } });
       // Normalize response shapes used across the app
       if (!resp) return { rows: [], count: 0 };
       if (Array.isArray(resp)) return { rows: resp, count: resp.length };
@@ -61,7 +61,7 @@ const vehicleService = {
   async destroy(ids: string[] | string) {
     const tenantId = getTenantId();
     const payload = Array.isArray(ids) ? ids : [ids];
-    await api.delete(`/tenant/${tenantId}/vehicle`, { data: { ids: payload } } as any);
+    await api.delete(`/tenant/${tenantId}/vehicle`, { data: { ids: payload } });
     return true;
   },
 };

@@ -54,6 +54,16 @@ import AddressAutocomplete from "@/components/maps/AddressAutocomplete";
 import ProfilePhotoCapture from "./components/ProfilePhotoCapture";
 import DocumentUpload, { type DocumentFile } from "./components/DocumentUpload";
 
+// Lightweight station shape used to build select options and client-filter matching.
+interface StationLike {
+  id: string;
+  name?: string;
+  clientId?: string;
+  clientAccountId?: string;
+  client?: { id?: string } | null;
+  clientAccount?: { id?: string } | null;
+}
+
 // Helpers
 const blankInviteEntry = (inviteBy: GuardEntryValues["inviteBy"] = "Correo Electrónico"): any => ({
   firstName: "", lastName: "", inviteBy, contact: "", clientId: [] as string[], stationId: [] as string[],
@@ -102,7 +112,7 @@ export default function NewSecurityGuardPage() {
   }, [hasPermission, navigate]);
   const [activeTab, setActiveTab] = useState<TabKey>("invite");
   const [clients, setClients] = useState<Array<{ id: string; name: string; lastName?: string }>>([]);
-  const [stations, setStations] = useState<Array<any>>([]);
+  const [stations, setStations] = useState<StationLike[]>([]);
   // Password fields removed from create profile form - guard will set password via invitation link
 
   useEffect(() => {
@@ -365,11 +375,11 @@ export default function NewSecurityGuardPage() {
     value: c.id,
     label: [c.name, c.lastName].filter(Boolean).join(" ").trim() || c.name,
   }));
-  const siteOptions = stations.map((s: any) => ({ value: s.id, label: s.name }));
+  const siteOptions = stations.map((s: StationLike) => ({ value: s.id, label: s.name }));
 
   // watch create form clientId to filter station options
   const createClientId = useWatch({ control: createCtrl, name: 'clientId' });
-  const matchesStationClient = (s: any, clientId?: string) => {
+  const matchesStationClient = (s: StationLike, clientId?: string) => {
     if (!clientId) return false;
     if (s.clientId && String(s.clientId) === String(clientId)) return true;
     if (s.clientAccountId && String(s.clientAccountId) === String(clientId)) return true;
@@ -385,8 +395,8 @@ export default function NewSecurityGuardPage() {
       ? [createClientId as string]
       : [];
   const createStationOptions = createClientIds.length
-    ? stations.filter((s: any) => createClientIds.some((cid) => matchesStationClient(s, cid))).map((s: any) => ({ value: s.id, label: s.name }))
-    : stations.map((s: any) => ({ value: s.id, label: s.name }));
+    ? stations.filter((s: StationLike) => createClientIds.some((cid) => matchesStationClient(s, cid))).map((s: StationLike) => ({ value: s.id, label: s.name }))
+    : stations.map((s: StationLike) => ({ value: s.id, label: s.name }));
 
   const translateInviteByLabel = (val: string) => val === "SMS" ? t('guards.new.form.contactSms') : t('guards.new.form.contactEmail')
 

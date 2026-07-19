@@ -51,7 +51,7 @@ export default function VideoRelaySites() {
     setError(null);
     videoService.relaySites()
       .then(setSites)
-      .catch((e: any) => setError(e?.message || "No se pudieron cargar los sitios relay"))
+      .catch((e) => setError((e as Error)?.message || "No se pudieron cargar los sitios relay"))
       .finally(() => setLoading(false));
   };
   useEffect(load, []);
@@ -64,8 +64,8 @@ export default function VideoRelaySites() {
       toast.success("Sitio relay creado");
       setNewOpen(false); setName(""); setNotes("");
       load();
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudo crear el sitio");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudo crear el sitio");
     } finally {
       setSaving(false);
     }
@@ -76,8 +76,8 @@ export default function VideoRelaySites() {
     setBundle(null);
     try {
       setBundle(await videoService.relayBundle(s.id));
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudo generar el relay");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudo generar el relay");
       setBundleSite(null);
     }
   };
@@ -98,8 +98,8 @@ export default function VideoRelaySites() {
       await videoService.updateRelaySite(s.id, { regenToken: true });
       toast.success("Token regenerado — vuelve a descargar el relay");
       load();
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudo regenerar el token");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudo regenerar el token");
     }
   };
 
@@ -110,8 +110,8 @@ export default function VideoRelaySites() {
       toast.success("Sitio relay eliminado");
       setDeleteTarget(null);
       load();
-    } catch (e: any) {
-      toast.error(e?.message || "No se pudo eliminar");
+    } catch (e) {
+      toast.error((e as Error)?.message || "No se pudo eliminar");
     }
   };
 

@@ -52,7 +52,7 @@ function rangeLabel(period: Period, anchor: Date): string {
   return `${s.toLocaleDateString("es", { day: "2-digit", month: sameMonth ? undefined : "short" })} – ${e.toLocaleDateString("es", { day: "2-digit", month: "short", year: "numeric" })}`;
 }
 
-function csvCell(v: any): string {
+function csvCell(v: unknown): string {
   const s = v == null ? "" : String(v);
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
@@ -147,7 +147,7 @@ export default function NominaRecords() {
     }
   }, [focusId, focusHandled, loading, rows]);
 
-  const act = async (fn: () => Promise<any>, okMsg: string) => {
+  const act = async (fn: () => Promise<unknown>, okMsg: string) => {
     setBusy(true);
     const openId = selected?.id;
     try {
@@ -160,8 +160,8 @@ export default function NominaRecords() {
         try { setSelected(await attendanceService.find(openId)); } catch { setSelected(null); }
       }
       load();
-    } catch (e: any) {
-      toast.error(e?.message || "Error");
+    } catch (e) {
+      toast.error((e as { message?: string })?.message || "Error");
     } finally {
       setBusy(false);
     }
@@ -533,7 +533,7 @@ export default function NominaRecords() {
                             {wasDecided ? (
                               <p className="w-full text-xs text-muted-foreground">
                                 {selected.approvalStatus === "approved" ? "Aprobado" : "Rechazado"}
-                                {(selected as any).approvedAt ? ` · ${fmtDateTime((selected as any).approvedAt)}` : ""}
+                                {(selected as AttendanceRecord & { approvedAt?: string }).approvedAt ? ` · ${fmtDateTime((selected as AttendanceRecord & { approvedAt?: string }).approvedAt)}` : ""}
                                 {" — puedes cambiar la decisión."}
                               </p>
                             ) : (

@@ -241,9 +241,10 @@ export default function VideoMonitoring() {
       ]);
       setCameras(Array.isArray(cams) ? cams : []);
       setDevices(Array.isArray(devs) ? devs : []);
-    } catch (e: any) {
+    } catch (e) {
+      const err = e as { data?: { message?: string }; message?: string };
       setError(
-        e?.data?.message || e?.message || "No se pudieron cargar las cámaras"
+        err?.data?.message || err?.message || "No se pudieron cargar las cámaras"
       );
     } finally {
       setLoading(false);

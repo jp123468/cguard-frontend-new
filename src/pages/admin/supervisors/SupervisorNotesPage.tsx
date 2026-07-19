@@ -12,8 +12,8 @@ export default function SupervisorNotesPage() {
   const { id = "" } = useParams();
   const tid = localStorage.getItem("tenantId") || "";
   const notesApi = {
-    list: (uid: string) => api.get(`/tenant/${tid}/supervisors/${uid}/notes`).then((r: any) => r.data),
-    create: (uid: string, payload: any) => api.post(`/tenant/${tid}/supervisors/${uid}/notes`, payload).then((r: any) => r.data),
+    list: (uid: string) => api.get(`/tenant/${tid}/supervisors/${uid}/notes`).then((r) => r.data),
+    create: (uid: string, payload: unknown) => api.post(`/tenant/${tid}/supervisors/${uid}/notes`, payload).then((r) => r.data),
   };
   return <GuardNotes navKey="supervisors" title="Notas" entityId={id} notesApi={notesApi} />;
 }

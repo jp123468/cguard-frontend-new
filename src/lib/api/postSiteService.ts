@@ -77,7 +77,12 @@ const getTenantId = (): string => {
 
   // Fallback: try to read from window.__APP_AUTH which AuthProvider sets for debug
   try {
-    const w: any = window as any;
+    const w = window as unknown as {
+      __APP_AUTH?: {
+        tenantId?: string;
+        user?: { tenants?: Array<{ tenantId?: string; tenant?: { id?: string; tenantId?: string } }> };
+      };
+    };
     const info = w.__APP_AUTH;
     if (info) {
       if (info.tenantId) {
@@ -128,7 +133,7 @@ const postSiteService = {
         params.append('filter[email]', filters.email);
         params.append('filter[contactEmail]', filters.email);
       }
-      const phoneToUse = (filters as any).phone ?? (filters as any).phoneNumber;
+      const phoneToUse = filters.phone ?? filters.phoneNumber;
       if (phoneToUse) {
         params.append('filter[phone]', phoneToUse);
         params.append('filter[contactPhone]', phoneToUse);
@@ -152,7 +157,7 @@ const postSiteService = {
         // eslint-disable-next-line no-console
         console.debug('[postSiteService] list params ->', params.toString());
       }
-      const { data } = await api.get(`/tenant/${tenantId}/business-info?${params.toString()}`, { toast: { silentError: true } } as any);
+      const { data } = await api.get(`/tenant/${tenantId}/business-info?${params.toString()}`, { toast: { silentError: true } });
 
       // Map backend `business-info` shape to frontend `PostSite` shape
       const mappedRows: PostSite[] = (data.rows || []).map((r: any) => ({
@@ -204,7 +209,7 @@ const postSiteService = {
       const { data } = await api.get(`/tenant/${tenantId}/business-info/${id}`, {
         // Prevent global interceptor from showing duplicate toasts for not-found errors.
         toast: { silentError: true },
-      } as any);
+      });
       // Return raw backend object so callers can access fields like companyName, categoryIds, latitud, longitud, etc.
       console.debug('Fetched post site:', data);
       return data;
@@ -327,7 +332,7 @@ const postSiteService = {
       
       if (filters.name) params.append('filter[name]', filters.name);
       if (filters.clientId) params.append('filter[clientId]', filters.clientId);
-      const categoryToUse = filters.categoryId ?? (filters as any).category;
+      const categoryToUse = filters.categoryId ?? filters.category;
       if (categoryToUse) {
         params.append('filter[categoryIds]', categoryToUse);
       }
@@ -335,7 +340,7 @@ const postSiteService = {
         params.append('filter[email]', filters.email);
         params.append('filter[contactEmail]', filters.email);
       }
-      const phoneToUse = (filters as any).phone ?? (filters as any).phoneNumber;
+      const phoneToUse = filters.phone ?? filters.phoneNumber;
       if (phoneToUse) {
         params.append('filter[phone]', phoneToUse);
         params.append('filter[contactPhone]', phoneToUse);
@@ -371,7 +376,7 @@ const postSiteService = {
       
       if (filters.name) params.append('filter[name]', filters.name);
       if (filters.clientId) params.append('filter[clientId]', filters.clientId);
-      const categoryExcel = filters.categoryId ?? (filters as any).category;
+      const categoryExcel = filters.categoryId ?? filters.category;
       if (categoryExcel) {
         params.append('filter[categoryIds]', categoryExcel);
       }
@@ -379,7 +384,7 @@ const postSiteService = {
         params.append('filter[email]', filters.email);
         params.append('filter[contactEmail]', filters.email);
       }
-      const phoneExcel = (filters as any).phone ?? (filters as any).phoneNumber;
+      const phoneExcel = filters.phone ?? filters.phoneNumber;
       if (phoneExcel) {
         params.append('filter[phone]', phoneExcel);
         params.append('filter[contactPhone]', phoneExcel);
@@ -474,7 +479,7 @@ const postSiteService = {
     if (pagination.limit !== undefined) params.append('limit', String(pagination.limit));
     if (pagination.offset !== undefined) params.append('offset', String(pagination.offset));
 
-    const { data } = await api.get<any>(`/tenant/${tenantId}/post-site/${postSiteId}/contacts?${params.toString()}`, { toast: { silentError: true } } as any);
+    const { data } = await api.get<any>(`/tenant/${tenantId}/post-site/${postSiteId}/contacts?${params.toString()}`, { toast: { silentError: true } });
     return data;
   },
 

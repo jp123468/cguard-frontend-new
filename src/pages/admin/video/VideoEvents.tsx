@@ -142,8 +142,9 @@ export default function VideoEvents() {
           if (c?.id) map[c.id] = c;
         }
         setCameras(map);
-      } catch (e: any) {
-        toast.error(e?.data?.message || e?.message || "No se pudieron cargar los eventos");
+      } catch (e) {
+        const err = e as { data?: { message?: string }; message?: string };
+        toast.error(err?.data?.message || err?.message || "No se pudieron cargar los eventos");
       } finally {
         setLoading(false);
       }
@@ -176,8 +177,9 @@ export default function VideoEvents() {
         )
       );
       toast.success(next === "ack" ? "Evento reconocido" : "Evento resuelto");
-    } catch (e: any) {
-      toast.error(e?.data?.message || e?.message || "No se pudo actualizar el evento");
+    } catch (e) {
+      const err = e as { data?: { message?: string }; message?: string };
+      toast.error(err?.data?.message || err?.message || "No se pudo actualizar el evento");
     } finally {
       setBusyId(null);
     }

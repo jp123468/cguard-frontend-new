@@ -25,8 +25,8 @@ export default function IncidentTypePage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const resp: any = await IncidentTypesService.list(query, page, pageSize);
-      const mapped = (resp.rows || []).map((r: any) => ({ id: r.id, name: r.name, status: r.active === true || r.active === 1 ? 'active' : 'inactive' }));
+      const resp: { rows?: Array<{ id: string; name: string; active?: boolean | number }>; count?: number } = await IncidentTypesService.list(query, page, pageSize);
+      const mapped = (resp.rows || []).map((r) => ({ id: r.id, name: r.name, status: (r.active === true || r.active === 1 ? 'active' : 'inactive') as 'active' | 'inactive' }));
       setRows(mapped);
       setTotal(resp.count || 0);
     } catch (e) {

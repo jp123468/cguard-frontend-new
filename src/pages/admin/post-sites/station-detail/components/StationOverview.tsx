@@ -11,8 +11,22 @@ import StationGeofencePolygon, { type PolyPoint } from '@/components/GoogleMap/S
 import RotationStyleSelect from '@/components/schedule/RotationStyleSelect';
 import { reverseGeocode } from '@/lib/geocodeClient';
 import { Section, StatCard, Stagger } from '@/components/kit';
+import type { Station } from '@/types';
 
-type Props = { station: any; stationId: string; postSiteId: string };
+interface StationDetail extends Station {
+  name?: string;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  numberOfGuardsInStation?: string | number | null;
+  clockInEarlyBufferMin?: number | null;
+  clockInLateGraceMin?: number | null;
+  geofencePolygon?: PolyPoint[] | null;
+  geofenceRadius?: number | string | null;
+  startingTimeInDay?: string | null;
+  finishTimeInDay?: string | null;
+}
+
+type Props = { station: StationDetail; stationId: string; postSiteId: string };
 
 // A station's "horario" = the scheduling engine's scheduleType, configured via
 // /auto-positions (the same path Programador › Horario uses). The turno picker

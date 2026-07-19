@@ -6,9 +6,10 @@ import { useTranslation } from 'react-i18next';
 import { postSiteService } from '@/lib/api/postSiteService';
 import { toast } from 'sonner';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
+import type { PostSite } from '@/types';
 
 type Props = {
-  site?: any;
+  site?: PostSite;
 };
 
 export default function PostSiteNotes({ site }: Props) {

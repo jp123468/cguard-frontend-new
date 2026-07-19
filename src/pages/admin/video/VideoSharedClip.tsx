@@ -25,7 +25,7 @@ export default function VideoSharedClip() {
     let on = true;
     (async () => {
       try {
-        const res: any = await ApiService.get(`/video/clip/shared/${encodeURIComponent(String(token))}`, { skipAuth: true } as any);
+        const res = await ApiService.get(`/video/clip/shared/${encodeURIComponent(String(token))}`, { skipAuth: true } as { skipAuth?: boolean }) as (SharedClip & { data?: SharedClip }) | null;
         if (on) setClip(res?.data ?? res);
       } catch {
         if (on) setError("Este enlace no es válido o ya expiró.");

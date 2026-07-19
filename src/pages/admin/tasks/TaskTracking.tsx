@@ -84,7 +84,7 @@ export default function TaskTracking() {
     setOpen(true);
     try {
       const r = await taskService.stations();
-      const opts = (r.rows || r || []).map((s: any) => ({ id: s.id, label: s.label || s.stationName || s.id }));
+      const opts = (r.rows || r || []).map((s: { id: string; label?: string; stationName?: string }) => ({ id: s.id, label: s.label || s.stationName || s.id }));
       setStations(opts);
     } catch { /* silent */ }
   };

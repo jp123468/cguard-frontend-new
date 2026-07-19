@@ -37,7 +37,7 @@ export default function SiteTour() {
       columns={columns}
       load={async ({ from, to }) => {
         const tenantId = localStorage.getItem("tenantId") || "";
-        const res: any = await ApiService.get(`/tenant/${tenantId}/site-tour/tag-scans?limit=2000`);
+        const res: TagScan[] | { rows?: TagScan[] } = await ApiService.get(`/tenant/${tenantId}/site-tour/tag-scans?limit=2000`);
         const rows: TagScan[] = Array.isArray(res) ? res : res?.rows || [];
         const start = new Date(`${from}T00:00:00.000Z`).getTime();
         const end = new Date(`${to}T23:59:59.999Z`).getTime();

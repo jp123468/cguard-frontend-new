@@ -10,6 +10,13 @@ import { useTranslation } from 'react-i18next';
 import { EmptyState, SkeletonCards } from '@/components/kit';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import StationGeofencePolygon, { type PolyPoint } from '@/components/GoogleMap/StationGeofencePolygon';
+import type { PostSite } from '@/types';
+
+interface SiteProp extends PostSite {
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  tenantId?: string;
+}
 
 // ── Staffing model ───────────────────────────────────────────────────────────
 // A station covers ONE jornada (turno). That jornada needs 1 *fijo* guard on
@@ -35,7 +42,7 @@ function requiredFijos(_schedule?: string): number {
   return 1;
 }
 
-export default function Stations({ site }: { site?: any }) {
+export default function Stations({ site }: { site?: SiteProp }) {
   const { t } = useTranslation();
   const [stations, setStations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);

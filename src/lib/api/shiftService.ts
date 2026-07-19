@@ -63,13 +63,13 @@ const shiftService = {
     const tenantId = getTenantId();
     const qs = buildQuery(params);
     const resp = await api.get(`/tenant/${tenantId}/shift${qs}`);
-    return (resp as any)?.data ?? resp;
+    return resp.data ?? resp;
   },
 
   async find(id: string): Promise<ShiftRecord> {
     const tenantId = getTenantId();
     const resp = await api.get(`/tenant/${tenantId}/shift/${id}`);
-    return (resp as any)?.data ?? resp;
+    return resp.data ?? resp;
   },
 
   async create(data: {
@@ -81,7 +81,7 @@ const shiftService = {
   }): Promise<ShiftRecord> {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/shift`, { data });
-    return (resp as any)?.data ?? resp;
+    return resp.data ?? resp;
   },
 
   async update(
@@ -96,7 +96,7 @@ const shiftService = {
   ): Promise<ShiftRecord> {
     const tenantId = getTenantId();
     const resp = await api.put(`/tenant/${tenantId}/shift/${id}`, { data });
-    return (resp as any)?.data ?? resp;
+    return resp.data ?? resp;
   },
 
   async destroy(id: string): Promise<void> {
@@ -109,7 +109,7 @@ const shiftService = {
     const resp = await api.patch(`/tenant/${tenantId}/shift/${id}/assign`, {
       data: { guard: guardId },
     });
-    return (resp as any)?.data ?? resp;
+    return resp.data ?? resp;
   },
 };
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { Client } from '@/types/client';
 import { useNavigate } from 'react-router-dom';
 import { clientService } from '@/lib/api/clientService';
 import { postSiteService } from '@/lib/api/postSiteService';
@@ -39,7 +40,7 @@ const riskTone = (r: string) => {
 const covTone = (c: number) => (c >= 95 ? 'bg-emerald-500' : c >= 70 ? 'bg-orange-500' : 'bg-red-500');
 const markerRole = (s: Sede) => (!s.active ? 'muted' : s.coverage >= 95 ? 'ok' : s.coverage >= 70 ? 'warn' : 'crit');
 
-export default function ClientPostSites({ client }: { client: any }) {
+export default function ClientPostSites({ client }: { client: Client }) {
   const navigate = useNavigate();
   const [sedes, setSedes] = useState<Sede[]>([]);
   const [loading, setLoading] = useState(true);

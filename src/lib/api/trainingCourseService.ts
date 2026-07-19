@@ -125,14 +125,14 @@ export const trainingCourseService = {
     if (options.offset !== undefined) params.append('offset', String(options.offset));
     const { data } = await api.get(`${base()}/courses?${params.toString()}`, {
       toast: { silentError: true },
-    } as any);
+    });
     return { rows: data.rows ?? [], count: data.count ?? 0 };
   },
 
   async get(id: string): Promise<TrainingCourse> {
     const { data } = await api.get(`${base()}/courses/${id}`, {
       toast: { silentError: true },
-    } as any);
+    });
     return data;
   },
 
@@ -154,7 +154,7 @@ export const trainingCourseService = {
   async listLessons(courseId: string): Promise<TrainingLesson[]> {
     const { data } = await api.get(`${base()}/courses/${courseId}/lessons`, {
       toast: { silentError: true },
-    } as any);
+    });
     return data.rows ?? [];
   },
 

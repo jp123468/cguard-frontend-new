@@ -64,7 +64,7 @@ const routeService = {
   async destroy(ids: string[] | string) {
     const tenantId = getTenantId();
     const payload = Array.isArray(ids) ? ids : [ids];
-    await api.delete(`/tenant/${tenantId}/route`, { data: { ids: payload } } as any);
+    await api.delete(`/tenant/${tenantId}/route`, { data: { ids: payload } });
     return true;
   },
 };

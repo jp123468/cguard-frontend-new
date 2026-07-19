@@ -61,7 +61,7 @@ export const userService = {
     const tenantId = getTenantId();
     const url = `/tenant/${tenantId}/user/${id}`;
     try {
-      const { data: resp } = await api.get<any>(url, { toast: { silentError: true } } as any);
+      const { data: resp } = await api.get<any>(url, { toast: { silentError: true } });
       return resp?.data || resp || null;
     } catch (err: any) {
       if (import.meta.env.DEV) {
@@ -72,7 +72,7 @@ export const userService = {
   },
 
   async fetchCurrentUser(): Promise<UserCurrent | null> {
-    const { data: resp } = await api.get<any>(`/auth/me`, { toast: { silentError: true } } as any);
+    const { data: resp } = await api.get<any>(`/auth/me`, { toast: { silentError: true } });
     return resp?.data || resp || null;
   }
   ,
@@ -109,7 +109,7 @@ export const userService = {
       }
     }
 
-    const { data: resp } = await api.get<any>(url, { toast: { silentError: true } } as any);
+    const { data: resp } = await api.get<any>(url, { toast: { silentError: true } });
     if (!resp) return [];
     if (Array.isArray(resp)) return resp;
     if (resp.rows && Array.isArray(resp.rows)) return resp.rows;
@@ -167,7 +167,7 @@ export const userService = {
     const tenantId = getTenantId();
     // try delete with JSON body first — axios expects `data` for DELETE payload
     try {
-      await api.delete(`/tenant/${tenantId}/user`, { data: { ids: [id] } } as any);
+      await api.delete(`/tenant/${tenantId}/user`, { data: { ids: [id] } });
       return;
     } catch (e) {
       // fallbacks
@@ -207,7 +207,7 @@ export const userService = {
     const response = await api.get(`/tenant/${tenantId}/user/export${qs}`, {
       responseType: "blob",
       toast: { silentError: true },
-    } as any);
+    });
     return response.data;
   }
 };

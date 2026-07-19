@@ -27,8 +27,9 @@ import MobileCardList from '@/components/responsive/MobileCardList';
 import { Button } from '@/components/ui/button';
 import { EmptyState, StatusBadge } from '@/components/kit';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
+import type { PostSite } from '@/types';
 type Props = {
-  site?: any;
+  site?: PostSite;
 };
 
 export default function PostSiteKPIs({ site }: Props) {

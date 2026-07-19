@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Client } from '@/types/client';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
 import securityGuardService from '@/lib/api/securityGuardService';
@@ -70,7 +71,7 @@ function Kpi({ icon, value, label, sub, accent = 'primary', bar }: any) {
   );
 }
 
-export default function ClientDocuments({ client }: { client: any }) {
+export default function ClientDocuments({ client }: { client: Client }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   useScrollToTopOnMount(containerRef);
   const fileInputRef = useRef<HTMLInputElement | null>(null);

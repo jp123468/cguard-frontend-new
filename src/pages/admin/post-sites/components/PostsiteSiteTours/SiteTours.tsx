@@ -8,8 +8,11 @@ import { EmptyState } from '@/components/kit';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
-          
-export default function PostSiteTours({ site, guards = [] }: { site?: any; guards?: any[] }) {
+import type { PostSite } from '@/types';
+
+interface SiteProp extends PostSite { tenantId?: string }
+
+export default function PostSiteTours({ site, guards = [] }: { site?: SiteProp; guards?: any[] }) {
   const { t } = useTranslation();
   // Helper: determine whether a guard object is assigned to a given station id
   function guardMatchesStation(g: any, stationId: string) {

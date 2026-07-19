@@ -78,14 +78,14 @@ export const trainingEnrollmentService = {
     if (options.status) params.append('status', options.status);
     const { data } = await api.get(`${base()}/courses/${courseId}/enrollments?${params.toString()}`, {
       toast: { silentError: true },
-    } as any);
+    });
     return { rows: data.rows ?? [], count: data.count ?? 0 };
   },
 
   async detail(enrollmentId: string): Promise<EnrollmentDetail> {
     const { data } = await api.get(`${base()}/enrollments/${enrollmentId}`, {
       toast: { silentError: true },
-    } as any);
+    });
     return data;
   },
 };

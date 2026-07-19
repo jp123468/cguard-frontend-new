@@ -57,7 +57,7 @@ export const projectService = {
     params.append('offset', options.offset.toString());
     const { data } = await api.get(`/tenant/${tenantId}/client-project?${params.toString()}`, {
       toast: { silentError: true },
-    } as any);
+    });
     return data;
   },
 
@@ -75,7 +75,7 @@ export const projectService = {
     params.append('offset', options.offset.toString());
     const { data } = await api.get(
       `/tenant/${tenantId}/client-account/${clientId}/projects?${params.toString()}`,
-      { toast: { silentError: true } } as any,
+      { toast: { silentError: true } },
     );
     return data;
   },
@@ -84,7 +84,7 @@ export const projectService = {
     const tenantId = getTenantId();
     const { data } = await api.get(`/tenant/${tenantId}/client-project/${id}`, {
       toast: { silentError: true },
-    } as any);
+    });
     return data;
   },
 

@@ -38,7 +38,7 @@ export default function OperationsMapFull() {
 
   const goFullscreen = () => {
     try {
-      const el: any = document.documentElement;
+      const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };
       if (document.fullscreenElement) document.exitFullscreen?.();
       else (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
     } catch { /* ignore */ }

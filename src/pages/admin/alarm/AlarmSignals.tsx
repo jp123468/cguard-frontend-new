@@ -92,8 +92,9 @@ export default function AlarmSignals() {
       try {
         const rows = await alarmService.signals({ limit });
         setSignals(Array.isArray(rows) ? rows : []);
-      } catch (e: any) {
-        toast.error(e?.data?.message || e?.message || "No se pudieron cargar las señales");
+      } catch (e) {
+        const err = e as { data?: { message?: string }; message?: string };
+        toast.error(err?.data?.message || err?.message || "No se pudieron cargar las señales");
       } finally {
         setLoading(false);
       }

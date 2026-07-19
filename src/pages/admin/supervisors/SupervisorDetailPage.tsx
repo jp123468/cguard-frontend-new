@@ -24,12 +24,12 @@ const FIELD_OPTIONS: Record<string, string[]> = {
   academicInstruction: ["Primaria", "Secundaria", "Universitaria", "Universidad", "Especial"],
 };
 
-function toDateInput(v: any): string {
+function toDateInput(v: string | number | Date | null | undefined): string {
   if (!v) return "";
   const d = new Date(v);
   return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
 }
-function fmtDate(v: any): string | null {
+function fmtDate(v: string | number | Date | null | undefined): string | null {
   if (!v) return null;
   const d = new Date(v);
   return isNaN(d.getTime()) ? String(v) : d.toLocaleDateString("es");
@@ -48,7 +48,7 @@ const Section = ({ title, icon, action, children }: { title: string; icon?: Reac
     {children}
   </div>
 );
-const ReadField = ({ label, value }: { label: string; value: any }) => (
+const ReadField = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div className="min-w-0">
     <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-0.5">{label}</div>
     <div className="font-medium text-sm text-foreground truncate">{value || "—"}</div>
@@ -78,9 +78,9 @@ export default function SupervisorDetailPage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [form, setForm] = useState<Record<string, any>>({});
+  const [form, setForm] = useState<Record<string, string>>({});
 
-  const setField = (k: string, v: any) => setForm((p) => ({ ...p, [k]: v }));
+  const setField = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
   const hydrate = (s: Supervisor) => {
     setSup(s);
@@ -107,9 +107,9 @@ export default function SupervisorDetailPage() {
   const save = async () => {
     setSaving(true);
     try {
-      const body: Record<string, any> = {};
+      const body: Record<string, string | null> = {};
       for (const k of Object.keys(form)) body[k] = form[k] === "" ? null : form[k];
-      const updated = await supervisorService.update(id, body);
+      const updated = await supervisorService.update(id, body as Partial<Supervisor>);
       hydrate(updated);
       setEditing(false);
       toast.success("Perfil actualizado");

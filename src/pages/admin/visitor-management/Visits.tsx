@@ -30,11 +30,44 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { confirmDialog } from "@/components/ui/confirmDialog";
-import visitorLogService from "@/lib/api/visitorLogService";
+import visitorLogService, { VisitorLogFilters } from "@/lib/api/visitorLogService";
 import { clientService } from "@/lib/api/clientService";
 import { postSiteService } from "@/lib/api/postSiteService";
 import securityGuardService from "@/lib/api/securityGuardService";
+import type { Client, PostSite, SecurityGuard } from "@/types";
 import * as XLSX from "xlsx";
+
+// Loose shape covering the various name fields the client association may carry.
+type ClientLike = {
+    id?: string;
+    name?: string;
+    firstName?: string;
+    lastName?: string;
+    displayName?: string;
+    commercialName?: string;
+    companyName?: string;
+};
+
+// A single visitor-log list row (lean list returns association objects + flat fallbacks).
+type VisitLogRow = {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    client?: ClientLike | string;
+    clientName?: string;
+    postSite?: { companyName?: string; name?: string; postSiteName?: string };
+    station?: { stationName?: string; name?: string };
+    postSiteName?: string;
+    stationName?: string;
+    vehiclePlate?: string;
+    vehicleType?: string;
+    vehicleMakeModel?: string;
+    visitDate?: string;
+    exitTime?: string;
+};
+
+// Guard option carries fallback name fields not present on the canonical model.
+type GuardOption = SecurityGuard & { displayName?: string; name?: string };
 
 type VisitsFilters = {
     clientId: string;
@@ -63,7 +96,7 @@ const defaultFilters: VisitsFilters = {
 // The lean visitor-log list returns association objects on `client`/`postSite`/`station`
 // (never plain strings), plus flat *Name fallbacks. Always extract a string — never
 // render the raw Sequelize object as a React child (React #31 crash).
-const clientDisplayName = (c: any) => {
+const clientDisplayName = (c: ClientLike | null | undefined) => {
     if (!c) return "";
     if (c.displayName) return c.displayName;
     if (c.commercialName) return c.commercialName;
@@ -74,14 +107,14 @@ const clientDisplayName = (c: any) => {
     return joined || c.name || c.id || "";
 };
 
-const getClientLabel = (rec: any) => {
+const getClientLabel = (rec: VisitLogRow | null | undefined) => {
     if (!rec) return "-";
     if (rec.client && typeof rec.client === "object") return clientDisplayName(rec.client) || "-";
     if (typeof rec.client === "string") return rec.client;
     return rec.clientName || "-";
 };
 
-const getPostSiteLabel = (rec: any) => {
+const getPostSiteLabel = (rec: VisitLogRow | null | undefined) => {
     if (!rec) return "-";
     if (rec.postSite && typeof rec.postSite === "object") {
         return rec.postSite.companyName || rec.postSite.name || rec.postSite.postSiteName || "-";
@@ -92,7 +125,7 @@ const getPostSiteLabel = (rec: any) => {
     return rec.postSiteName || rec.stationName || "-";
 };
 
-const getVehicleLabel = (rec: any) => {
+const getVehicleLabel = (rec: VisitLogRow | null | undefined) => {
     const plate = rec?.vehiclePlate || "";
     const type = rec?.vehicleType || rec?.vehicleMakeModel || "";
     if (plate && type) return `${plate} (${type})`;
@@ -125,9 +158,9 @@ export default function Visits() {
     const [action, setAction] = useState<string | undefined>(undefined);
 
     // Filter dropdown data
-    const [clients, setClients] = useState<any[]>([]);
-    const [sites, setSites] = useState<any[]>([]);
-    const [guards, setGuards] = useState<any[]>([]);
+    const [clients, setClients] = useState<Client[]>([]);
+    const [sites, setSites] = useState<PostSite[]>([]);
+    const [guards, setGuards] = useState<GuardOption[]>([]);
 
     const limit = useMemo(() => Number(filters.perPage) || 25, [filters.perPage]);
 
@@ -135,7 +168,7 @@ export default function Visits() {
     useEffect(() => {
         clientService
             .getClients(undefined, { limit: 200, offset: 0 })
-            .then((resp: any) => setClients(resp?.rows || []))
+            .then((resp) => setClients(resp?.rows || []))
             .catch((e) => console.error("Failed to load clients", e));
     }, []);
 
@@ -148,11 +181,11 @@ export default function Visits() {
         }
         postSiteService
             .list({ clientId: filters.clientId }, { limit: 200, offset: 0 } as any)
-            .then((resp: any) => setSites(resp?.rows || []))
+            .then((resp) => setSites(resp?.rows || []))
             .catch((e) => console.error("Failed to load post sites", e));
         securityGuardService
             .list({ "filter[clientId]": filters.clientId, limit: 200, offset: 0 } as any)
-            .then((resp: any) => setGuards(Array.isArray(resp) ? resp : resp?.rows || []))
+            .then((resp) => setGuards(Array.isArray(resp) ? resp : resp?.rows || []))
             .catch((e) => console.error("Failed to load guards", e));
         setFilters((s) => ({ ...s, siteId: "", guardId: "" }));
     }, [filters.clientId]);
@@ -173,7 +206,7 @@ export default function Visits() {
     // unmount-safe. refetch() reloads after a mutation.
     const { data, loading, refetch } = useAsyncList(
         () => {
-            const f: any = {};
+            const f: VisitorLogFilters & { query?: string } = {};
             const s = search.trim();
             if (s) {
                 if (/^[0-9]+$/.test(s)) f.idNumber = s;
@@ -198,7 +231,7 @@ export default function Visits() {
             onError: (e) => { console.error("Error fetching visits", e); toast.error("No se pudieron cargar las visitas"); },
         },
     );
-    const rows: any[] = data?.rows || [];
+    const rows: VisitLogRow[] = data?.rows || [];
     const count = data?.count || 0;
     // Clear row selection whenever a fresh page loads.
     useEffect(() => { setSelected({}); }, [data]);
@@ -264,7 +297,7 @@ export default function Visits() {
         "Hora de salida",
         "Puesto de seguridad",
     ];
-    const toExportRow = (r: any) => ({
+    const toExportRow = (r: VisitLogRow) => ({
         Nombre: `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim(),
         Vehículo: getVehicleLabel(r) === "-" ? "" : getVehicleLabel(r),
         "Hora de entrada": formatDateTime(r.visitDate),

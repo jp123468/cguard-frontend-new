@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Client } from '@/types/client';
 import { useNavigate } from 'react-router-dom';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
@@ -63,7 +64,7 @@ function Avatar({ url, name }: { url?: string | null; name: string }) {
     : <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/12 text-xs font-semibold text-primary">{initials}</span>;
 }
 
-export default function ClientStaff({ client }: { client: any }) {
+export default function ClientStaff({ client }: { client: Client }) {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement | null>(null);
   useScrollToTopOnMount(containerRef);

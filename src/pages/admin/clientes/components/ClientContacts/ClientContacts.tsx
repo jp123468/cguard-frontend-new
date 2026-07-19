@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
+import type { Client } from '@/types/client';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
 import { useTranslation } from "react-i18next";
@@ -31,7 +32,7 @@ type Contact = {
   allowGuard?: boolean;
 };
 
-export default function ClientContacts({ client }: { client: any }) {
+export default function ClientContacts({ client }: { client: Client & { contacts?: Contact[]; postSites?: unknown[] } }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [phoneCountry, setPhoneCountry] = useState<string>('us');
   const initial: Contact[] = Array.isArray(client?.contacts) ? client.contacts : [];

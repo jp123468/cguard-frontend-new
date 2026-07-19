@@ -7,8 +7,11 @@ import {
 import { ApiService } from '@/services/api/apiService';
 import { Section, EmptyState, SkeletonCards, StatusBadge, Modal } from '@/components/kit';
 import { fileUrlFromPrivate } from '@/lib/fileUrl';
+import type { Station } from '@/types';
 
-type Props = { station: any; stationId: string; postSiteId: string };
+interface StationDetail extends Station { name?: string }
+
+type Props = { station: StationDetail; stationId: string; postSiteId: string };
 
 interface Scan {
   id: string;

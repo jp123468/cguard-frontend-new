@@ -28,7 +28,7 @@ export default function NominaTimeClock() {
 
   const tryStaff = async () => {
     try {
-      const s: any = await attendanceService.staffStatus();
+      const s: { isClockedIn?: boolean; office?: { radiusM: number; address: string | null } | null } = await attendanceService.staffStatus();
       setIsClockedIn(!!s?.isClockedIn);
       setOffice(s?.office ? { radiusM: s.office.radiusM, address: s.office.address } : null);
       setMode("staff");
@@ -41,7 +41,7 @@ export default function NominaTimeClock() {
     setLoading(true);
     attendanceService
       .myStatus()
-      .then(async (d: any) => {
+      .then(async (d: { guard?: unknown; stations?: Station[]; isClockedIn?: boolean }) => {
         if (d?.guard) {
           // Field guard → station-scoped guard punch.
           const sts: Station[] = d?.stations || [];
@@ -75,9 +75,9 @@ export default function NominaTimeClock() {
     try {
       // Guards require coords (server geofence). Staff: coords optional; still
       // sent when available so an office geofence can validate them.
-      let coords: any = {};
-      try { coords = await getPosition(); } catch (e: any) { if (mode === "guard") throw e; }
-      const res: any = mode === "guard"
+      let coords: { latitude?: number; longitude?: number } = {};
+      try { coords = await getPosition(); } catch (e) { if (mode === "guard") throw e; }
+      const res: { success?: boolean; message?: string } = mode === "guard"
         ? await attendanceService.clockIn({ stationId, ...coords })
         : await attendanceService.staffClockIn(coords);
       if (res && res.success === false) {
@@ -86,8 +86,8 @@ export default function NominaTimeClock() {
         toast.success("Entrada registrada");
         refresh();
       }
-    } catch (e: any) {
-      toast.error(e?.message || "Error");
+    } catch (e) {
+      toast.error((e as { message?: string })?.message || "Error");
     } finally {
       setBusy(false);
     }
@@ -96,15 +96,15 @@ export default function NominaTimeClock() {
   const doClockOut = async () => {
     setBusy(true);
     try {
-      let coords: any = {};
+      let coords: { latitude?: number; longitude?: number } = {};
       try { coords = await getPosition(); } catch { /* GPS optional on out */ }
-      const res: any = mode === "guard"
+      const res: { success?: boolean; message?: string } = mode === "guard"
         ? await attendanceService.clockOut(coords)
         : await attendanceService.staffClockOut(coords);
       if (res && res.success === false) toast.error(res.message || "No se pudo marcar salida");
       else { toast.success("Salida registrada"); refresh(); }
-    } catch (e: any) {
-      toast.error(e?.message || "Error");
+    } catch (e) {
+      toast.error((e as { message?: string })?.message || "Error");
     } finally {
       setBusy(false);
     }

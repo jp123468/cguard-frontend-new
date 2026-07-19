@@ -55,14 +55,14 @@ export const payrollService = {
     if (flags?.decimoTerceroMensualizado) p.set("decimoTerceroMensualizado", "true");
     if (flags?.decimoCuartoMensualizado) p.set("decimoCuartoMensualizado", "true");
     if (flags?.fondosReservaMensualizado) p.set("fondosReservaMensualizado", "true");
-    return unwrap(await api.get(`/tenant/${t}/payroll/roster?${p.toString()}`, { toast: { silentError: true } } as any));
+    return unwrap(await api.get(`/tenant/${t}/payroll/roster?${p.toString()}`, { toast: { silentError: true } }));
   },
 
   /** The statutory figures used (SBU, IESS %, IR brackets) for a year. */
   async statutory(year?: number) {
     const t = getTenantId();
     const q = year ? `?year=${year}` : "";
-    return unwrap(await api.get(`/tenant/${t}/payroll/statutory${q}`, { toast: { silentError: true } } as any));
+    return unwrap(await api.get(`/tenant/${t}/payroll/statutory${q}`, { toast: { silentError: true } }));
   },
 };
 

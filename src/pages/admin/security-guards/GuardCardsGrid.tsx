@@ -24,6 +24,28 @@ export type GuardCardAction = {
     destructive?: boolean;
 };
 
+/** Raw API securityGuard record carried on the normalized row for detail lookups. */
+interface GuardCardRaw {
+    id?: string;
+    guard?: { id?: string };
+    guardId?: string;
+    userId?: string;
+    // Dynamic: may be a string URL, a single {downloadUrl,publicUrl} object, or an array of them.
+    profileImage?: any;
+    photoUrl?: string;
+    [key: string]: unknown;
+}
+
+/** Normalized display row produced by SecurityGuardsPage.normalizeGuard. */
+export interface GuardRow {
+    id: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    status?: string;
+    raw?: GuardCardRaw;
+}
+
 const HUES = [28, 205, 150, 265, 340, 95, 180, 12];
 function hueFor(name: string): number {
     let h = 0;
@@ -48,15 +70,15 @@ export default function GuardCardsGrid({
     onOpen,
     actions,
 }: {
-    guards: any[];
+    guards: GuardRow[];
     stationByUserId: Record<string, string>;
     ratings?: Record<string, { average: number; count: number }>;
     onOpenReviews?: (guardId: string) => void;
     loading: boolean;
     selectedIds: string[];
     onSelect: (id: string, checked: boolean) => void;
-    onOpen: (guard: any) => void;
-    actions: (guard: any) => GuardCardAction[];
+    onOpen: (guard: GuardRow) => void;
+    actions: (guard: GuardRow) => GuardCardAction[];
 }) {
     if (loading) return <SkeletonCards count={8} className="sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" />;
     if (!guards.length) {
@@ -73,7 +95,7 @@ export default function GuardCardsGrid({
                 const pi = g.raw?.profileImage;
                 const photo = Array.isArray(pi) ? (pi[0]?.downloadUrl || pi[0]?.publicUrl || null) : (pi?.downloadUrl || pi?.publicUrl || (typeof pi === "string" ? pi : null)) || g.raw?.photoUrl || null;
                 const acts = actions(g);
-                const tone = STATUS_TONE[g.status] || "slate";
+                const tone = STATUS_TONE[g.status ?? ""] || "slate";
                 const realId = g.raw?.id || g.id;
                 const rating = ratings?.[realId];
                 return (

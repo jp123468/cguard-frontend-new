@@ -58,7 +58,7 @@ export const departmentService = {
     const tenantId = getTenantId();
     const { data: resp } = await api.get<any>(`/tenant/${tenantId}/department-member/${userId}`, {
       toast: { silentError: true },
-    } as any);
+    });
     const payload = resp?.data || resp || {};
     return { departmentId: payload.departmentId ?? null, department: payload.department ?? null };
   },

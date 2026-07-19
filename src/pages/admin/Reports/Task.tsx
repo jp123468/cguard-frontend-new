@@ -34,7 +34,7 @@ export default function Task() {
       accent="#0ea5e9"
       columns={columns}
       load={async ({ from, to }) => {
-        const res: any = await taskService.byStatus({ status: "all", limit: 2000 });
+        const res: TaskRow[] | { rows?: TaskRow[] } = await taskService.byStatus({ status: "all", limit: 2000 });
         const rows: TaskRow[] = Array.isArray(res) ? res : res?.rows || [];
         const start = new Date(`${from}T00:00:00.000Z`).getTime();
         const end = new Date(`${to}T23:59:59.999Z`).getTime();

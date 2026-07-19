@@ -233,10 +233,10 @@ export default function SupervisorsPage() {
                           <span className="truncate">{s.email}</span>
                         </div>
                       )}
-                      {(s as any).phoneNumber && (
+                      {s.phoneNumber && (
                         <div className="flex items-center gap-1.5">
                           <Phone className="h-3.5 w-3.5 shrink-0" />
-                          <span className="truncate">{(s as any).phoneNumber}</span>
+                          <span className="truncate">{s.phoneNumber}</span>
                         </div>
                       )}
                     </div>

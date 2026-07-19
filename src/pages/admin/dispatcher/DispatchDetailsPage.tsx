@@ -23,13 +23,14 @@ import { FileSearch } from 'lucide-react';
 
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import type { DirectoryOption, NamedEntity, DispatchComment, CommentAttachment } from './types';
 
 type ResourceType = 'request' | 'incident';
 
 export function DispatchDetailsContent({ requestId, resourceTypeProp }: { requestId?: string | null; resourceTypeProp?: ResourceType }) {
-  const [clients, setClients] = useState<any[]>([]);
-  const [postSites, setPostSites] = useState<any[]>([]);
-  const [incidentTypes, setIncidentTypes] = useState<any[]>([]);
+  const [clients, setClients] = useState<DirectoryOption[]>([]);
+  const [postSites, setPostSites] = useState<DirectoryOption[]>([]);
+  const [incidentTypes, setIncidentTypes] = useState<NamedEntity[]>([]);
   const [clientId, setClientId] = useState<string | undefined>(undefined);
   const [siteId, setSiteId] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<string>('abierto');
@@ -37,7 +38,7 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
   const [incidentDate, setIncidentDate] = useState<string | undefined>(undefined);
   const [includeArchived, setIncludeArchived] = useState<boolean>(false);
   const [requestPayload, setRequestPayload] = useState<any | null>(null);
-  const [comments, setComments] = useState<any[]>([]);
+  const [comments, setComments] = useState<DispatchComment[]>([]);
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -48,7 +49,7 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
   const location = useLocation();
   const search = new URLSearchParams(location.search || '');
   const resourceFromQuery = (search.get('resource') as ResourceType) || undefined;
-  const resourceType: ResourceType = (resourceTypeProp as ResourceType) || (location && (location.state as any)?.resource) || resourceFromQuery || 'request';
+  const resourceType: ResourceType = (resourceTypeProp as ResourceType) || (location && (location.state as { resource?: ResourceType } | null)?.resource) || resourceFromQuery || 'request';
 
   const { t } = useTranslation();
 
@@ -61,7 +62,7 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
       setCommentsLoading(true);
       const api = (await import('@/lib/api')).default;
 
-      let attachment: any = null;
+      let attachment: CommentAttachment | null = null;
       if (selectedFile) {
         try {
           setFileUploading(true);
@@ -75,7 +76,7 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
           form.append('file', selectedFile);
 
           const uploadResp = await fetch(uploadUrl, { method: 'POST', body: form });
-          let downloadUrl: any = null;
+          let downloadUrl: unknown = null;
           try {
             const json = await uploadResp.json();
             downloadUrl = json?.downloadUrl || json?.url || json;
@@ -83,7 +84,7 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
             downloadUrl = await uploadResp.text();
           }
           if (typeof downloadUrl === 'object' && downloadUrl !== null) downloadUrl = JSON.stringify(downloadUrl);
-          attachment = { url: downloadUrl, name: selectedFile.name };
+          attachment = { url: downloadUrl == null ? undefined : String(downloadUrl), name: selectedFile.name };
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           toast.error(`File upload failed${msg ? `: ${msg}` : ''}`);
@@ -92,7 +93,7 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
         }
       }
 
-      let author: any = null;
+      let author: { id?: string; name?: string } | null = null;
       try {
         const possibleKeys = ['currentUser', 'user', 'me', 'profile', 'authUser'];
         for (const k of possibleKeys) {
@@ -123,7 +124,7 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
       // NOTE: do NOT send a client-derived `author` — the backend must attach the
       // authenticated user to the comment (a client-supplied author could be spoofed).
       // `author` (read from localStorage above) is used only for optimistic local UI below.
-      const body: any = { data: { text: newComment } };
+      const body: { data: { text: string; attachment?: CommentAttachment } } = { data: { text: newComment } };
       if (attachment) body.data.attachment = attachment;
       try {
         const resp = await api.post(`/tenant/${tenantId}/${resourceType}/${requestId}/comments`, body);
@@ -157,14 +158,16 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
           postSiteService.list({}, { limit: 1000, offset: 0 }),
         ]);
 
-        if (clientsResp && Array.isArray((clientsResp as any).rows)) {
-          setClients((clientsResp as any).rows);
+        const clientRows = (clientsResp as { rows?: DirectoryOption[] })?.rows;
+        const siteRows = (sitesResp as { rows?: DirectoryOption[] })?.rows;
+        if (clientsResp && Array.isArray(clientRows)) {
+          setClients(clientRows);
         }
-        if (sitesResp && Array.isArray((sitesResp as any).rows)) {
-          setPostSites((sitesResp as any).rows);
+        if (sitesResp && Array.isArray(siteRows)) {
+          setPostSites(siteRows);
         }
         try {
-          const itResp: any = await IncidentTypesService.list('', 1, 1000);
+          const itResp = await IncidentTypesService.list('', 1, 1000) as { rows?: NamedEntity[] };
           if (itResp && Array.isArray(itResp.rows)) setIncidentTypes(itResp.rows);
         } catch (e) {
           // ignore

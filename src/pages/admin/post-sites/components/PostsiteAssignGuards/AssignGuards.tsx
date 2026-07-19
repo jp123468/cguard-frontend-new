@@ -6,6 +6,9 @@ import { useTranslation } from 'react-i18next';
 import { Section, EmptyState } from '@/components/kit';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import type { PostSite } from '@/types';
+
+interface SiteProp extends PostSite { tenantId?: string }
 
 /**
  * SITE-LEVEL vigilante roster — READ-ONLY aggregate.
@@ -30,7 +33,7 @@ type RosterRow = {
   stationName: string;
 };
 
-export default function AssignGuards({ site }: { site?: any }) {
+export default function AssignGuards({ site }: { site?: SiteProp }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';

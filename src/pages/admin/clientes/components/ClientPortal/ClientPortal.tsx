@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Client } from '@/types/client';
 import { useNavigate } from 'react-router-dom';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
@@ -10,7 +11,7 @@ import {
   KeyRound, ArrowRight, Building2, AlertTriangle, FileBarChart, ClipboardList, MapPin, Bell,
 } from 'lucide-react';
 
-type Props = { client?: any };
+type Props = { client?: Client & { contactEmail?: string; contactName?: string; userId?: string } };
 type Kind = 'portal' | 'app';
 
 const PORTAL_FEATURES = [
@@ -66,8 +67,8 @@ export default function ClientPortal({ client }: Props) {
     setSending(true); setErrorMsg('');
     try {
       const res = kind === 'portal'
-        ? await clientService.sendClientPortalInvitation(client.id, email || undefined)
-        : await clientService.sendClientAppInvitation(client.id, email || undefined);
+        ? await clientService.sendClientPortalInvitation(client?.id ?? "", email || undefined)
+        : await clientService.sendClientAppInvitation(client?.id ?? "", email || undefined);
       setResult({ kind, recipient: res?.recipient || email });
       setConfirm(null);
       toast.success(kind === 'portal' ? 'Invitación al portal enviada' : 'Invitación a la app enviada');
@@ -132,7 +133,7 @@ export default function ClientPortal({ client }: Props) {
           </Section>
 
           <Section title="Usuarios con acceso" icon={<Users className="h-4 w-4" />}
-            action={<button onClick={() => navigate(`/clients/${client.id}/user-access`)} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">Gestionar accesos <ArrowRight className="h-3.5 w-3.5" /></button>}>
+            action={<button onClick={() => navigate(`/clients/${client?.id}/user-access`)} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">Gestionar accesos <ArrowRight className="h-3.5 w-3.5" /></button>}>
             {accessCount === 0 ? (
               <EmptyState icon={<Users className="h-5 w-5" />} title="Sin usuarios con acceso" description="Invita al titular o agrega accesos adicionales para que el cliente entre al portal y la app." />
             ) : (

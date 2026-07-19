@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Package } from 'lucide-react';
 import inventoryAssignmentService from '@/lib/api/inventoryAssignmentService';
 import { Section, EmptyState, SkeletonCards } from '@/components/kit';
+import type { Station } from '@/types';
 
-type Props = { station: any; stationId: string; postSiteId: string };
+type Props = { station: Station; stationId: string; postSiteId: string };
 
 export default function StationInventory({ stationId }: Props) {
   const { t } = useTranslation();

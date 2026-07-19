@@ -137,7 +137,7 @@ const inventoryItemService = {
     const credsResp: any = await api.get(
       `/tenant/${tenantId}/file/credentials?filename=${encodeURIComponent(filename)}&storageId=inventoryItemPhotos`,
     );
-    const creds = credsResp && (credsResp as any).data ? (credsResp as any).data : credsResp;
+    const creds = credsResp && credsResp.data ? credsResp.data : credsResp;
 
     const uploadUrl = creds?.uploadCredentials?.url ?? creds?.url;
     const fields = creds?.uploadCredentials?.fields;

@@ -54,7 +54,7 @@ type Props = {
   onDelete: (r: UserRoleRow) => void;
   onBulkDelete: () => void;
   expandedRoleId?: string | null;
-  expandedContent?: any;
+  expandedContent?: React.ReactNode;
   onSaveExpanded?: (id: string, perms: string[]) => void;
   pageSize: string;
   onPageSize: (v: string) => void;

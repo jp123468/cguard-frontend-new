@@ -54,7 +54,7 @@ const guardRatingService = {
     const tenantId = getTenantId();
     const qs = buildQuery(params);
     const resp = await api.get(`/tenant/${tenantId}/guard-ratings${qs}`);
-    const payload = (resp as any)?.data ?? resp;
+    const payload = resp.data ?? resp;
     return {
       rows: Array.isArray(payload?.rows) ? payload.rows : [],
       count: payload?.count ?? 0,
@@ -72,7 +72,7 @@ const guardRatingService = {
       const tenantId = getTenantId();
       const qs = guardIds && guardIds.length ? `?guardIds=${guardIds.join(',')}` : '';
       const resp = await api.get(`/tenant/${tenantId}/guard-ratings/summary${qs}`);
-      const payload = (resp as any)?.data ?? resp;
+      const payload = resp.data ?? resp;
       return payload?.summary && typeof payload.summary === 'object' ? payload.summary : {};
     } catch {
       return {};

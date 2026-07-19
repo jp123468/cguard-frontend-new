@@ -81,7 +81,7 @@ class CategoryService {
         const tenantId = getTenantId();
         // Reference data — rarely changes; cache 60s across all consumers.
         return cachedFetch(["categories", tenantId, params ?? null], async () => {
-            const response = await api.get(`/tenant/${tenantId}/category`, { params, toast: { silentError: true } } as any);
+            const response = await api.get(`/tenant/${tenantId}/category`, { params, toast: { silentError: true } });
             return response.data;
         }, 60_000);
     }
