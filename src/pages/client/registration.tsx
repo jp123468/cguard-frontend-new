@@ -311,13 +311,13 @@ export default function ClientRegistration() {
                 </div>
               </div>
 
-              {/* Download buttons */}
-              <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <a href={MISEGURIDAD_PLAY_URL} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-lg bg-[#0A0E16] px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90">
-                  <span style={{ fontSize: 18, lineHeight: 1 }}>▶</span> Google Play
+              {/* Download buttons — official store badges */}
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                <a href={MISEGURIDAD_PLAY_URL} target="_blank" rel="noreferrer" className="transition-opacity hover:opacity-90">
+                  <img src="/assets/badges/google-play.png" alt="Descargar en Google Play" className="h-12 w-auto" />
                 </a>
-                <a href={MISEGURIDAD_IOS_URL} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-lg bg-[#0A0E16] px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90">
-                  <span style={{ fontSize: 18, lineHeight: 1 }}></span> App Store
+                <a href={MISEGURIDAD_IOS_URL} target="_blank" rel="noreferrer" className="transition-opacity hover:opacity-90">
+                  <img src="/assets/badges/app-store.png" alt="Consíguelo en el App Store" className="h-12 w-auto" />
                 </a>
               </div>
 
