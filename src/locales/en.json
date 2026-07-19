@@ -3188,6 +3188,7 @@
     },
     "equipo": {
       "guardias": "Security Guards",
+      "supervisores": "Supervisors",
       "label": "Security Team",
       "usuarios": "Admin Office Users"
     },

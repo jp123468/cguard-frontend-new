@@ -3189,6 +3189,7 @@
     },
     "equipo": {
       "guardias": "Vigilantes de seguridad",
+      "supervisores": "Supervisores",
       "label": "Equipo de seguridad",
       "usuarios": "Usuarios administrativos"
     },

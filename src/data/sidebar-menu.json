@@ -54,6 +54,11 @@
         "path": "/security-guards"
       },
       {
+        "id": "supervisores",
+        "name": "Supervisores",
+        "path": "/supervisors"
+      },
+      {
         "id": "usuarios",
         "name": "Usuarios de Oficina Administrativa",
         "path": "/back-office"

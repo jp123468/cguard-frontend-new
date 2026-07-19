@@ -148,6 +148,7 @@ export default function AdminOfficeUsersPage() {
       };
 
       // Mostrar todos los usuarios (incluye vigilantes). Normalizar roles para mostrar.
+      // SIN supervisores de seguridad: viven en Equipo de seguridad › Supervisores.
       const filtered = (users || [])
         .map((u) => ({
           ...u,
@@ -155,7 +156,7 @@ export default function AdminOfficeUsersPage() {
         }))
         .filter((u) => {
           const roles = normalizeRoles(u.roles || u.role || u.rolesList || u._rolesDisplay);
-          return !roles.includes('customer');
+          return !roles.includes('customer') && !roles.includes('securitysupervisor');
         });
 
       setRows(filtered);

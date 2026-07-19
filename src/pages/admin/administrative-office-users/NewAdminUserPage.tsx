@@ -177,32 +177,18 @@ export default function NewAdminUserPage() {
     return name || id || '';
   }, [t]);
 
-  const DEFAULT_SUPERVISOR_ROLE: RoleOption = {
-    id: 'securitySupervisor',
-    name: 'securitySupervisor',
-    slug: 'securitySupervisor',
-  };
-
   const DEFAULT_ADMIN_ROLE: RoleOption = {
     id: 'admin',
     name: 'admin',
     slug: 'admin',
   };
 
-  const findSupervisorRole = useCallback((roles: RoleOption[]) => {
-    return roles.find((role) => {
-      const id = (role.id || '').toString().toLowerCase();
-      const name = (role.name || '').toString().toLowerCase();
-      const slug = (role.slug || '').toString().toLowerCase();
-      return (
-        id === 'securitysupervisor' ||
-        slug === 'securitysupervisor' ||
-        id.includes('supervisor') ||
-        slug.includes('supervisor') ||
-        name.includes('supervisor')
-      );
-    });
-  }, []);
+  // Los supervisores de seguridad NO se crean desde oficina administrativa —
+  // tienen su propia página (Equipo de seguridad › Supervisores).
+  const isSecuritySupervisorRole = (role: RoleOption) => {
+    const norm = (v: any) => (v || '').toString().toLowerCase();
+    return norm(role.id) === 'securitysupervisor' || norm(role.slug) === 'securitysupervisor' || norm(role.name) === 'securitysupervisor';
+  };
 
   const findAdminRole = useCallback((roles: RoleOption[]) => {
     return roles.find((role) => {
@@ -288,15 +274,14 @@ export default function NewAdminUserPage() {
           };
         });
 
-        const supervisorRole = findSupervisorRole(mappedRoles) ?? DEFAULT_SUPERVISOR_ROLE;
-        const adminRole = findAdminRole(mappedRoles) ?? DEFAULT_ADMIN_ROLE;
-        const mappedWithSupervisor = findSupervisorRole(mappedRoles) ? mappedRoles : [supervisorRole, ...mappedRoles];
-        const mappedRolesWithAdmin = findAdminRole(mappedWithSupervisor) ? mappedWithSupervisor : [adminRole, ...mappedWithSupervisor];
+        const withoutSecuritySupervisor = mappedRoles.filter((r: RoleOption) => !isSecuritySupervisorRole(r));
+        const adminRole = findAdminRole(withoutSecuritySupervisor) ?? DEFAULT_ADMIN_ROLE;
+        const mappedRolesWithAdmin = findAdminRole(withoutSecuritySupervisor) ? withoutSecuritySupervisor : [adminRole, ...withoutSecuritySupervisor];
 
         setRoleOptions(mappedRolesWithAdmin);
 
         if (!accessLevelValue) {
-          setValue('accessLevel', supervisorRole.id);
+          setValue('accessLevel', adminRole.id);
         }
       } catch (err) {
         console.error('Error cargando datos iniciales', err);
@@ -306,10 +291,10 @@ export default function NewAdminUserPage() {
 
   useEffect(() => {
     if (!accessLevelValue && roleOptions.length > 0) {
-      const supervisorRole = findSupervisorRole(roleOptions) ?? DEFAULT_SUPERVISOR_ROLE;
-      setValue('accessLevel', supervisorRole.id);
+      const adminRole = findAdminRole(roleOptions) ?? roleOptions[0];
+      setValue('accessLevel', adminRole.id);
     }
-  }, [accessLevelValue, roleOptions, setValue, findSupervisorRole]);
+  }, [accessLevelValue, roleOptions, setValue, findAdminRole]);
 
   // load sites whenever selected clients change
   useEffect(() => {
