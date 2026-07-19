@@ -23,7 +23,7 @@ import {
 const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-all placeholder:text-muted-foreground hover:border-ring/40 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]';
 
 // ── Shape of GET /client-account/:id/coverage (clientAccountCoverage.ts) ──
-type CoverageStatus = 'cubierto' | 'parcial' | 'sin_cobertura' | 'sin_turno';
+type CoverageStatus = 'cubierto' | 'parcial' | 'sin_cobertura' | 'asignado_sin_marcar' | 'sin_turno';
 type BadgeTone = 'green' | 'orange' | 'red' | 'slate';
 interface CoverageSede { id: string; name: string; address: string | null; lat: number | null; lng: number | null; }
 interface CoveragePuesto {
@@ -68,14 +68,15 @@ interface CoverageData {
 }
 
 const STATUS_META: Record<string, { label: string; tone: BadgeTone; dot: string; role: string }> = {
-  cubierto:      { label: 'Cubierto',      tone: 'green',  dot: 'bg-emerald-500', role: 'ok' },
-  parcial:       { label: 'Parcial',       tone: 'orange', dot: 'bg-orange-500',  role: 'warn' },
-  sin_cobertura: { label: 'Sin cobertura', tone: 'red',    dot: 'bg-red-500',     role: 'crit' },
-  sin_turno:     { label: 'Sin turno',     tone: 'slate',  dot: 'bg-slate-400',   role: 'muted' },
+  cubierto:            { label: 'Cubierto',           tone: 'green',  dot: 'bg-emerald-500', role: 'ok' },
+  parcial:             { label: 'Parcial',            tone: 'orange', dot: 'bg-orange-500',  role: 'warn' },
+  asignado_sin_marcar: { label: 'Asignado · sin marcar', tone: 'orange', dot: 'bg-orange-500', role: 'warn' },
+  sin_cobertura:       { label: 'Sin cobertura',      tone: 'red',    dot: 'bg-red-500',     role: 'crit' },
+  sin_turno:           { label: 'Sin turno',          tone: 'slate',  dot: 'bg-slate-400',   role: 'muted' },
 };
 
 function Bar({ pct, status }: { pct: number; status: string }) {
-  const color = status === 'sin_cobertura' ? 'bg-red-500' : status === 'parcial' ? 'bg-orange-500' : status === 'sin_turno' ? 'bg-slate-300' : 'bg-emerald-500';
+  const color = status === 'sin_cobertura' ? 'bg-red-500' : status === 'parcial' || status === 'asignado_sin_marcar' ? 'bg-orange-500' : status === 'sin_turno' ? 'bg-slate-300' : 'bg-emerald-500';
   return (
     <div className="h-1.5 w-full min-w-[54px] rounded-full bg-muted">
       <div className={`h-1.5 rounded-full ${color}`} style={{ width: `${Math.max(2, Math.min(100, pct))}%` }} />
@@ -234,6 +235,7 @@ export default function ClientCoverage({ client }: { client: Client }) {
                 <option value="todos">Estado: Todos</option>
                 <option value="cubierto">Cubierto</option>
                 <option value="parcial">Parcial</option>
+                <option value="asignado_sin_marcar">Asignado sin marcar</option>
                 <option value="sin_cobertura">Sin cobertura</option>
                 <option value="sin_turno">Sin turno</option>
               </select>
