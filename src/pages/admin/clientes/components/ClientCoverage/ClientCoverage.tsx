@@ -11,7 +11,13 @@ import {
   Search, MapPin, Shield, ShieldAlert, Clock,
   CheckCircle2, Crosshair, RefreshCw, Route as RouteIcon, ChevronRight,
   LayoutGrid, Locate, Satellite, Map as MapIcon, ExternalLink,
+  MoreVertical, Trash2, Users, CalendarDays,
 } from 'lucide-react';
+import { ApiService } from '@/services/api/apiService';
+import { confirmDialog } from '@/components/ui/confirmDialog';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-all placeholder:text-muted-foreground hover:border-ring/40 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]';
 
@@ -77,6 +83,27 @@ export default function ClientCoverage({ client }: { client: any }) {
   const proximos: any[] = data?.proximos || [];
 
   const selected = puestos.find((p) => p.id === selectedId) || null;
+
+  const deleteStation = async (p: any) => {
+    const ok = await confirmDialog({
+      title: 'Eliminar estación',
+      message: `¿Eliminar la estación "${p.name}"? Sus horarios, asignaciones y rondas (QR) quedan huérfanos — si la vuelves a crear, las rondas NO se reconectan solas. Considera editarla en su lugar.`,
+      confirmText: 'Eliminar',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    try {
+      // NOTE: stationService.delete() actually deletes POST-SITES (misleading
+      // name) — the station row is DELETE /station/:id.
+      const tenantId = localStorage.getItem('tenantId') || '';
+      await ApiService.delete(`/tenant/${tenantId}/station/${p.id}`);
+      toast.success('Estación eliminada');
+      if (selectedId === p.id) setSelectedId(null);
+      await load(sedeId, true);
+    } catch (e: any) {
+      toast.error(e?.message || 'No se pudo eliminar la estación');
+    }
+  };
 
   const changeSede = (id: string) => { setSedeId(id); setSelectedId(null); setPage(1); load(id); };
 
@@ -196,6 +223,7 @@ export default function ClientCoverage({ client }: { client: any }) {
                       <th className="px-2 py-2 font-medium">Cobertura</th>
                       <th className="px-2 py-2 font-medium">Estado</th>
                       <th className="px-2 py-2 font-medium">Última actividad</th>
+                      <th className="px-2 py-2 font-medium" aria-label="Acciones" />
                     </tr>
                   </thead>
                   <tbody>
@@ -204,11 +232,16 @@ export default function ClientCoverage({ client }: { client: any }) {
                       const n = idxOf(p.id) + 1;
                       const sel = p.id === selectedId;
                       return (
-                        <tr key={p.id} onClick={() => selectPuesto(p)}
+                        <tr key={p.id} onClick={() => navigate(`/post-sites/${sedeId}/stations/${p.id}`)}
+                          title="Abrir el detalle de la estación"
                           className={`cursor-pointer border-b last:border-0 ${sel ? 'bg-primary/5' : 'hover:bg-muted/40'}`}>
                           <td className="px-2 py-2.5">
                             <div className="flex items-center gap-2.5">
-                              <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white ${meta.dot}`}>{n}</span>
+                              {/* Numbered pin: selects on the map (does NOT navigate) */}
+                              <button
+                                onClick={(e) => { e.stopPropagation(); selectPuesto(p); }}
+                                title="Ver en el mapa"
+                                className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white transition-transform hover:scale-110 ${meta.dot}`}>{n}</button>
                               <div className="min-w-0">
                                 <div className="font-medium truncate">{p.name}</div>
                                 {p.nickname && <div className="text-xs text-muted-foreground truncate">{p.nickname}</div>}
@@ -235,6 +268,44 @@ export default function ClientCoverage({ client }: { client: any }) {
                             {p.lastActivity?.type === 'ronda' ? <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600"><RouteIcon className="h-3.5 w-3.5" /> Ronda activa</span>
                               : p.lastActivity?.type === 'checkin' ? <div><div className="tabular-nums">{p.lastActivity.time}</div><div className="text-xs text-muted-foreground">Check-in</div></div>
                               : <span className="text-xs text-muted-foreground">Sin actividad</span>}
+                          </td>
+                          <td className="px-2 py-2.5 text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                  title="Acciones"
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem onClick={() => navigate(`/post-sites/${sedeId}/stations/${p.id}`)}>
+                                  <ExternalLink className="mr-2 h-3.5 w-3.5" /> Abrir estación
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate(`/post-sites/${sedeId}/stations/${p.id}/guards`)}>
+                                  <Users className="mr-2 h-3.5 w-3.5" /> Vigilantes asignados
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate('/schedule')}>
+                                  <CalendarDays className="mr-2 h-3.5 w-3.5" /> Horario en Programador
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => selectPuesto(p)}>
+                                  <Locate className="mr-2 h-3.5 w-3.5" /> Ver en el mapa
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { selectPuesto(p); setPlacing(true); }}>
+                                  <Crosshair className="mr-2 h-3.5 w-3.5" /> Fijar ubicación en el mapa
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-red-500 focus:text-red-500"
+                                  onClick={() => void deleteStation(p)}
+                                >
+                                  <Trash2 className="mr-2 h-3.5 w-3.5" /> Eliminar estación
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </td>
                         </tr>
                       );
