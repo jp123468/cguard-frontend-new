@@ -732,12 +732,12 @@ export const clientService = {
     },
     async assignGuardToPosition(payload: { guardId: string; stationId: string; positionId: string; startDate?: string; isRelief?: boolean }) {
         const tenantId = getTenantId();
-        const { data } = await api.post<any>(`/tenant/${tenantId}/guard-assignment`, { data: payload });
+        const { data } = await api.post<any>(`/tenant/${tenantId}/guard-assignment`, { data: payload }, { toast: { silentError: true } } as any);
         return data?.data ?? data;
     },
     async removeGuardAssignment(assignmentId: string) {
         const tenantId = getTenantId();
-        const { data } = await api.delete<any>(`/tenant/${tenantId}/guard-assignment/${assignmentId}`);
+        const { data } = await api.delete<any>(`/tenant/${tenantId}/guard-assignment/${assignmentId}`, { toast: { silentError: true } } as any);
         return data?.data ?? data;
     },
 

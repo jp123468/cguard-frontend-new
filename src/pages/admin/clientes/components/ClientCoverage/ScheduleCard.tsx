@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { clientService } from '@/lib/api/clientService';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Section, EmptyState, Modal } from '@/components/kit';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -16,6 +17,8 @@ const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent 
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 export default function ScheduleCard({ clientId, sedeId }: { clientId: string; sedeId: string }) {
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission('stationEdit');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [start, setStart] = useState<string | undefined>(undefined);
@@ -56,23 +59,25 @@ export default function ScheduleCard({ clientId, sedeId }: { clientId: string; s
     setStart(ymd(cur));
   };
 
-  const openEdit = (row: any) => { setEditRow(row); setPickGuard(row.guardId || ''); };
+  const openEdit = (row: any) => { if (!canEdit) return; setEditRow(row); setPickGuard(row.guardId || ''); };
   const saveGuard = async () => {
     if (!editRow) return;
     setSaving(true);
     try {
-      // Change = remove existing assignment on the position, then assign the new guard.
-      if (editRow.assignmentId) await clientService.removeGuardAssignment(editRow.assignmentId);
       if (pickGuard) {
+        // Create the NEW assignment first (the unique slot index is keyed on
+        // guardId, so it can coexist with the old one), THEN remove the old. A
+        // failed create never leaves the position unassigned / nukes old shifts.
         await clientService.assignGuardToPosition({ guardId: pickGuard, stationId: editRow.stationId, positionId: editRow.positionId, isRelief: editRow.positionType === 'sacafranco' });
-        toast.success('Vigilante asignado');
-      } else {
+        if (editRow.assignmentId) { try { await clientService.removeGuardAssignment(editRow.assignmentId); } catch { /* old row lingers harmlessly; refetch reflects truth */ } }
+        toast.success(editRow.positionType === 'sacafranco' ? 'Sacafranco asignado (los turnos se colocan según los huecos de la operación)' : 'Vigilante asignado');
+      } else if (editRow.assignmentId) {
+        await clientService.removeGuardAssignment(editRow.assignmentId);
         toast.success('Asignación removida');
       }
       setEditRow(null);
-      await load(true);
     } catch (e: any) { toast.error(e?.response?.data?.message || 'No se pudo actualizar la asignación'); }
-    finally { setSaving(false); }
+    finally { setSaving(false); await load(true); }
   };
   const removeGuard = async () => {
     if (!editRow?.assignmentId) { setEditRow(null); return; }
@@ -125,11 +130,15 @@ export default function ScheduleCard({ clientId, sedeId }: { clientId: string; s
                       <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
                           <span className="text-xs text-muted-foreground">{r.positionName}{r.positionType === 'sacafranco' ? ' · SF' : ''}</span>
-                          <button onClick={() => openEdit(r)} className="block truncate text-left text-sm font-medium hover:text-primary" title="Cambiar vigilante">
-                            {r.guardName || <span className="text-orange-600">Sin asignar</span>}
-                          </button>
+                          {canEdit ? (
+                            <button onClick={() => openEdit(r)} className="block truncate text-left text-sm font-medium hover:text-primary" title="Cambiar vigilante">
+                              {r.guardName || <span className="text-orange-600">Sin asignar</span>}
+                            </button>
+                          ) : (
+                            <div className="truncate text-sm font-medium">{r.guardName || <span className="text-orange-600">Sin asignar</span>}</div>
+                          )}
                         </div>
-                        <button onClick={() => openEdit(r)} className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-primary" title="Cambiar vigilante"><UserPlus className="h-3.5 w-3.5" /></button>
+                        {canEdit && <button onClick={() => openEdit(r)} className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-primary" title="Cambiar vigilante"><UserPlus className="h-3.5 w-3.5" /></button>}
                       </div>
                     </td>
                     {r.cells.map((c: any) => {
@@ -145,7 +154,7 @@ export default function ScheduleCard({ clientId, sedeId }: { clientId: string; s
             <span className="inline-flex items-center gap-1.5"><span className="grid h-4 w-4 place-items-center rounded bg-sky-500/15 text-[10px] font-bold text-sky-700">D</span> Día</span>
             <span className="inline-flex items-center gap-1.5"><span className="grid h-4 w-4 place-items-center rounded bg-indigo-500/15 text-[10px] font-bold text-indigo-700">N</span> Noche</span>
             <span className="inline-flex items-center gap-1.5"><span className="grid h-4 w-4 place-items-center rounded bg-muted text-[10px] font-bold text-muted-foreground">L</span> Libre</span>
-            <span className="ml-auto">Toca un vigilante para cambiarlo.</span>
+            {canEdit && <span className="ml-auto">Toca un vigilante para cambiarlo.</span>}
           </div>
         </>
       )}
