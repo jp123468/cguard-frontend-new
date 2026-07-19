@@ -6,14 +6,25 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Wallet, FileSpreadsheet, Printer, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
 import { PageContainer, PageHeader, Section, StatCard } from "@/components/kit";
-import payrollService, { type Roster, type RosterRow } from "@/lib/api/payrollService";
+import payrollService, { type Roster, type RosterRow, type RosterTotals } from "@/lib/api/payrollService";
 
 const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 const SOURCE_LABEL: Record<string, string> = {
   "guard-override": "Configurado",
-  "tenant-default": "Sueldo base tenant",
+  "tenant-default": "Sueldo base",
   "sbu-fallback": "SBU (sin configurar)",
+};
+
+const ROLE_LABEL: Record<string, string> = {
+  guard: "Vigilante",
+  supervisor: "Supervisor",
+  administrative: "Administrativo",
+};
+
+const ROLE_BADGE: Record<string, string> = {
+  supervisor: "bg-amber-500/15 text-amber-600",
+  administrative: "bg-sky-500/15 text-sky-600",
 };
 
 export default function NominaRolDePagos() {
@@ -47,29 +58,43 @@ export default function NominaRolDePagos() {
   const periodLabel = `${MONTHS[month - 1]} ${year}`;
   const fallbackCount = useMemo(() => (roster?.rows || []).filter((r) => r.salarySource === "sbu-fallback").length, [roster]);
 
+  const hoursOf = (r: RosterRow) => Number((r.aggregate.regularHours + r.aggregate.overtimeHours).toFixed(2));
+
   // ── Exports ────────────────────────────────────────────────────────────────
-  const COLS: Array<[string, (r: RosterRow) => string | number]> = [
-    ["Vigilante", (r) => r.guardName],
-    ["Sueldo", (r) => r.payroll.earnings.baseSalary],
-    ["Horas extra ($)", (r) => Number(extras(r).toFixed(2))],
-    ["Imponible", (r) => r.payroll.earnings.imponible],
-    ["Décimo 13", (r) => r.payroll.earnings.decimoTercero],
-    ["Décimo 14", (r) => r.payroll.earnings.decimoCuarto],
-    ["Fondos reserva", (r) => r.payroll.earnings.fondosReserva],
-    ["IESS personal", (r) => r.payroll.deductions.iessPersonal],
-    ["Otras deduc.", (r) => r.payroll.deductions.other],
-    ["Total ingresos", (r) => r.payroll.earnings.totalEarnings],
-    ["Total deduc.", (r) => r.payroll.deductions.totalDeductions],
-    ["Neto a pagar", (r) => r.payroll.netPay],
-    ["IESS patronal", (r) => r.payroll.employerCost.iessPatronal],
-    ["Salario", (r) => SOURCE_LABEL[r.salarySource] || r.salarySource],
+  // fmt drives PDF/print number formatting: "text" as-is, "num" plain number,
+  // "money" as currency. `total` (when present) fills the TOTALES footer row.
+  type Fmt = "text" | "num" | "money";
+  const COLS: Array<{
+    label: string;
+    get: (r: RosterRow) => string | number;
+    fmt: Fmt;
+    total?: (t: RosterTotals) => number;
+  }> = [
+    { label: "Trabajador", get: (r) => r.guardName, fmt: "text" },
+    { label: "Tipo", get: (r) => ROLE_LABEL[r.role || "guard"], fmt: "text" },
+    { label: "Turnos", get: (r) => r.aggregate.shiftCount, fmt: "num" },
+    { label: "Días trab.", get: (r) => r.aggregate.daysWorked ?? 0, fmt: "num" },
+    { label: "Horas", get: (r) => hoursOf(r), fmt: "num" },
+    { label: "Sueldo", get: (r) => r.payroll.earnings.baseSalary, fmt: "money" },
+    { label: "Horas extra ($)", get: (r) => Number(extras(r).toFixed(2)), fmt: "money" },
+    { label: "Imponible", get: (r) => r.payroll.earnings.imponible, fmt: "money", total: (t) => t.imponible },
+    { label: "Décimo 13", get: (r) => r.payroll.earnings.decimoTercero, fmt: "money" },
+    { label: "Décimo 14", get: (r) => r.payroll.earnings.decimoCuarto, fmt: "money" },
+    { label: "Fondos reserva", get: (r) => r.payroll.earnings.fondosReserva, fmt: "money" },
+    { label: "IESS personal", get: (r) => r.payroll.deductions.iessPersonal, fmt: "money", total: (t) => t.iessPersonal },
+    { label: "Otras deduc.", get: (r) => r.payroll.deductions.other, fmt: "money" },
+    { label: "Total ingresos", get: (r) => r.payroll.earnings.totalEarnings, fmt: "money", total: (t) => t.totalEarnings },
+    { label: "Total deduc.", get: (r) => r.payroll.deductions.totalDeductions, fmt: "money", total: (t) => t.totalDeductions },
+    { label: "Neto a pagar", get: (r) => r.payroll.netPay, fmt: "money", total: (t) => t.netPay },
+    { label: "IESS patronal", get: (r) => r.payroll.employerCost.iessPatronal, fmt: "money", total: (t) => t.iessPatronal },
+    { label: "Salario", get: (r) => SOURCE_LABEL[r.salarySource] || r.salarySource, fmt: "text" },
   ];
 
   const exportExcel = () => {
     if (!roster) return;
-    const header = COLS.map((c) => c[0]);
-    const body = roster.rows.map((r) => COLS.map((c) => c[1](r)));
-    const totalRow = ["TOTALES", "", "", roster.totals.imponible, "", "", "", roster.totals.iessPersonal, "", roster.totals.totalEarnings, roster.totals.totalDeductions, roster.totals.netPay, roster.totals.iessPatronal, ""];
+    const header = COLS.map((c) => c.label);
+    const body = roster.rows.map((r) => COLS.map((c) => c.get(r)));
+    const totalRow = COLS.map((c, i) => (i === 0 ? "TOTALES" : c.total ? c.total(roster.totals) : ""));
     const ws = XLSX.utils.aoa_to_sheet([header, ...body, [], totalRow]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Rol de pagos");
@@ -80,9 +105,11 @@ export default function NominaRolDePagos() {
   const printPdf = () => {
     if (!roster) return;
     const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const head = COLS.map((c) => `<th>${esc(c[0])}</th>`).join("");
+    const cell = (c: (typeof COLS)[number], r: RosterRow) =>
+      c.fmt === "money" ? money(Number(c.get(r)) || 0) : esc(c.get(r));
+    const head = COLS.map((c) => `<th>${esc(c.label)}</th>`).join("");
     const rows = roster.rows
-      .map((r) => `<tr>${COLS.map((c, i) => `<td class="${i === 0 || i === COLS.length - 1 ? "l" : "r"}">${i === 0 || i === COLS.length - 1 ? esc(c[1](r)) : money(Number(c[1](r)) || 0)}</td>`).join("")}</tr>`)
+      .map((r) => `<tr>${COLS.map((c) => `<td class="${c.fmt === "text" ? "l" : "r"}">${cell(c, r)}</td>`).join("")}</tr>`)
       .join("");
     const w = window.open("", "_blank");
     if (!w) { toast.error("Habilita las ventanas emergentes para exportar"); return; }
@@ -98,7 +125,9 @@ export default function NominaRolDePagos() {
       <h1>Rol de pagos — ${esc(periodLabel)}</h1>
       <p class="sub">${roster.count} trabajador(es) · Neto total a pagar: ${money(roster.totals.netPay)} · Costo patronal: ${money(roster.totals.employerCost)}</p>
       <table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody>
-      <tfoot><tr><td class="l">TOTALES</td><td class="r"></td><td class="r"></td><td class="r">${money(roster.totals.imponible)}</td><td class="r"></td><td class="r"></td><td class="r"></td><td class="r">${money(roster.totals.iessPersonal)}</td><td class="r"></td><td class="r">${money(roster.totals.totalEarnings)}</td><td class="r">${money(roster.totals.totalDeductions)}</td><td class="r">${money(roster.totals.netPay)}</td><td class="r">${money(roster.totals.iessPatronal)}</td><td class="l"></td></tr></tfoot>
+      <tfoot><tr>${COLS.map((c, i) => i === 0
+        ? `<td class="l">TOTALES</td>`
+        : `<td class="r">${c.total ? money(c.total(roster.totals)) : ""}</td>`).join("")}</tr></tfoot>
       </table>
       <p class="foot">Generado por CGuardPro · para procesamiento contable</p>
       </body></html>`);
@@ -173,7 +202,7 @@ export default function NominaRolDePagos() {
         {fallbackCount > 0 && (
           <div className="flex items-center gap-2 rounded-xl border border-warn/30 bg-warn/10 px-4 py-2.5 text-sm text-foreground">
             <AlertTriangle className="h-4 w-4 text-amber-500" />
-            {fallbackCount} vigilante(s) sin sueldo configurado — se usó el SBU. Configura sus sueldos en Nómina › Ajustes para un cálculo exacto.
+            {fallbackCount} trabajador(es) sin sueldo configurado — se usó el SBU. Configura sus sueldos en Nómina › Ajustes para un cálculo exacto.
           </div>
         )}
 
@@ -182,13 +211,16 @@ export default function NominaRolDePagos() {
           {loading ? (
             <div className="flex min-h-[240px] items-center justify-center"><Loader2 className="animate-spin text-primary" size={26} /></div>
           ) : !roster || roster.rows.length === 0 ? (
-            <div className="px-6 py-16 text-center text-sm text-muted-foreground">Sin vigilantes o sin datos para {periodLabel}.</div>
+            <div className="px-6 py-16 text-center text-sm text-muted-foreground">Sin trabajadores o sin datos para {periodLabel}.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/50 bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
-                    <th className="px-3 py-2.5 text-left font-semibold">Vigilante</th>
+                    <th className="px-3 py-2.5 text-left font-semibold">Trabajador</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Turnos</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Días</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Horas</th>
                     <th className="px-3 py-2.5 text-right font-semibold">Sueldo</th>
                     <th className="px-3 py-2.5 text-right font-semibold">H. extra</th>
                     <th className="px-3 py-2.5 text-right font-semibold">Imponible</th>
@@ -203,9 +235,19 @@ export default function NominaRolDePagos() {
                   {roster.rows.map((r) => (
                     <tr key={r.guardId} className="border-b border-border/20 hover:bg-muted/20">
                       <td className="px-3 py-2.5 text-foreground">
-                        {r.guardName}
-                        {r.salarySource === "sbu-fallback" && <span className="ml-2 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600">SBU</span>}
+                        <span className="inline-flex flex-wrap items-center gap-1.5">
+                          {r.guardName}
+                          {r.role && r.role !== "guard" && (
+                            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${ROLE_BADGE[r.role] || ""}`}>
+                              {ROLE_LABEL[r.role]}
+                            </span>
+                          )}
+                          {r.salarySource === "sbu-fallback" && <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600">SBU</span>}
+                        </span>
                       </td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{r.aggregate.shiftCount}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{r.aggregate.daysWorked ?? 0}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{hoursOf(r).toFixed(2)}</td>
                       <td className="px-3 py-2.5 text-right tabular-nums">{money(r.payroll.earnings.baseSalary)}</td>
                       <td className="px-3 py-2.5 text-right tabular-nums">{money(extras(r))}</td>
                       <td className="px-3 py-2.5 text-right tabular-nums">{money(r.payroll.earnings.imponible)}</td>
@@ -220,7 +262,7 @@ export default function NominaRolDePagos() {
                 <tfoot>
                   <tr className="border-t-2 border-primary/40 bg-muted/40 font-semibold">
                     <td className="px-3 py-3">TOTALES ({roster.count})</td>
-                    <td /><td /><td className="px-3 py-3 text-right tabular-nums">{money(roster.totals.imponible)}</td>
+                    <td /><td /><td /><td /><td /><td className="px-3 py-3 text-right tabular-nums">{money(roster.totals.imponible)}</td>
                     <td /><td /><td /><td className="px-3 py-3 text-right tabular-nums text-red-500">−{money(roster.totals.iessPersonal)}</td>
                     <td className="px-3 py-3 text-right tabular-nums">{money(roster.totals.netPay)}</td>
                   </tr>

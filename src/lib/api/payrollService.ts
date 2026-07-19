@@ -10,10 +10,11 @@ const getTenantId = (): string => localStorage.getItem("tenantId") || "";
 export interface RosterRow {
   guardId: string;
   guardName: string;
+  role?: "guard" | "supervisor" | "administrative";
   monthlyRemuneration: number;
   salarySource: "guard-override" | "tenant-default" | "sbu-fallback";
   yearsOfService: number;
-  aggregate: { shiftCount: number; regularHours: number; overtimeHours: number };
+  aggregate: { shiftCount: number; daysWorked?: number; regularHours: number; overtimeHours: number };
   payroll: {
     earnings: {
       baseSalary: number; supplementaryPay: number; extraordinaryPay: number; nightSurcharge: number;
