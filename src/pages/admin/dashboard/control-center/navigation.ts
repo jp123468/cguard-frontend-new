@@ -11,8 +11,8 @@ import type { ActivityItem } from "./types";
 /** KPI card → route, keyed by Kpi.key. Used for both live and demo data. */
 export const KPI_ROUTES: Record<string, string> = {
   onDuty: "/live-tracking", // guards currently on duty → live GPS map
-  stations: "/post-sites", // puestos activos
-  supervisors: "/back-office", // administrative team
+  stations: "/clients", // estaciones viven bajo Clientes (/post-sites redirige)
+  supervisors: "/supervisors", // Equipo de seguridad › Supervisores
   openIncidents: "/activities", // live incident / event feed
   clients: "/clients",
   response: "/analytics/reporting", // response-time analytics

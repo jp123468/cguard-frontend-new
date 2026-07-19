@@ -101,6 +101,9 @@ export const clientSchema = z
         .or(z.literal("")),
     contractEndDate: z.string().optional().or(z.literal("")),
     riskLevel: z.string().optional().or(z.literal("")),
+    // Orden de compra (opcional) — clientes públicos/estatales que contratan
+    // por orden de compra en lugar de contrato directo.
+    purchaseOrder: z.string().max(120).optional().or(z.literal("")),
     code: z.string().trim().max(50, "Máximo 50 caracteres").optional().or(z.literal("")),
     accountExecutiveId: z.string().optional().or(z.literal("")),
     // Representante legal (persona) — separado de la empresa.

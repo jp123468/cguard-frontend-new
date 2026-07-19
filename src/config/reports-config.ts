@@ -81,7 +81,6 @@ export const REPORT_SECTIONS: ReportSection[] = [
     id: "incidents",
     title: "Informes de Incidentes",
     viewAllHref: "/reports/incidents",
-    settingsHref: "/reports/incidents/settings",
     reports: [
       {
         id: "general-incident",
@@ -89,16 +88,12 @@ export const REPORT_SECTIONS: ReportSection[] = [
         description:
           "General incident report with an option to select any incident",
         href: "/reports/incidents/general",
-        openCount: 0,
-        closedCount: 0,
       },
       {
         id: "detailed-incident",
         title: "Detailed Incident Report",
         description: "Detailed Incident Report",
         href: "/reports/incidents/detailed",
-        openCount: 0,
-        closedCount: 0,
       },
       {
         id: "parking-violation",
@@ -106,16 +101,12 @@ export const REPORT_SECTIONS: ReportSection[] = [
         description:
           "This report is used to check the parking violation.",
         href: "/reports/incidents/parking-violation",
-        openCount: 0,
-        closedCount: 0,
       },
       {
         id: "break-in",
         title: "Break-In",
         description: "This report covers break-in incident.",
         href: "/reports/incidents/break-in",
-        openCount: 0,
-        closedCount: 0,
       },
       {
         id: "fire-alarm",
@@ -123,48 +114,36 @@ export const REPORT_SECTIONS: ReportSection[] = [
         description:
           "This report is created to address fire alarm.",
         href: "/reports/incidents/fire-alarm",
-        openCount: 0,
-        closedCount: 0,
       },
       {
         id: "vandalism",
         title: "Vandalism",
         description: "This report covers vandalism incident.",
         href: "/reports/incidents/vandalism",
-        openCount: 0,
-        closedCount: 0,
       },
       {
         id: "suspicious-activity",
         title: "Suspicious Activity",
         description: "This report covers suspicious activity.",
         href: "/reports/incidents/suspicious-activity",
-        openCount: 0,
-        closedCount: 0,
       },
       {
         id: "police-onsite",
         title: "Police Onsite",
         description: "This report covers police reports.",
         href: "/reports/incidents/police-onsite",
-        openCount: 0,
-        closedCount: 0,
       },
       {
         id: "trespassing",
         title: "Trespassing",
         description: "This report is to address trespassing incident.",
         href: "/reports/incidents/trespassing",
-        openCount: 0,
-        closedCount: 0,
       },
     ],
   },
   {
     id: "standard",
     title: "Informes Estándar",
-    viewAllHref: "/reports/standard",
-    settingsHref: "/reports/standard",
     reports: [
       {
         id: "hourly-report",

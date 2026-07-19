@@ -104,7 +104,7 @@ export default function SacafrancoAssignModal({
       await ApiService.post(`/tenant/${tenantId}/guard-assignment`, {
         data: { guardId: g.id, stationId, positionId: sf.id, startDate: today(), isRelief: true },
       });
-      toast.success(`${g.name} asignado como sacafranco — cubrirá los descansos de los fijos`);
+      toast.success(`${g.name} asignado como sacafranco — quedó asignado como sacafranco — coloca su cobertura día a día en Programador › Horario (arrastra sus días L) o usa Optimizar Sacafrancos`);
       onAssigned();
       onClose();
     } catch (e: any) {

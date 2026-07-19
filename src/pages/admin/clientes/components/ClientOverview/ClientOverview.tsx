@@ -71,14 +71,15 @@ export default function ClientOverview({ client }: { client: any }) {
   const primary = contacts[0] || null;
 
 
-  // Per-site rollups for the "Estado de sedes" table.
+  // Per-site rollups for the "Estado de sedes" table. Incident counts come
+  // from the overview endpoint's REAL 7-day aggregate keyed by postSiteId —
+  // the old logic counted inside the last-8 feed matched by NAME, so a busy
+  // sede systematically showed 0.
+  const incidentsBySite: Record<string, number> = (ov as any).incidentsBySite || {};
   const siteRows = sites.map((s) => {
     const guards = new Set<string>();
     (s.stations || []).forEach((st: any) => (st.guards || []).forEach((g: any) => guards.add(String(g.id))));
-    const incCount = novedades.filter((n: any) => {
-      const site = n.postSiteName || n.postSite?.companyName || '';
-      return site && s.name && String(site).toLowerCase() === String(s.name).toLowerCase();
-    }).length;
+    const incCount = incidentsBySite[String(s.id)] ?? 0;
     return {
       id: s.id, name: s.name, address: s.address || s.city || '',
       stations: (s.stations || []).length, guards: guards.size, incidents: incCount,

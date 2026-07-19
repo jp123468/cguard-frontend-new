@@ -325,7 +325,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
       >
         <div className="px-5">
           <p className="-mt-2 text-xs text-muted-foreground">
-            {t('station.guards.hint', 'El fijo cubre la rotación; el sacafranco cubre sus días de descanso.')}
+            {t('station.guards.hint', 'El fijo cubre la rotación; el sacafranco se coloca a mano en Programador › Horario (o con Optimizar Sacafrancos).')}
           </p>
           {rows.length > 0 && (
             <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">

@@ -79,7 +79,7 @@ export default function ClientPostSites({ client }: { client: any }) {
         const m = meta.get(String(s.id)) || {};
         const cov = required > 0 ? Math.min(100, Math.round((guards.size / required) * 100)) : 0;
         return {
-          id: s.id, code: `SDE-${String(i + 1).padStart(3, '0')}`, name: s.name,
+          id: s.id, code: '', name: s.name,
           address: s.address || m.address || '', city: s.city || m.city || '',
           active: s.active !== undefined ? !!s.active : !!m.active,
           stations, guards: guards.size, required, coverage: cov,
@@ -168,7 +168,7 @@ export default function ClientPostSites({ client }: { client: any }) {
                     <th className="py-2 pr-3 font-medium">Guardias</th>
                     <th className="py-2 pr-3 font-medium">Estaciones</th>
                     <th className="py-2 pr-3 font-medium">Estado</th>
-                    <th className="py-2 pr-3 font-medium">Cobertura</th>
+                    <th className="py-2 pr-3 font-medium" title="Vigilantes asignados vs estaciones (no es cobertura en vivo)">Asignación</th>
                     <th className="py-2 pr-1 font-medium" aria-label="Acciones" />
                   </tr>
                 </thead>
@@ -196,7 +196,7 @@ export default function ClientPostSites({ client }: { client: any }) {
                           )}
                           <div className="min-w-0">
                             <p className="truncate font-medium text-foreground">{s.name}</p>
-                            <p className="text-[11px] text-muted-foreground">{s.code}</p>
+                            <p className="text-[11px] text-muted-foreground">{s.city || ""}</p>
                           </div>
                         </div>
                       </td>
@@ -262,11 +262,6 @@ export default function ClientPostSites({ client }: { client: any }) {
           {!loading && filtered.length > 0 && (
             <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-xs text-muted-foreground">
               <span>Mostrando {filtered.length} de {sedes.length} sedes</span>
-              <div className="flex items-center gap-1">
-                <button className="flex h-7 w-7 items-center justify-center rounded-md border border-input opacity-40" disabled><ChevronLeft className="h-4 w-4" /></button>
-                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-white">1</span>
-                <button className="flex h-7 w-7 items-center justify-center rounded-md border border-input opacity-40" disabled><ChevronRight className="h-4 w-4" /></button>
-              </div>
             </div>
           )}
         </Section>
@@ -312,7 +307,7 @@ export default function ClientPostSites({ client }: { client: any }) {
                     </span>
                   </div>
                   <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-                    <span>{selected.code}</span>
+                    <span>{selected.city || ''}</span>
                     {risk && <>· Nivel de riesgo: <span className={`rounded-full px-1.5 py-0.5 font-semibold capitalize ${riskTone(risk)}`}>{risk}</span></>}
                   </p>
                   {selected.address && <p className="mt-1 text-xs text-muted-foreground">{selected.address}{selected.city ? `, ${selected.city}` : ''}</p>}

@@ -425,6 +425,13 @@ export default function Schedule() {
     const rot = (station?.rotationStyleId ? rotationStylesById.get(station.rotationStyleId) : null) || assignment.rotationStyle;
     if (!rot) return 'rest';
 
+    // Vigencia: outside [startDate, endDate] the assignment generates no
+    // shifts, so the grid must not paint work there (a cover \"hasta el 31\"
+    // used to show D/N all year).
+    const dStr = fmtDate(date);
+    if (assignment.startDate && dStr < String(assignment.startDate).slice(0, 10)) return 'rest';
+    if (assignment.endDate && dStr > String(assignment.endDate).slice(0, 10)) return 'rest';
+
     // For sacafranco positions, check if any fijo guard at the same station is resting
     const pos = positionsById.get(assignment.positionId);
     if (pos?.type === 'sacafranco' || assignment.isRelief) {

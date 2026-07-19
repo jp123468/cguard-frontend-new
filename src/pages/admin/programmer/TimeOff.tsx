@@ -50,7 +50,13 @@ import { securityGuardService } from "@/lib/api/securityGuardService";
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("es-EC", {
+  // startDate/endDate are DATEONLY strings: `new Date("2026-07-20")` is UTC
+  // midnight, which rendered vacations one day EARLY for anyone west of UTC.
+  // Anchor the calendar date locally instead.
+  const s = String(iso).slice(0, 10);
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  const d = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(iso);
+  return d.toLocaleDateString("es-EC", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -411,28 +417,6 @@ export default function TimeOff() {
                   </div>
                 </SheetContent>
               </Sheet>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-primary">
-                    <EllipsisVertical className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuItem>
-                    <FileText className="mr-2 h-4 w-4" /> Exportar como PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <FileSpreadsheet className="mr-2 h-4 w-4" /> Exportar como Excel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Printer className="mr-2 h-4 w-4" /> Imprimir
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Mail className="mr-2 h-4 w-4" /> Correo Electrónico
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
         </div>

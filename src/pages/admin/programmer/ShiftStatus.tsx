@@ -46,6 +46,9 @@ function formatDate(iso: string | null) {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    // Same tz as formatTime — mixed zones made a row's Fecha disagree with
+    // its own hours for viewers outside the company timezone.
+    timeZone: getTenantTimezone(),
   });
 }
 
@@ -304,28 +307,6 @@ export default function ShiftStatus() {
                   </div>
                 </SheetContent>
               </Sheet>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-primary">
-                    <EllipsisVertical className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuItem>
-                    <FileText className="mr-2 h-4 w-4" /> Exportar como PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <FileSpreadsheet className="mr-2 h-4 w-4" /> Exportar como Excel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Printer className="mr-2 h-4 w-4" /> Imprimir
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Mail className="mr-2 h-4 w-4" /> Enviar Informe por Correo
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
         </div>

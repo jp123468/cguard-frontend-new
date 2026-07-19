@@ -48,7 +48,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
     let alive = true;
     (async () => {
       const gaps: string[] = [];
-      const [stats, active, stationsR, postsR, clientsR, guardsR, incidentsR, usersR, tenantR, eventsR] = await Promise.all([
+      const [stats, active, stationsR, postsR, clientsR, guardsR, incidentsR, openIncR, usersR, tenantR, eventsR] = await Promise.all([
         safe<DashboardStats>(get("/dashboard/stats"), {}),
         safe(securityGuardService.activeLocations(), null as any),
         safe(get("/station?limit=500"), null),
@@ -56,6 +56,9 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
         safe(get("/client-account?limit=500"), null),
         safe(get("/security-guard?limit=1"), null),
         safe(get("/incident?limit=50&orderBy=createdAt_DESC"), null),
+        // Server-side OPEN count — counting client-side inside the latest 50
+        // undercounted tenants with older open incidents.
+        safe(get("/incident?limit=1&filter[status]=abierto"), null),
         safe(get("/user"), null),
         safe(tenantService.findById(tenantId()), null as any),
         // Recent platform events (clock-ins, visitors, patrols, incidents, memos…) —
@@ -113,10 +116,13 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
       const acquisitionTrend: MonthPoint[] = (stats.clientAcquisition || []).map((m) => ({ month: m.month, value: num(m.count) }));
 
       // ── counts ──
-      const openIncidents = incidentRows.filter((i: any) => (i.status || "").toLowerCase() === "abierto").length;
+      const openFromApi = count(openIncR);
+      const openIncidents = openFromApi || incidentRows.filter((i: any) => (i.status || "").toLowerCase() === "abierto").length;
+      // Only REAL security supervisors — the old match also counted
+      // dispatchers/ops managers and disagreed with /supervisors.
       const supervisors = userRows.filter((u: any) => {
         const roles = ([] as string[]).concat(u.roles || u.role || [], ...((u.tenants || []).map((t: any) => t.roles || [])));
-        return roles.map((r: any) => String(r).toLowerCase()).some((r: string) => r.includes("supervisor") || r === "operationsmanager" || r === "dispatcher");
+        return roles.map((r: any) => String(r).toLowerCase()).some((r: string) => r === "securitysupervisor");
       }).length;
       const counts = {
         clients: count(clientsR), postSites: postRows.length || count(postsR),

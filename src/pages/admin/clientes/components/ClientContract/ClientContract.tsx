@@ -48,6 +48,17 @@ export default function ClientContract({ client }: { client: any }) {
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  // Real contract documents (Documentos tab, categoría "Contratos") — the old
+  // panel was a hardcoded EmptyState that said "Sin documentos" forever.
+  const [contractDocs, setContractDocs] = useState<any[]>([]);
+  useEffect(() => {
+    let alive = true;
+    if (!client?.id) return;
+    clientService.getClientDocuments(client.id, { category: 'Contratos', perPage: 20 })
+      .then((r: any) => { if (alive) setContractDocs(Array.isArray(r) ? r : (r?.rows ?? r?.docs ?? [])); })
+      .catch(() => { /* keep empty */ });
+    return () => { alive = false; };
+  }, [client?.id]);
 
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState<any>({});
@@ -206,11 +217,33 @@ export default function ClientContract({ client }: { client: any }) {
         </Section>
 
         <Section title="Documentos del contrato" icon={<ClipboardList className="h-4 w-4" />}>
-          <EmptyState
-            icon={<FileText className="h-5 w-5" />}
-            title="Sin documentos"
-            description="Sube el contrato firmado y anexos en la pestaña Documentos."
-          />
+          {contractDocs.length === 0 ? (
+            <EmptyState
+              icon={<FileText className="h-5 w-5" />}
+              title="Sin documentos"
+              description="Sube el contrato firmado y anexos en la pestaña Documentos (categoría Contratos)."
+            />
+          ) : (
+            <div className="divide-y">
+              {contractDocs.map((d: any) => (
+                <a
+                  key={d.id}
+                  href={d.downloadUrl || d.url || '#'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between gap-2 py-2.5 hover:bg-muted/30 rounded-md px-1"
+                >
+                  <span className="flex min-w-0 items-center gap-2 text-sm text-foreground">
+                    <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className="truncate">{d.name || d.filename || 'Documento'}</span>
+                  </span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {d.createdAt ? new Date(d.createdAt).toLocaleDateString() : ''}
+                  </span>
+                </a>
+              ))}
+            </div>
+          )}
         </Section>
       </div>
 

@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 
 import { PhoneInput } from "@/components/phone/PhoneInput";
+import { Input } from "@/components/ui/input";
 import {
     CategorySelect,
     CategoryOption,
@@ -118,6 +119,7 @@ export default function ClientForm({
             contractDate: "",
             contractEndDate: "",
             riskLevel: "",
+            purchaseOrder: "",
             code: "",
             accountExecutiveId: "",
             legalRepFirstName: "",
@@ -200,6 +202,7 @@ export default function ClientForm({
                         contractDate: (data as any)?.contractDate ? String((data as any).contractDate).slice(0, 10) : '',
                         contractEndDate: (data as any)?.contractEndDate ? String((data as any).contractEndDate).slice(0, 10) : '',
                         riskLevel: (data as any)?.riskLevel ?? '',
+                        purchaseOrder: (data as any)?.purchaseOrder ?? '',
                         code: (data as any)?.code ?? '',
                         accountExecutiveId: (data as any)?.accountExecutiveId ?? '',
                         legalRepFirstName: (data as any)?.legalRepFirstName ?? '',
@@ -294,6 +297,7 @@ export default function ClientForm({
         if ((values as any).contractDate !== undefined) basePayload.contractDate = (values as any).contractDate || null;
         if ((values as any).contractEndDate !== undefined) basePayload.contractEndDate = (values as any).contractEndDate || null;
         if ((values as any).riskLevel !== undefined) basePayload.riskLevel = (values as any).riskLevel || null;
+        if ((values as any).purchaseOrder !== undefined) basePayload.purchaseOrder = String((values as any).purchaseOrder || '').trim() || null;
         if ((values as any).code !== undefined) basePayload.code = (values as any).code || null;
         // The legal rep's name IS the top Nombre/Apellido — mirror them so the
         // legalRep* columns stay consistent (no duplicate inputs).
@@ -698,6 +702,20 @@ export default function ClientForm({
                                                     <option value="Alto">{t('clients.risk.high', 'Alto')}</option>
                                                 </select>
                                             </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField<ClientInput>
+                                    control={form.control}
+                                    name={"purchaseOrder" as any}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.form.purchaseOrder', 'Orden de compra')}<span className="ml-2 text-[10px] font-normal text-muted-foreground normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span></FormLabel>
+                                            <FormControl>
+                                                <Input placeholder={t('clients.form.purchaseOrderPh', 'N° de orden de compra (clientes públicos/estatales)')} {...field} value={typeof field.value === "string" ? field.value : ""} />
+                                            </FormControl>
+                                            <p className="text-[11px] text-muted-foreground">{t('clients.form.purchaseOrderHint', 'Úsalo cuando el cliente sea una entidad pública que contrata por orden de compra.')}</p>
                                             <FormMessage />
                                         </FormItem>
                                     )}

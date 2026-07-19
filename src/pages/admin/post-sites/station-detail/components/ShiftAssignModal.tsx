@@ -186,7 +186,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
           isRelief: (pos?.type || 'fijo') === 'sacafranco',
         },
       });
-      toast.success('Vigilante asignado · la rotación se genera automáticamente');
+      toast.success('Vigilante asignado · si es fijo, la rotación se genera automáticamente; los sacafrancos se colocan a mano en Programador › Horario');
       onSaved(new Date(rotationStartDate + 'T12:00:00'));
     } catch (e: any) {
       toast.error(e?.data?.message || e?.message || 'Error al asignar');

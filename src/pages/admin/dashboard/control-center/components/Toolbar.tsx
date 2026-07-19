@@ -51,16 +51,8 @@ export function Toolbar({
             />
           </span>
         </button>
-        <div className="flex rounded-lg border border-border/60 bg-white/[0.03] p-0.5">
-          {RANGES.map((r) => (
-            <button key={r.key} onClick={() => onRange(r.key)}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                range === r.key ? "text-[color:var(--cc-accent)]" : "text-muted-foreground hover:text-foreground"}`}
-              style={range === r.key ? { background: "color-mix(in oklab, var(--cc-accent) 16%, transparent)" } : undefined}>
-              {r.label}
-            </button>
-          ))}
-        </div>
+        {/* Range selector removed: it never fed any KPI/chart/fetch — a dead
+            control that made users believe they were viewing "Hoy" data. */}
         <button onClick={onRefresh} title="Actualizar"
           className="grid h-8 w-8 place-items-center rounded-lg border border-border/60 bg-white/[0.03] text-muted-foreground hover:text-foreground active:scale-95 transition">
           <RefreshCw size={15} />

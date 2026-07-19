@@ -458,7 +458,7 @@ export default function ClientCoverage({ client }: { client: any }) {
 
           {/* Próximos a iniciar */}
           <Section title="Próximos a iniciar" icon={<Clock className="h-4 w-4" />}
-            action={<button onClick={() => navigate('/scheduler')} className="text-xs font-medium text-primary hover:underline">Ver calendario</button>}>
+            action={<button onClick={() => navigate('/schedule')} className="text-xs font-medium text-primary hover:underline">Ver calendario</button>}>
             {proximos.length === 0 ? (
               <div className="py-2 text-sm text-muted-foreground">No hay turnos próximos en las siguientes 2 horas.</div>
             ) : (

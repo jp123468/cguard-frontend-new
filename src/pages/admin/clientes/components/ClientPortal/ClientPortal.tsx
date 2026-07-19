@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
@@ -44,8 +44,18 @@ export default function ClientPortal({ client }: Props) {
   const email = client?.email || client?.contactEmail || '';
   const name = client?.name || client?.contactName || 'este cliente';
   const linked = !!client?.userId;
-  const accessUsers: any[] = Array.isArray(client?.portalUsers) ? client.portalUsers : [];
-  const accessCount = accessUsers.length + (linked ? 1 : 0);
+  // Real access roster from /access-users (client.portalUsers never existed in
+  // the backend — this card always said 0/1 while Accesos showed the truth).
+  const [accessUsers, setAccessUsers] = useState<any[]>([]);
+  useEffect(() => {
+    let alive = true;
+    if (!client?.id) return;
+    clientService.getClientAccessUsers(client.id)
+      .then((r: any) => { if (alive) setAccessUsers(Array.isArray(r) ? r : (r?.rows ?? [])); })
+      .catch(() => { /* keep empty */ });
+    return () => { alive = false; };
+  }, [client?.id]);
+  const accessCount = accessUsers.length || (linked ? 1 : 0);
 
   const [confirm, setConfirm] = useState<Kind | null>(null);
   const [sending, setSending] = useState(false);
@@ -127,7 +137,9 @@ export default function ClientPortal({ client }: Props) {
               <EmptyState icon={<Users className="h-5 w-5" />} title="Sin usuarios con acceso" description="Invita al titular o agrega accesos adicionales para que el cliente entre al portal y la app." />
             ) : (
               <div className="divide-y">
-                {linked && (
+                {/* /access-users already includes the titular — only fall back
+                    to the linked-user row when the fetch returned nothing. */}
+                {linked && accessUsers.length === 0 && (
                   <div className="flex items-center justify-between py-2.5">
                     <div className="flex items-center gap-2.5"><span className="grid h-8 w-8 place-items-center rounded-full bg-primary/12 text-xs font-semibold text-primary">{initial}</span><div><div className="text-sm font-medium">{name}</div><div className="text-xs text-muted-foreground">{email || '—'}</div></div></div>
                     <StatusBadge tone="green" dot={false}>Titular</StatusBadge>
