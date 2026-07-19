@@ -207,13 +207,18 @@ export default function SupervisorDetailPage() {
                     </div>
                   </Section>
 
-                  <Section title="Horario / Turno" icon={<CalendarClock className="h-4 w-4" />}>
+                  <Section title="Cobertura y horario" icon={<CalendarClock className="h-4 w-4" />}>
                     <p className="text-sm text-muted-foreground">
-                      El horario del supervisor proviene del <span className="font-medium text-foreground">puesto</span> al que está asignado — la rotación (día/noche) se configura en el puesto, no aquí.
+                      La zona y estaciones que cubre este supervisor, y su horario generado, se ven en sus pestañas dedicadas.
                     </p>
-                    <a href="/supervisor-positions" className="mt-3 inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium hover:bg-muted">
-                      <MapPin className="h-4 w-4" /> Puestos de supervisor
-                    </a>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button onClick={() => navigate(`/supervisors/${id}/cobertura`)} className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium hover:bg-muted transition">
+                        <MapPin className="h-4 w-4" /> Cobertura
+                      </button>
+                      <button onClick={() => navigate(`/supervisors/${id}/horario`)} className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium hover:bg-muted transition">
+                        <CalendarClock className="h-4 w-4" /> Horario
+                      </button>
+                    </div>
                   </Section>
                 </div>
 

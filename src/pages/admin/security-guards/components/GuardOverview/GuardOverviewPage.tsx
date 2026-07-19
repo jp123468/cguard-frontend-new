@@ -115,11 +115,6 @@ export default function GuardResumenPage() {
         dot: 'bg-orange-500',
       };
 
-  const assignedSites = guard?.assignedSitesCount ?? 1;
-  const completedRoutes = guard?.completedRoutes ?? 0;
-  const reportsSent = guard?.reportsSent ?? 0;
-  const guardNumber = guard?.guardNumber ?? guard?.employeeCode ?? '—';
-
   return (
     <AppLayout>
       <GuardsLayout navKey="keep-safe" title={t('guards.nav.resumen')}>
@@ -137,9 +132,10 @@ export default function GuardResumenPage() {
           ) : guard ? (
             <>
               {/* Identity (avatar/name/status/rating) now lives in the shared
-                  GuardsLayout header card. This page shows only the summary. */}
-              {/* ── SUMMARY STAT TILES ─────────────────────────────────────── */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  GuardsLayout header card. These two tiles are REAL quick-status
+                  signals derived from the loaded guard; the rest of the resumen
+                  (station, performance, schedule, activity) lives in GuardSummary. */}
+              <div className="grid grid-cols-2 gap-4">
                 <StatTile
                   label={t('guards.profile.cards.appAccess') || 'Acceso a la app'}
                   value={isActivated ? (t('guards.profile.access.statusActive') || 'Activa') : (t('guards.profile.access.statusPending') || 'Pendiente')}
@@ -160,30 +156,9 @@ export default function GuardResumenPage() {
                     </svg>
                   }
                 />
-                <StatTile
-                  label={t('guards.summary.stats.metrics.assignedSites') || 'Sitios asignados'}
-                  value={assignedSites}
-                  accent="blue"
-                  icon={
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  }
-                />
-                <StatTile
-                  label={t('guards.summary.stats.metrics.reportsSent') || 'Reportes enviados'}
-                  value={reportsSent || completedRoutes}
-                  accent="gold"
-                  icon={
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  }
-                />
               </div>
 
-              {/* ── DETAILED STATS + ACTIVITY (unchanged functionality) ────── */}
+              {/* ── REAL STATION / PERFORMANCE / SCHEDULE / ACTIVITY ───────── */}
               <GuardSummary guard={guard} />
             </>
           ) : (

@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Search, Plus, X, StickyNote, Calendar, User } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, Plus, X, StickyNote, Calendar, User, Trash2, Paperclip, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import AppLayout from '@/layouts/app-layout';
@@ -17,6 +17,8 @@ const GOLD = '#C8860A';
 type NotesApi = {
     list: (id: string) => Promise<any>;
     create: (id: string, payload: any) => Promise<any>;
+    remove?: (id: string, noteId: string) => Promise<any>;
+    update?: (id: string, noteId: string, payload: any) => Promise<any>;
 };
 
 type Props = {
@@ -30,6 +32,8 @@ type Props = {
 const guardNotesApi: NotesApi = {
     list: (id) => securityGuardService.getSecurityGuardNotes(id),
     create: (id, payload) => securityGuardService.createSecurityGuardNote(id, payload),
+    remove: (id, noteId) => securityGuardService.destroySecurityGuardNote(id, noteId),
+    update: (id, noteId, payload) => securityGuardService.updateSecurityGuardNote(id, noteId, payload),
 };
 
 // ── Small presentational helper ─────────────────────────────────────────────
@@ -71,13 +75,12 @@ function initials(name: string): string {
 
 export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', title = 'guards.nav.notas', notesApi = guardNotesApi }: Props) {
     const resolvedId: string | undefined = entityId ?? guard?.id;
-    const actionRef = useRef<HTMLDivElement>(null);
-    const [actionOpen, setActionOpen] = useState(false);
-    const [actionSelection, setActionSelection] = useState<string>('default');
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
     const [notesData, setNotesData] = useState<any[]>([]); // Vacío inicialmente
     const [showModal, setShowModal] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -101,22 +104,6 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
     const handleCloseModal = () => {
         setShowModal(false);
     };
-
-    // Cerrar dropdown al hacer clic fuera
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (actionRef.current && !actionRef.current.contains(event.target as Node)) {
-                setActionOpen(false);
-            }
-        };
-
-        if (actionOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-            return () => {
-                document.removeEventListener('mousedown', handleClickOutside);
-            };
-        }
-    }, [actionOpen]);
 
     const handleSubmitNote = () => {
         // Save note to backend
@@ -201,8 +188,9 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                     }
                 }
 
-                // Backend returns the created note object (unwrapped above)
-                setNotesData((prev) => [createdNote, ...prev]);
+                // Refetch so the new note comes back with its attachments populated
+                // (attachment records are created separately, above).
+                await loadNotes();
                 try { toast.success(t('guards.notes.noteCreated', { defaultValue: 'Nota creada correctamente' })); } catch (e) {}
                 setShowModal(false);
                 setFormData({ title: '', description: '', date: new Date().toISOString().split('T')[0], attachments: [] });
@@ -215,22 +203,40 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
     };
 
     // Load notes for guard
-    useEffect(() => {
-        let mounted = true;
-        (async () => {
-            if (!resolvedId) return;
-            try {
-                const resp: any = await notesApi.list(resolvedId);
-                // resp may be { rows, count } or an array
-                const items = resp?.rows ?? resp ?? [];
-                if (mounted) setNotesData(items);
-            } catch (err) {
-                console.error('Failed to load notes', err);
-                try { toast.error(t('guards.notes.loadError', { defaultValue: 'Error al cargar notas' })); } catch (e) {}
-            }
-        })();
-        return () => { mounted = false; };
+    const loadNotes = useCallback(async () => {
+        if (!resolvedId) return;
+        try {
+            const resp: any = await notesApi.list(resolvedId);
+            // resp may be { rows, count } or an array
+            const items = resp?.rows ?? resp ?? [];
+            setNotesData(items);
+        } catch (err) {
+            console.error('Failed to load notes', err);
+            try { toast.error(t('guards.notes.loadError', { defaultValue: 'Error al cargar notas' })); } catch (e) {}
+        }
     }, [resolvedId]);
+
+    useEffect(() => {
+        loadNotes();
+    }, [loadNotes]);
+
+    // Delete a note (with confirmation via modal) then refetch.
+    const handleConfirmDelete = async () => {
+        if (!resolvedId || !deleteTarget) return;
+        if (!notesApi.remove) { setDeleteTarget(null); return; }
+        setDeleting(true);
+        try {
+            await notesApi.remove(resolvedId, deleteTarget.id);
+            toast.success(t('guards.notes.noteDeleted', { defaultValue: 'Nota eliminada' }));
+            setDeleteTarget(null);
+            await loadNotes();
+        } catch (err) {
+            console.error('Failed to delete note', err);
+            toast.error(t('guards.notes.noteDeleteFailed', { defaultValue: 'No se pudo eliminar la nota' }));
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     const removeAttachment = (index: number) => {
         setFormData((prev) => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== index) }));
@@ -260,25 +266,6 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                         icon={<StickyNote size={16} />}
                         action={
                             <div className="flex items-center gap-2">
-                                {/* Action dropdown (preserved) */}
-                                <div className="relative" ref={actionRef}>
-                                    <button
-                                        onClick={() => setActionOpen(!actionOpen)}
-                                        className="hidden h-9 items-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted sm:flex"
-                                    >
-                                        {t(`guards.notes.actions.${actionSelection}`, { defaultValue: actionSelection === 'default' ? 'Acciones' : actionSelection })}
-                                    </button>
-                                    {actionOpen && (
-                                        <div className="absolute right-0 z-10 mt-1 w-40 overflow-hidden rounded-xl border bg-card shadow-lg">
-                                            <button
-                                                onClick={() => { setActionSelection('delete'); setActionOpen(false); }}
-                                                className="block w-full px-4 py-2 text-left text-sm transition-colors hover:bg-muted"
-                                            >
-                                                {t('guards.notes.actions.delete', { defaultValue: 'Eliminar' })}
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
                                 {/* Add note */}
                                 <button
                                     onClick={handleAddNote}
@@ -337,6 +324,7 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                                 {filteredNotes.map((note: any, idx: number) => {
                                     const author = note?.addedBy || note?.createdBy?.fullName || '';
                                     const when = fmtDate(note?.noteDate ?? note?.date ?? note?.createdAt);
+                                    const attachments: any[] = Array.isArray(note?.attachments) ? note.attachments : [];
                                     return (
                                         <li
                                             key={note?.id ?? idx}
@@ -354,18 +342,69 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                                                         <h5 className="truncate text-sm font-semibold tracking-tight text-foreground">
                                                             {note?.title || t('guards.notes.untitled', { defaultValue: 'Sin título' })}
                                                         </h5>
-                                                        {when && (
-                                                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                                                                <Calendar size={11} />
-                                                                {when}
-                                                            </span>
-                                                        )}
+                                                        <div className="flex shrink-0 items-center gap-1.5">
+                                                            {when && (
+                                                                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                                                    <Calendar size={11} />
+                                                                    {when}
+                                                                </span>
+                                                            )}
+                                                            {notesApi.remove && note?.id && (
+                                                                <button
+                                                                    onClick={() => setDeleteTarget(note)}
+                                                                    title={t('guards.notes.actions.delete', { defaultValue: 'Eliminar' }) as string}
+                                                                    className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition hover:bg-red-500/10 hover:text-red-600 group-hover:opacity-100"
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                     {note?.description && (
                                                         <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-muted-foreground">
                                                             {note.description}
                                                         </p>
                                                     )}
+
+                                                    {/* Attachments */}
+                                                    {attachments.length > 0 && (
+                                                        <div className="mt-3 flex flex-wrap gap-2">
+                                                            {attachments.map((att: any, ai: number) => {
+                                                                const href = att?.publicUrl ?? att?.privateUrl ?? att?.downloadUrl ?? '';
+                                                                const mime = att?.mimeType || '';
+                                                                const isImg = mime.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp|svg|avif|heic)$/i.test(att?.name || '');
+                                                                if (isImg && href) {
+                                                                    return (
+                                                                        <a
+                                                                            key={att?.id ?? ai}
+                                                                            href={href}
+                                                                            target="_blank"
+                                                                            rel="noreferrer"
+                                                                            title={att?.name || ''}
+                                                                            className="block h-16 w-16 overflow-hidden rounded-lg border bg-muted"
+                                                                        >
+                                                                            <img src={href} alt={att?.name || ''} className="h-full w-full object-cover" loading="lazy" />
+                                                                        </a>
+                                                                    );
+                                                                }
+                                                                return (
+                                                                    <a
+                                                                        key={att?.id ?? ai}
+                                                                        href={href || undefined}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        title={att?.name || ''}
+                                                                        className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground transition hover:bg-muted/70"
+                                                                    >
+                                                                        <Paperclip size={12} />
+                                                                        <span className="max-w-[160px] truncate">{att?.name || t('guards.notes.attachment', { defaultValue: 'Adjunto' })}</span>
+                                                                        {href && <Download size={12} className="text-muted-foreground" />}
+                                                                    </a>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+
                                                     {author && (
                                                         <div className="mt-2 inline-flex items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground">
                                                             <User size={11} />
@@ -513,6 +552,52 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                                         style={{ background: GOLD }}
                                     >
                                         {t('guards.notes.modal.save', { defaultValue: 'Guardar' })}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Delete confirmation */}
+                    {deleteTarget && (
+                        <div
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+                            onClick={() => !deleting && setDeleteTarget(null)}
+                        >
+                            <div
+                                className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-2xl"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
+                                        <Trash2 size={18} />
+                                    </div>
+                                    <h3 className="text-base font-semibold tracking-tight text-foreground">
+                                        {t('guards.notes.delete.title', { defaultValue: 'Eliminar nota' })}
+                                    </h3>
+                                </div>
+                                <p className="mt-4 text-sm text-muted-foreground">
+                                    {t('guards.notes.delete.confirm', {
+                                        defaultValue: '¿Seguro que deseas eliminar "{{title}}"? Esta acción no se puede deshacer.',
+                                        title: deleteTarget?.title || t('guards.notes.untitled', { defaultValue: 'Sin título' }),
+                                    })}
+                                </p>
+                                <div className="mt-6 flex items-center justify-end gap-3">
+                                    <button
+                                        onClick={() => setDeleteTarget(null)}
+                                        disabled={deleting}
+                                        className="h-9 rounded-lg border px-4 text-sm font-medium text-foreground transition hover:bg-muted"
+                                    >
+                                        {t('guards.notes.modal.cancel', { defaultValue: 'Cancelar' })}
+                                    </button>
+                                    <button
+                                        onClick={handleConfirmDelete}
+                                        disabled={deleting}
+                                        className="h-9 rounded-lg bg-red-600 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-red-700 disabled:opacity-60"
+                                    >
+                                        {deleting
+                                            ? t('actions.deleting', { defaultValue: 'Eliminando…' })
+                                            : t('guards.notes.actions.delete', { defaultValue: 'Eliminar' })}
                                     </button>
                                 </div>
                             </div>
