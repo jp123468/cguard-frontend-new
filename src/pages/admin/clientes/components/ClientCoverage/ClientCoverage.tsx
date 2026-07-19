@@ -146,14 +146,14 @@ export default function ClientCoverage({ client }: { client: any }) {
 
   const fmtUpdated = data?.updatedAt ? new Date(data.updatedAt).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
 
-  if (loading && !data) return <div className="p-8 text-sm text-muted-foreground">Cargando puestos y cobertura…</div>;
+  if (loading && !data) return <div className="p-8 text-sm text-muted-foreground">Cargando estaciones y cobertura…</div>;
 
   return (
     <div ref={containerRef} className="space-y-4">
       {/* Sede selector */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <LayoutGrid className="h-4 w-4" /> Puestos y cobertura en vivo de la sede seleccionada
+          <LayoutGrid className="h-4 w-4" /> Estaciones y cobertura en vivo de la sede seleccionada
         </div>
         <div className="flex items-center gap-2">
           <label className="text-xs font-medium text-muted-foreground">Sede / Sitio</label>
@@ -165,27 +165,27 @@ export default function ClientCoverage({ client }: { client: any }) {
 
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
-        <Kpi icon={<LayoutGrid />} value={kpis.puestosTotales ?? 0} label="Puestos totales" accent="primary" />
-        <Kpi icon={<CheckCircle2 />} value={kpis.puestosCubiertos ?? 0} label="Puestos cubiertos" accent="green"
+        <Kpi icon={<LayoutGrid />} value={kpis.puestosTotales ?? 0} label="Estaciones totales" accent="primary" />
+        <Kpi icon={<CheckCircle2 />} value={kpis.puestosCubiertos ?? 0} label="Estaciones cubiertas" accent="green"
           sub={<span className="rounded-full bg-emerald-500/12 px-1.5 py-0.5 text-emerald-600">{kpis.puestosTotales ? Math.round((kpis.puestosCubiertos / kpis.puestosTotales) * 100) : 0}%</span>} />
         <Kpi icon={<Shield />} value={`${kpis.coberturaPct ?? 0}%`} label="Cobertura actual" accent={(kpis.coberturaPct ?? 0) >= objetivoPct ? 'green' : 'orange'}
           sub={<span className="text-muted-foreground">Objetivo: {objetivoPct}%</span>} />
-        <Kpi icon={<Users />} value={`${kpis.guardiasEnPuestos ?? 0}`} label="Guardias en puestos" accent="blue"
+        <Kpi icon={<Users />} value={`${kpis.guardiasEnPuestos ?? 0}`} label="Guardias en estaciones" accent="blue"
           sub={<span className="text-muted-foreground">de {kpis.guardiasRequeridas ?? 0} requeridos</span>} />
-        <Kpi icon={<ShieldAlert />} value={kpis.puestosSinCobertura ?? 0} label="Puestos sin cobertura" accent={(kpis.puestosSinCobertura ?? 0) > 0 ? 'red' : 'slate'} />
+        <Kpi icon={<ShieldAlert />} value={kpis.puestosSinCobertura ?? 0} label="Estaciones sin cobertura" accent={(kpis.puestosSinCobertura ?? 0) > 0 ? 'red' : 'slate'} />
         <Kpi icon={<Clock />} value={kpis.proximosAIniciar ?? 0} label="Próximos a iniciar" accent="blue" sub={<span className="text-muted-foreground">próximas 2 horas</span>} />
-        <Kpi icon={<AlertTriangle />} value={kpis.puestosConNovedad ?? 0} label="Puestos con novedad" accent={(kpis.puestosConNovedad ?? 0) > 0 ? 'orange' : 'slate'} />
+        <Kpi icon={<AlertTriangle />} value={kpis.puestosConNovedad ?? 0} label="Estaciones con novedad" accent={(kpis.puestosConNovedad ?? 0) > 0 ? 'orange' : 'slate'} />
         <Kpi icon={<CheckCircle2 />} value={`${kpis.cumplimientoHoy ?? 0}%`} label="Cumplimiento hoy" accent="green" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_1fr]">
         {/* LEFT — filters + table */}
         <div className="space-y-4">
-          <Section title="Puestos del sitio" icon={<LayoutGrid className="h-4 w-4" />}>
+          <Section title="Estaciones del sitio" icon={<LayoutGrid className="h-4 w-4" />}>
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <div className="relative min-w-[180px] flex-1">
                 <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input className={`${inputCls} pl-8`} placeholder="Buscar puesto por nombre" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+                <input className={`${inputCls} pl-8`} placeholder="Buscar estación por nombre" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
               </div>
               <select className={inputCls} value={estado} onChange={(e) => { setEstado(e.target.value); setPage(1); }}>
                 <option value="todos">Estado: Todos</option>
@@ -214,13 +214,13 @@ export default function ClientCoverage({ client }: { client: any }) {
             </div>
 
             {filtered.length === 0 ? (
-              <EmptyState icon={<LayoutGrid className="h-5 w-5" />} title="Sin puestos" description="Esta sede no tiene puestos que coincidan con los filtros." />
+              <EmptyState icon={<LayoutGrid className="h-5 w-5" />} title="Sin estaciones" description="Esta sede no tiene estaciones que coincidan con los filtros." />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[720px] text-sm">
                   <thead>
                     <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
-                      <th className="px-2 py-2 font-medium">Puesto</th>
+                      <th className="px-2 py-2 font-medium">Estación</th>
                       <th className="px-2 py-2 font-medium">Tipo</th>
                       <th className="px-2 py-2 font-medium">Turno actual</th>
                       <th className="px-2 py-2 font-medium">Guardias</th>
@@ -276,7 +276,7 @@ export default function ClientCoverage({ client }: { client: any }) {
             )}
 
             <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
-              <span>Mostrando {filtered.length === 0 ? 0 : (page - 1) * PER + 1} a {Math.min(page * PER, filtered.length)} de {filtered.length} puestos</span>
+              <span>Mostrando {filtered.length === 0 ? 0 : (page - 1) * PER + 1} a {Math.min(page * PER, filtered.length)} de {filtered.length} estaciones</span>
               <div className="flex items-center gap-1">
                 <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-md border px-2 py-1 disabled:opacity-40">‹</button>
                 <span className="grid h-7 min-w-[28px] place-items-center rounded-md bg-primary px-2 text-xs font-semibold text-white">{page}</span>
@@ -301,7 +301,7 @@ export default function ClientCoverage({ client }: { client: any }) {
             }
           >
             {mapMarkers.length === 0 && !mapCenter ? (
-              <EmptyState icon={<MapPin className="h-5 w-5" />} title="Sin ubicaciones" description="Ningún puesto de esta sede tiene coordenadas. Selecciona un puesto y usa “Fijar ubicación exacta”." />
+              <EmptyState icon={<MapPin className="h-5 w-5" />} title="Sin ubicaciones" description="Ninguna estación de esta sede tiene coordenadas. Selecciona una estación y usa “Fijar ubicación exacta”." />
             ) : (
               <>
                 {placing && (
@@ -337,7 +337,7 @@ export default function ClientCoverage({ client }: { client: any }) {
 
           {/* Selected puesto detail + place-location */}
           {selected && (
-            <Section title="Puesto seleccionado" icon={<Locate className="h-4 w-4" />}>
+            <Section title="Estación seleccionada" icon={<Locate className="h-4 w-4" />}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="font-semibold">{selected.name}</div>
@@ -345,14 +345,14 @@ export default function ClientCoverage({ client }: { client: any }) {
                   <div className="mt-1"><StatusBadge tone={(STATUS_META[selected.status] || STATUS_META.sin_turno).tone}>{(STATUS_META[selected.status] || STATUS_META.sin_turno).label}</StatusBadge></div>
                   {Number.isFinite(selected.lat)
                     ? <div className="mt-2 text-xs text-muted-foreground">📍 {selected.lat.toFixed(6)}, {selected.lng.toFixed(6)}</div>
-                    : <div className="mt-2 text-xs text-orange-600">Este puesto aún no tiene ubicación exacta.</div>}
+                    : <div className="mt-2 text-xs text-orange-600">Esta estación aún no tiene ubicación exacta.</div>}
                 </div>
                 <div className="flex shrink-0 flex-col gap-2">
                   <Button size="sm" variant={placing ? 'brand' : 'outline'} onClick={() => setPlacing((v) => !v)}>
                     <Crosshair className="mr-1.5 h-4 w-4" /> {placing ? 'Fijando…' : 'Fijar ubicación exacta'}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => navigate(`/post-sites/${sedeId}/stations/${selected.id}/overview`)}>
-                    <ExternalLink className="mr-1.5 h-4 w-4" /> Ver puesto
+                    <ExternalLink className="mr-1.5 h-4 w-4" /> Ver estación
                   </Button>
                 </div>
               </div>
@@ -381,10 +381,10 @@ export default function ClientCoverage({ client }: { client: any }) {
             </div>
           </Section>
 
-          {/* Puestos sin cobertura */}
-          <Section title={`Puestos sin cobertura (${sinCobertura.length})`} icon={<ShieldAlert className="h-4 w-4" />}>
+          {/* Estaciones sin cobertura */}
+          <Section title={`Estaciones sin cobertura (${sinCobertura.length})`} icon={<ShieldAlert className="h-4 w-4" />}>
             {sinCobertura.length === 0 ? (
-              <div className="flex items-center gap-2 py-2 text-sm text-emerald-600"><CheckCircle2 className="h-4 w-4" /> Todos los puestos con turno están cubiertos.</div>
+              <div className="flex items-center gap-2 py-2 text-sm text-emerald-600"><CheckCircle2 className="h-4 w-4" /> Todas las estaciones con turno están cubiertas.</div>
             ) : (
               <div className="divide-y">
                 {sinCobertura.map((p) => (

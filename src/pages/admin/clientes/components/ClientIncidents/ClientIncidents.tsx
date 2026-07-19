@@ -144,7 +144,7 @@ export default function ClientIncidents({ client }: { client: any }) {
               <input className={`${inputCls} pl-8`} placeholder="Buscar por ID, título o ubicación" value={q} onChange={(e) => resetPage(setQ)(e.target.value)} />
             </div>
             <select className={inputCls} value={sedeId} onChange={(e) => resetPage(setSedeId)(e.target.value)}><option value="">Sede: Todas</option>{sedes.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
-            <select className={inputCls} value={puestoId} onChange={(e) => resetPage(setPuestoId)(e.target.value)}><option value="">Puesto: Todos</option>{puestos.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
+            <select className={inputCls} value={puestoId} onChange={(e) => resetPage(setPuestoId)(e.target.value)}><option value="">Estación: Todas</option>{puestos.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
             <select className={inputCls} value={tipo} onChange={(e) => resetPage(setTipo)(e.target.value)}><option value="">Tipo: Todos</option>{tipos.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
             <select className={inputCls} value={estado} onChange={(e) => resetPage(setEstado)(e.target.value)}><option value="">Estado: Todos</option><option value="abierto">Abierto</option><option value="investigacion">En investigación</option><option value="resuelto">Resuelto</option></select>
             <select className={inputCls} value={prioridad} onChange={(e) => resetPage(setPrioridad)(e.target.value)}><option value="">Prioridad: Todas</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select>
@@ -160,7 +160,7 @@ export default function ClientIncidents({ client }: { client: any }) {
                     <th className="px-2 py-2 font-medium">ID</th>
                     <th className="px-2 py-2 font-medium">Fecha / Hora</th>
                     <th className="px-2 py-2 font-medium">Incidente</th>
-                    <th className="px-2 py-2 font-medium">Sede / Puesto</th>
+                    <th className="px-2 py-2 font-medium">Sede / Estación</th>
                     <th className="px-2 py-2 font-medium">Reportado por</th>
                     <th className="px-2 py-2 font-medium">Prioridad</th>
                     <th className="px-2 py-2 font-medium">Estado</th>
@@ -222,7 +222,7 @@ export default function ClientIncidents({ client }: { client: any }) {
               </div>
 
               <div className="grid grid-cols-2 gap-3 rounded-xl bg-muted/40 p-3 text-sm">
-                <div><div className="cg-eyebrow mb-0.5">Sede / Puesto</div><div className="font-medium">{selected.sedeName || '—'}</div><div className="text-xs text-muted-foreground">{selected.puestoName || ''}</div></div>
+                <div><div className="cg-eyebrow mb-0.5">Sede / Estación</div><div className="font-medium">{selected.sedeName || '—'}</div><div className="text-xs text-muted-foreground">{selected.puestoName || ''}</div></div>
                 <div><div className="cg-eyebrow mb-0.5">Prioridad</div>{selected.priority ? <StatusBadge tone={(PRIO[selected.priority] || PRIO.media).tone} dot={false}>{(PRIO[selected.priority] || PRIO.media).label}</StatusBadge> : <span className="text-muted-foreground">—</span>}</div>
                 <div><div className="cg-eyebrow mb-0.5">Fecha / Hora</div><div className="font-medium tabular-nums">{fmtDT(selected.date)}</div></div>
                 <div><div className="cg-eyebrow mb-0.5">Respuesta</div><div className="font-medium tabular-nums">{selected.responseMin != null ? `${selected.responseMin} min` : '—'}</div></div>

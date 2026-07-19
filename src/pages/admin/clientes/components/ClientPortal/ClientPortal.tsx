@@ -14,7 +14,7 @@ type Props = { client?: any };
 type Kind = 'portal' | 'app';
 
 const PORTAL_FEATURES = [
-  { icon: MapPin, label: 'Sedes y puestos', desc: 'Ubicaciones y cobertura de su operación' },
+  { icon: MapPin, label: 'Sedes y estaciones', desc: 'Ubicaciones y cobertura de su operación' },
   { icon: Users, label: 'Vigilantes asignados', desc: 'Quién está en turno en cada sitio' },
   { icon: AlertTriangle, label: 'Incidentes y novedades', desc: 'Reportes en tiempo real' },
   { icon: FileBarChart, label: 'Reportes', desc: 'Informes operativos de su servicio' },

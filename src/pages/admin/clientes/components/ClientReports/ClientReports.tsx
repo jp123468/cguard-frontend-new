@@ -154,7 +154,7 @@ export default function ClientReports({ client }: { client: any }) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
         {kpis.map((k) => <Kpi key={k.key} k={k} icon={KPI_ICONS[k.key] || <FileBarChart />} />)}
         <div className="cg-card p-4 sm:col-span-2 lg:col-span-3 xl:col-span-2">
-          <div className="mb-2 text-xs text-muted-foreground">Cumplimiento de puestos</div>
+          <div className="mb-2 text-xs text-muted-foreground">Cumplimiento de estaciones</div>
           {cumplimiento.hasData === false ? (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <Donut segments={[]} centerTop="—" centerBottom="Sin datos" />
@@ -252,7 +252,7 @@ export default function ClientReports({ client }: { client: any }) {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
               <thead><tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="px-2 py-2 font-medium">Nombre del reporte</th><th className="px-2 py-2 font-medium">Tipo</th><th className="px-2 py-2 font-medium">Sede / Puesto</th><th className="px-2 py-2 font-medium">Generado por</th><th className="px-2 py-2 font-medium">Generado el</th><th className="px-2 py-2 font-medium">Formato</th>
+                <th className="px-2 py-2 font-medium">Nombre del reporte</th><th className="px-2 py-2 font-medium">Tipo</th><th className="px-2 py-2 font-medium">Sede / Estación</th><th className="px-2 py-2 font-medium">Generado por</th><th className="px-2 py-2 font-medium">Generado el</th><th className="px-2 py-2 font-medium">Formato</th>
               </tr></thead>
               <tbody>
                 {reportsList.map((r) => (
@@ -292,7 +292,7 @@ export default function ClientReports({ client }: { client: any }) {
           <div><label className="mb-1 block text-xs font-medium text-muted-foreground">Nombre</label><input className={inputCls} placeholder="Informe semanal de operaciones" value={schedForm.name} onChange={(e) => setSchedForm({ ...schedForm, name: e.target.value })} /></div>
           <div><label className="mb-1 block text-xs font-medium text-muted-foreground">Reporte</label>
             <select className={inputCls} value={schedForm.type} onChange={(e) => setSchedForm({ ...schedForm, type: e.target.value })}>
-              <option value="incidents">Reporte de incidentes</option><option value="rounds">Reporte de rondas</option><option value="attendance">Reporte de asistencia</option><option value="coverage">Cumplimiento de puestos</option><option value="guard-activity">Actividad por guardia</option>
+              <option value="incidents">Reporte de incidentes</option><option value="rounds">Reporte de rondas</option><option value="attendance">Reporte de asistencia</option><option value="coverage">Cumplimiento de estaciones</option><option value="guard-activity">Actividad por guardia</option>
             </select>
           </div>
           <div><label className="mb-1 block text-xs font-medium text-muted-foreground">Frecuencia</label>

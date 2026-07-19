@@ -12,10 +12,10 @@ import {
 
 // ----- service catalog metadata (drives live-usage on the backend) ----------
 const SERVICE_PRESETS: Record<string, { name: string; unit: string; icon: any }> = {
-  fixed_guard: { name: 'Vigilancia fija 24/7', unit: 'Puesto', icon: Shield },
+  fixed_guard: { name: 'Vigilancia fija 24/7', unit: 'Estación', icon: Shield },
   mobile_patrol: { name: 'Patrullaje móvil', unit: 'Rondas', icon: Car },
   camera_monitoring: { name: 'Monitoreo de cámaras', unit: 'Cámaras', icon: Monitor },
-  access_control: { name: 'Control de acceso', unit: 'Puesto', icon: UserCheck },
+  access_control: { name: 'Control de acceso', unit: 'Estación', icon: UserCheck },
   visitor_management: { name: 'Gestión de visitantes', unit: 'Visitantes', icon: Users },
   alarm_response: { name: 'Respuesta a alarmas', unit: 'Eventos', icon: Bell },
   asset_custody: { name: 'Custodia de activos', unit: 'Servicio', icon: Lock },
@@ -411,7 +411,7 @@ export default function ClientContract({ client }: { client: any }) {
             </Lbl>
             <Lbl label="Nombre" full><input className={inputCls} value={svcForm.name} onChange={(e) => setSvcForm({ ...svcForm, name: e.target.value })} /></Lbl>
             <Lbl label="Descripción" full><input className={inputCls} value={svcForm.description || ''} onChange={(e) => setSvcForm({ ...svcForm, description: e.target.value })} /></Lbl>
-            <Lbl label="Unidad"><input className={inputCls} placeholder="Puesto, Rondas…" value={svcForm.unit || ''} onChange={(e) => setSvcForm({ ...svcForm, unit: e.target.value })} /></Lbl>
+            <Lbl label="Unidad"><input className={inputCls} placeholder="Estación, Rondas…" value={svcForm.unit || ''} onChange={(e) => setSvcForm({ ...svcForm, unit: e.target.value })} /></Lbl>
             <Lbl label="Cantidad contratada"><input type="number" className={inputCls} placeholder="Vacío = ilimitado" value={svcForm.contractedQty ?? ''} onChange={(e) => setSvcForm({ ...svcForm, contractedQty: e.target.value })} /></Lbl>
             <Lbl label="Objetivo SLA (%)"><input type="number" className={inputCls} value={svcForm.slaTarget ?? ''} onChange={(e) => setSvcForm({ ...svcForm, slaTarget: e.target.value })} /></Lbl>
           </div>

@@ -148,7 +148,7 @@ export default function ClientStaff({ client }: { client: any }) {
           <div className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
             <div className="relative col-span-2 md:col-span-3 xl:col-span-1">
               <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input className={`${inputCls} pl-8`} placeholder="Buscar por nombre, ID o puesto" value={q} onChange={(e) => resetPage(setQ)(e.target.value)} />
+              <input className={`${inputCls} pl-8`} placeholder="Buscar por nombre, ID o estación" value={q} onChange={(e) => resetPage(setQ)(e.target.value)} />
             </div>
             <select className={inputCls} value={sede} onChange={(e) => resetPage(setSede)(e.target.value)}>
               <option value="todos">Sede: Todas</option>
@@ -186,7 +186,7 @@ export default function ClientStaff({ client }: { client: any }) {
                   <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
                     <th className="px-2 py-2 font-medium">Personal</th>
                     <th className="px-2 py-2 font-medium">Rol</th>
-                    <th className="px-2 py-2 font-medium">Puesto</th>
+                    <th className="px-2 py-2 font-medium">Estación</th>
                     <th className="px-2 py-2 font-medium">Sede / Sitio</th>
                     <th className="px-2 py-2 font-medium">Turno</th>
                     <th className="px-2 py-2 font-medium">Estado</th>

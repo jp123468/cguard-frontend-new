@@ -88,13 +88,13 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
 
   const kpis = [
     { icon: <Building2 />, value: ov?.postSitesCount ?? '—', label: t('clients.overview.cards.postSites', 'Sedes activas'), accent: 'blue', to: `${base}/post-sites`, sub: t('common.viewDetail', 'Ver detalle') },
-    { icon: <Shield />, value: ov?.stationsCount ?? '—', label: t('clients.overview.cards.stations', 'Estaciones'), accent: 'primary', to: `${base}/post-sites`, sub: t('common.viewDetail', 'Ver detalle') },
-    { icon: <Users />, value: ov?.assignedCount ?? '—', label: t('clients.overview.cards.guardsAssigned', 'Vigilantes asignados'), accent: 'green', sub: t('clients.overview.cards.viewStaff', 'Ver personal'), to: `${base}/post-sites` },
-    { icon: <UserRound />, value: ov?.onsiteCount ?? '—', label: t('clients.overview.cards.onsite', 'En turno ahora'), accent: 'green', sub: t('clients.overview.cards.now', 'En este momento') },
-    { icon: <AlertTriangle />, value: ov?.incidentsLast7Days ?? '—', label: t('clients.overview.cards.incidents', 'Incidentes (7 días)'), accent: 'orange', to: '/dispatch-tickets', sub: t('clients.overview.cards.viewIncidents', 'Ver incidentes') },
-    { icon: <RouteIcon />, value: ov?.toursLast7Days ?? '—', label: t('clients.overview.cards.toursCompleted', 'Rondas (7 días)'), accent: 'violet' },
-    { icon: <Clock />, value: hoursWorked, label: t('clients.overview.cards.hoursWorked', 'Horas (7 días)'), accent: 'red' },
-    { icon: <ShieldCheck />, value: client?.active ? t('common.active', 'Activo') : t('common.archived', 'Inactivo'), label: t('clients.overview.cards.contract', 'Contrato'), accent: client?.active ? 'green' : 'slate', sub: client?.contractEndDate ? `${t('clients.contractEnd', 'Hasta')} ${fmtD(client.contractEndDate)}` : undefined },
+    { icon: <Shield />, value: ov?.stationsCount ?? '—', label: t('clients.overview.cards.stations', 'Estaciones'), accent: 'primary', to: `${base}/coverage`, sub: t('common.viewDetail', 'Ver detalle') },
+    { icon: <Users />, value: ov?.assignedCount ?? '—', label: t('clients.overview.cards.guardsAssigned', 'Vigilantes asignados'), accent: 'green', sub: t('clients.overview.cards.viewStaff', 'Ver personal'), to: `${base}/staff` },
+    { icon: <UserRound />, value: ov?.onsiteCount ?? '—', label: t('clients.overview.cards.onsite', 'En turno ahora'), accent: 'green', sub: t('clients.overview.cards.now', 'En este momento'), to: `${base}/staff` },
+    { icon: <AlertTriangle />, value: ov?.incidentsLast7Days ?? '—', label: t('clients.overview.cards.incidents', 'Incidentes (7 días)'), accent: 'orange', to: `${base}/incidents`, sub: t('clients.overview.cards.viewIncidents', 'Ver incidentes') },
+    { icon: <RouteIcon />, value: ov?.toursLast7Days ?? '—', label: t('clients.overview.cards.toursCompleted', 'Rondas (7 días)'), accent: 'violet', to: `${base}/reports`, sub: t('common.viewDetail', 'Ver detalle') },
+    { icon: <Clock />, value: hoursWorked, label: t('clients.overview.cards.hoursWorked', 'Horas (7 días)'), accent: 'red', to: `${base}/reports`, sub: t('common.viewDetail', 'Ver detalle') },
+    { icon: <ShieldCheck />, value: client?.active ? t('common.active', 'Activo') : t('common.archived', 'Inactivo'), label: t('clients.overview.cards.contract', 'Contrato'), accent: client?.active ? 'green' : 'slate', to: `${base}/contract`, sub: client?.contractEndDate ? `${t('clients.contractEnd', 'Hasta')} ${fmtD(client.contractEndDate)}` : t('common.viewDetail', 'Ver detalle') },
   ];
 
   return (
