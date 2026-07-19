@@ -70,7 +70,7 @@ interface CoverageData {
 const STATUS_META: Record<string, { label: string; tone: BadgeTone; dot: string; role: string }> = {
   cubierto:            { label: 'Cubierto',           tone: 'green',  dot: 'bg-emerald-500', role: 'ok' },
   parcial:             { label: 'Parcial',            tone: 'orange', dot: 'bg-orange-500',  role: 'warn' },
-  asignado_sin_marcar: { label: 'Asignado · sin marcar', tone: 'orange', dot: 'bg-orange-500', role: 'warn' },
+  asignado_sin_marcar: { label: 'Sin marcar', tone: 'orange', dot: 'bg-orange-500', role: 'warn' },
   sin_cobertura:       { label: 'Sin cobertura',      tone: 'red',    dot: 'bg-red-500',     role: 'crit' },
   sin_turno:           { label: 'Sin turno',          tone: 'slate',  dot: 'bg-slate-400',   role: 'muted' },
 };
@@ -262,9 +262,9 @@ export default function ClientCoverage({ client }: { client: Client }) {
               <EmptyState icon={<LayoutGrid className="h-5 w-5" />} title="Sin estaciones" description="Esta sede no tiene estaciones que coincidan con los filtros." />
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[720px] text-sm">
+                <table className="w-full min-w-[860px] text-sm">
                   <thead>
-                    <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
+                    <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground [&>th]:whitespace-nowrap">
                       <th className="px-2 py-2 font-medium">Estación</th>
                       <th className="px-2 py-2 font-medium">Tipo</th>
                       <th className="px-2 py-2 font-medium">Turno actual</th>
@@ -300,20 +300,25 @@ export default function ClientCoverage({ client }: { client: Client }) {
                           <td className="px-2 py-2.5">
                             <span className="rounded-md bg-muted px-2 py-0.5 text-xs capitalize">{p.type === 'patrulla' ? 'Patrulla' : 'Fijo'}</span>
                           </td>
-                          <td className="px-2 py-2.5">
-                            {p.window ? <div><div>{p.window}</div><div className="text-xs text-muted-foreground">{p.turno || '—'}</div></div> : <span className="text-muted-foreground">Sin turno</span>}
+                          <td className="px-2 py-2.5 whitespace-nowrap">
+                            {p.window ? (
+                              <div className="leading-tight">
+                                <div className="tabular-nums">{p.window}</div>
+                                {p.turno && <div className="text-xs text-muted-foreground">{p.turno}</div>}
+                              </div>
+                            ) : <span className="text-muted-foreground">Sin turno</span>}
                           </td>
                           <td className="px-2 py-2.5">
-                            <div className="tabular-nums">{p.onPost} / {p.required || 0}</div>
-                            {/* "Sin asignar" was misleading: coverage is LIVE (marcaciones).
-                                If there ARE assigned guards who just haven't punched in,
-                                say exactly that. */}
-                            <div className="max-w-[160px] truncate text-xs">
+                            <div className="font-medium tabular-nums">{p.onPost} / {p.required || 0}</div>
+                            {/* Names: on-post guards (muted) OR — when nobody's marked —
+                                the assigned guards (amber). The Estado badge already
+                                says "Sin marcar", so no suffix is needed here. */}
+                            <div className="max-w-[180px] truncate text-xs">
                               {p.guards?.length ? (
-                                <span className="text-muted-foreground">{p.guards.join(', ')}</span>
+                                <span className="text-muted-foreground" title={p.guards.join(', ')}>{p.guards.join(', ')}</span>
                               ) : p.assigned?.length ? (
-                                <span className="text-orange-500" title={`Asignados: ${p.assigned.join(', ')} — aún sin marcar entrada`}>
-                                  {p.assigned.join(', ')} · sin marcar
+                                <span className="text-orange-600 dark:text-orange-400" title={`Asignados (aún sin marcar entrada): ${p.assigned.join(', ')}`}>
+                                  {p.assigned.join(', ')}
                                 </span>
                               ) : (
                                 <span className="text-muted-foreground">{p.status === 'sin_turno' ? '—' : 'Sin asignar'}</span>
@@ -325,8 +330,8 @@ export default function ClientCoverage({ client }: { client: Client }) {
                               <div className="flex items-center gap-2"><span className="w-8 text-xs tabular-nums">{p.coveragePct}%</span><Bar pct={p.coveragePct} status={p.status} /></div>
                             )}
                           </td>
-                          <td className="px-2 py-2.5"><StatusBadge tone={meta.tone}>{meta.label}</StatusBadge></td>
-                          <td className="px-2 py-2.5">
+                          <td className="px-2 py-2.5"><StatusBadge tone={meta.tone} className="whitespace-nowrap">{meta.label}</StatusBadge></td>
+                          <td className="px-2 py-2.5 whitespace-nowrap">
                             {p.lastActivity?.type === 'ronda' ? <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600"><RouteIcon className="h-3.5 w-3.5" /> Ronda activa</span>
                               : p.lastActivity?.type === 'checkin' ? <div><div className="tabular-nums">{p.lastActivity.time}</div><div className="text-xs text-muted-foreground">Check-in</div></div>
                               : <span className="text-xs text-muted-foreground">Sin actividad</span>}
