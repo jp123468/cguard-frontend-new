@@ -281,7 +281,7 @@ export default function NominaRecords() {
                   className="bg-transparent text-sm outline-none"
                 >
                   {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>{s === "" ? "Todos los estados" : s}</option>
+                    <option key={s} value={s}>{s === "" ? "Todos los estados" : (STATUS_META[s]?.label ?? s)}</option>
                   ))}
                 </select>
               </div>
@@ -511,34 +511,59 @@ export default function NominaRecords() {
                     </p>
                   ) : (
                     <>
-                      {/* Once resolved, show the decision + who/when, and swap the
-                          buttons: the taken action is hidden, only the opposite one
-                          (to reverse) + Corregir remain — no more re-offering "Aprobar". */}
-                      {(selected.approvalStatus === "approved" || selected.approvalStatus === "rejected") && (
-                        <p className="w-full text-xs text-muted-foreground">
-                          {selected.approvalStatus === "approved" ? "Aprobado" : "Rechazado"}
-                          {(selected as any).approvedAt ? ` · ${fmtDateTime((selected as any).approvedAt)}` : ""}
-                          {" — puedes cambiar la decisión."}
-                        </p>
-                      )}
-                      {selected.approvalStatus !== "approved" && (
-                        <Button
-                          disabled={busy}
-                          onClick={() => act(() => attendanceService.approve(selected.id), "Aprobado")}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                        >
-                          Aprobar
-                        </Button>
-                      )}
-                      {selected.approvalStatus !== "rejected" && (
-                        <Button
-                          disabled={busy}
-                          variant="outline"
-                          onClick={() => act(() => attendanceService.reject(selected.id), "Rechazado")}
-                        >
-                          Rechazar
-                        </Button>
-                      )}
+                      {/* Approval is only meaningful when the punch actually needs
+                          review (outside geofence → pending_review, or a request left
+                          it pending) or was already decided (so it can be reversed). A
+                          normal on-time / in-geofence punch needs no approval — showing
+                          an "Aprobar" button there was the source of confusion. */}
+                      {(() => {
+                        const needsReview =
+                          selected.status === "pending_review" || selected.approvalStatus === "pending";
+                        const wasDecided =
+                          selected.approvalStatus === "approved" || selected.approvalStatus === "rejected";
+                        if (!needsReview && !wasDecided) {
+                          return (
+                            <p className="w-full text-xs text-muted-foreground">
+                              Sin aprobación requerida — marcación válida.
+                            </p>
+                          );
+                        }
+                        return (
+                          <>
+                            {wasDecided ? (
+                              <p className="w-full text-xs text-muted-foreground">
+                                {selected.approvalStatus === "approved" ? "Aprobado" : "Rechazado"}
+                                {(selected as any).approvedAt ? ` · ${fmtDateTime((selected as any).approvedAt)}` : ""}
+                                {" — puedes cambiar la decisión."}
+                              </p>
+                            ) : (
+                              <p className="w-full text-xs text-amber-600">
+                                {selected.punchInOutsideGeofence
+                                  ? "Marcación fuera de la geocerca — requiere aprobación."
+                                  : "Marcación pendiente de revisión."}
+                              </p>
+                            )}
+                            {selected.approvalStatus !== "approved" && (
+                              <Button
+                                disabled={busy}
+                                onClick={() => act(() => attendanceService.approve(selected.id), "Aprobado")}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                              >
+                                Aprobar
+                              </Button>
+                            )}
+                            {selected.approvalStatus !== "rejected" && (
+                              <Button
+                                disabled={busy}
+                                variant="outline"
+                                onClick={() => act(() => attendanceService.reject(selected.id), "Rechazado")}
+                              >
+                                Rechazar
+                              </Button>
+                            )}
+                          </>
+                        );
+                      })()}
                       <Button
                         disabled={busy}
                         variant="outline"
