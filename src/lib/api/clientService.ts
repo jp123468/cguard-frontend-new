@@ -617,6 +617,16 @@ export const clientService = {
         return data;
     },
 
+    /** Unified activity timeline for the client (shifts, incidents, visitors,
+     *  tasks, rondas, relevos) — GET /client-account/:id/activity. */
+    async getClientActivity(clientId: string, params: { days?: number; limit?: number; before?: string } = {}) {
+        const tenantId = getTenantId();
+        const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v != null) as any).toString();
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/activity${qs ? `?${qs}` : ''}`, { toast: { silentError: true } } as any);
+        const p = data?.data ?? data;
+        return { rows: Array.isArray(p?.rows) ? p.rows : [], hasMore: !!p?.hasMore, nextBefore: p?.nextBefore || null };
+    },
+
     // ----- Accesos (usuarios con acceso a la app/portal) ------------------
     async getClientAccessUsers(clientId: string) {
         const tenantId = getTenantId();

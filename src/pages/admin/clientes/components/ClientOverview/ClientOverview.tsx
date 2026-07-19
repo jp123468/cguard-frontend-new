@@ -8,7 +8,20 @@ import { Section, EmptyState } from '@/components/kit';
 import {
   MapPin, Users, Building2, Shield, AlertTriangle, Route as RouteIcon, Clock,
   UserRound, Phone, Mail, ChevronRight, Bell, Activity, FileCheck, ShieldCheck,
+  LogIn, LogOut, UserCheck, UserX, CheckCircle2, Repeat,
 } from 'lucide-react';
+
+// Icon + accent per unified-activity event type.
+const ACT_META: Record<string, { icon: any; cls: string }> = {
+  clock_in:    { icon: LogIn,        cls: 'bg-emerald-500/10 text-emerald-600' },
+  clock_out:   { icon: LogOut,       cls: 'bg-muted text-muted-foreground' },
+  incident:    { icon: AlertTriangle,cls: 'bg-orange-500/10 text-orange-600' },
+  visitor_in:  { icon: UserCheck,    cls: 'bg-blue-500/10 text-blue-600' },
+  visitor_out: { icon: UserX,        cls: 'bg-muted text-muted-foreground' },
+  task_done:   { icon: CheckCircle2, cls: 'bg-emerald-500/10 text-emerald-600' },
+  ronda_done:  { icon: RouteIcon,    cls: 'bg-primary/10 text-primary' },
+  passdown:    { icon: Repeat,       cls: 'bg-blue-500/10 text-blue-600' },
+};
 
 type Overview = {
   postSitesCount: number; stationsCount: number; projectsCount: number;
@@ -38,17 +51,17 @@ export default function ClientOverview({ client }: { client: any }) {
   });
   const [sites, setSites] = useState<Site[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
-  const [novedades, setNovedades] = useState<any[]>([]);
+  const [activity, setActivity] = useState<any[]>([]);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       if (!client?.id) return;
-      const [o, op, c, inc] = await Promise.all([
+      const [o, op, c, act] = await Promise.all([
         clientService.getClientOverview(client.id).catch(() => null),
         clientService.getOperation(client.id).catch(() => ({ sites: [], looseStations: [] })),
         clientService.getClientContacts(client.id, { limit: 50, offset: 0 }).catch(() => null),
-        clientService.getClientIncidents(client.id, { limit: 8, offset: 0 }).catch(() => null),
+        clientService.getClientActivity(client.id, { limit: 12 }).catch(() => ({ rows: [] })),
       ]);
       if (!mounted) return;
       if (o) setOv((prev) => ({ ...prev, ...o }));
@@ -58,7 +71,7 @@ export default function ClientOverview({ client }: { client: any }) {
       }
       setSites(allSites);
       setContacts(Array.isArray(c) ? c : (c?.rows ?? []));
-      setNovedades(Array.isArray(inc) ? inc : (inc?.rows ?? []));
+      setActivity(Array.isArray(act?.rows) ? act.rows : []);
     })();
     return () => { mounted = false; };
   }, [client?.id]);
@@ -235,26 +248,28 @@ export default function ClientOverview({ client }: { client: any }) {
             )}
           </Section>
 
-          {/* Actividad reciente */}
+          {/* Actividad reciente — timeline unificado (marcas, incidentes,
+              visitas, tareas, rondas, relevos) del personal en las sedes del cliente. */}
           <Section title={t('clients.overview.recent.title', 'Actividad reciente')} icon={<Activity />}>
-            {novedades.length === 0 ? (
-              <EmptyState icon={<Activity />} title={t('clients.overview.recent.none', 'Sin actividad reciente') as string} description={t('clients.overview.recent.noneHint', 'Aquí verás los incidentes y reportes del cliente.') as string} />
+            {activity.length === 0 ? (
+              <EmptyState icon={<Activity />} title={t('clients.overview.recent.none', 'Sin actividad reciente') as string} description={t('clients.overview.recent.noneHint', 'Aquí verás la actividad del personal en las sedes del cliente: turnos, incidentes, visitas, tareas y rondas.') as string} />
             ) : (
               <ul className="space-y-3">
-                {novedades.slice(0, 6).map((n: any, i: number) => {
-                  const title = n.title || n.name || n.incidentType?.name || t('clients.overview.recent.item', 'Novedad');
-                  const station = n.stationName || n.station?.stationName || n.postSiteName || '';
-                  const when = n.createdAt || n.incidentAt || n.dateTime;
+                {activity.map((n: any, i: number) => {
+                  const meta = ACT_META[n.type] || { icon: Activity, cls: 'bg-muted text-muted-foreground' };
+                  const Icon = meta.icon;
                   return (
                     <li key={n.id || i} className="flex gap-3">
                       <div className="flex flex-col items-center">
-                        <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-orange-500/10 text-orange-600"><AlertTriangle className="h-3.5 w-3.5" /></span>
-                        {i < Math.min(novedades.length, 6) - 1 && <span className="mt-1 w-px flex-1 bg-border" />}
+                        <span className={`mt-1 flex h-7 w-7 items-center justify-center rounded-full ${meta.cls}`}><Icon className="h-3.5 w-3.5" /></span>
+                        {i < activity.length - 1 && <span className="mt-1 w-px flex-1 bg-border" />}
                       </div>
                       <div className="min-w-0 flex-1 pb-1">
-                        <p className="truncate text-sm font-medium text-foreground">{title}</p>
+                        <p className="truncate text-sm font-medium text-foreground">{n.title}</p>
                         <p className="truncate text-xs text-muted-foreground">
-                          {station && <span>{station} · </span>}{fmtDateTime(when) || fmtTime(when)}
+                          {n.subtitle && <span>{n.subtitle} · </span>}
+                          {n.actor && <span>{n.actor} · </span>}
+                          {fmtDateTime(n.at) || fmtTime(n.at)}
                         </p>
                       </div>
                     </li>
