@@ -92,7 +92,7 @@ export interface InventoryItemInput {
 
 const inventoryItemService = {
   async list(params: {
-    filter?: Record<string, any>;
+    filter?: Record<string, unknown>;
     limit?: number;
     offset?: number;
     orderBy?: string;

@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import {
   Star, MessageSquareWarning, FileText, Loader2, Building2, MapPin, Calendar,
 } from 'lucide-react';
+import type { GuardDetail } from '../../guardDetailTypes';
 
 function Stars({ value, size = 'h-4 w-4' }: { value: number; size?: string }) {
   return (
@@ -53,7 +54,7 @@ export default function GuardReviewsPage() {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
   useEffect(() => {
     if (!id) return;
-    securityGuardService.get(id).then((d: any) => {
+    securityGuardService.get(id).then((d: GuardDetail & { guard?: GuardDetail }) => {
       const g = d?.guard ?? d;
       setGuardName(g?.fullName || `${g?.firstName || ''} ${g?.lastName || ''}`.trim());
     }).catch(() => {});

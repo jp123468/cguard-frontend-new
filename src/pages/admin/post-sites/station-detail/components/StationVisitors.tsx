@@ -21,6 +21,24 @@ import type { Station } from '@/types';
 
 type Props = { station: Station; stationId: string; postSiteId: string };
 
+// A visitor-log row from visitorLogService.list (backend /visitor-log).
+interface VisitorPhoto { downloadUrl?: string; publicUrl?: string }
+interface VisitorGuardRef { firstName?: string; lastName?: string; name?: string }
+interface VisitorRow {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  idNumber?: string;
+  reason?: string;
+  numPeople?: number;
+  placeType?: string;
+  visitDate?: string | null;
+  exitTime?: string | null;
+  idPhoto?: VisitorPhoto[];
+  guard?: VisitorGuardRef | null;
+  guardName?: string;
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────
 
 const LIMIT = 25;
@@ -173,7 +191,7 @@ function emptyForm() {
 }
 
 function VisitorFormModal({ open, initialData, stationId, onClose, onSaved }: {
-  open: boolean; initialData?: any; stationId: string; onClose: () => void; onSaved: () => void;
+  open: boolean; initialData?: VisitorRow | null; stationId: string; onClose: () => void; onSaved: () => void;
 }) {
   const isEdit = !!initialData?.id;
   const [form, setForm] = useState(emptyForm);
@@ -324,13 +342,13 @@ function VisitorFormModal({ open, initialData, stationId, onClose, onSaved }: {
 // ─── Main Component ───────────────────────────────────────────────────────
 
 export default function StationVisitors({ stationId }: Props) {
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<VisitorRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const [formOpen, setFormOpen] = useState(false);
-  const [editRow, setEditRow] = useState<any | null>(null);
+  const [editRow, setEditRow] = useState<VisitorRow | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -397,7 +415,7 @@ export default function StationVisitors({ stationId }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {rows.map((r: any, i: number) => {
+                {rows.map((r: VisitorRow, i: number) => {
                   const photo = r.idPhoto?.[0]?.downloadUrl || r.idPhoto?.[0]?.publicUrl;
                   const fn = r.firstName || ''; const ln = r.lastName || '';
                   const name = `${fn} ${ln}`.trim() || '-';

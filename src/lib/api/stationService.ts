@@ -44,6 +44,50 @@ export interface PostSiteFilters {
   serviceType?: string;
 }
 
+/**
+ * Raw row shape returned by the backend `/post-site` and `/stations` endpoints
+ * before it is mapped to the frontend `PostSite` shape. All fields optional
+ * because the backend omits absent ones and the frontend reads name variants.
+ */
+export interface RawStationRow {
+  id?: string;
+  stationName?: string;
+  name?: string;
+  companyName?: string;
+  description?: string;
+  client?: { id: string; name: string };
+  clientAccount?: { id: string; name: string };
+  clientAccountId?: string;
+  clientId?: string;
+  address?: string;
+  secondAddress?: string;
+  addressLine2?: string;
+  postalCode?: string;
+  zipCode?: string;
+  city?: string;
+  country?: string;
+  contactEmail?: string;
+  email?: string;
+  contactPhone?: string;
+  phone?: string;
+  fax?: string;
+  categoryIds?: string[] | null;
+  active?: boolean;
+  status?: string;
+  latitud?: string | number;
+  latitude?: string | number;
+  longitud?: string | number;
+  longitude?: string | number;
+  stationSchedule?: string | null;
+  startingTimeInDay?: string | null;
+  finishTimeInDay?: string | null;
+  assignedGuards?: GuardAssignment[];
+  guardsCount?: number;
+  numberOfGuardsInStation?: string | number | null;
+  serviceType?: string;
+  serviceConfig?: unknown;
+}
+
 export interface PaginationOptions {
   limit: number;
   offset: number;
@@ -131,8 +175,8 @@ const stationService = {
     // If caller asked for stations linked to a postSite, call the stations endpoint
     const useStationsEndpoint = !!postSiteId;
     const endpoint = useStationsEndpoint ? 'stations' : 'post-site';
-    const { data } = await api.get(`/tenant/${tenantId}/${endpoint}?${params.toString()}`, { toast: { silentError: true } });
-    const mappedRows: PostSite[] = (data.rows || []).map((r: any) => ({
+    const { data } = await api.get<{ rows?: RawStationRow[]; count: number }>(`/tenant/${tenantId}/${endpoint}?${params.toString()}`, { toast: { silentError: true } });
+    const mappedRows = (data.rows || []).map((r: RawStationRow) => ({
       id: r.id,
       name: r.stationName ?? r.name ?? '',
       companyName: r.stationName ?? r.companyName ?? undefined,
@@ -148,7 +192,7 @@ const stationService = {
       fax: r.fax ?? undefined,
       categoryId: Array.isArray(r.categoryIds) && r.categoryIds.length > 0 ? r.categoryIds[0] : undefined,
       categoryIds: Array.isArray(r.categoryIds) ? r.categoryIds : [],
-      status: typeof r.active === 'boolean' ? (r.active ? 'active' : 'inactive') : (r.status ?? 'inactive'),
+      status: typeof r.active === 'boolean' ? (r.active ? 'active' : 'inactive') : ((r.status as 'active' | 'inactive') ?? 'inactive'),
       latitud: r.latitud ?? r.latitude ?? undefined,
       longitud: r.longitud ?? r.longitude ?? undefined,
       stationSchedule: r.stationSchedule ?? undefined,
@@ -159,45 +203,48 @@ const stationService = {
       numberOfGuardsInStation: r.numberOfGuardsInStation ?? undefined,
       serviceType: r.serviceType ?? undefined,
     }));
-    return { rows: mappedRows, count: data.count };
+    return { rows: mappedRows as unknown as PostSite[], count: data.count };
     });
   },
 
-  async get(id: string): Promise<any> {
+  async get(id: string): Promise<RawStationRow> {
     const tenantId = getTenantId();
     // Use the canonical `/post-site/:id` endpoint directly. Some deployments
     // previously attempted `/stations/:id` first which produced noisy 404s
     // for valid post-site resources; remove that fallback.
     const postSiteUrl = `/tenant/${tenantId}/post-site/${id}`;
-    const { data } = await api.get(postSiteUrl, { toast: { silentError: true } });
+    const { data } = await api.get<RawStationRow>(postSiteUrl, { toast: { silentError: true } });
     return data;
   },
 
   async create(payload: PostSiteInput): Promise<PostSite> {
     const tenantId = getTenantId();
-    const body: any = {
-      stationName: (payload as any).name ?? undefined,
+    // The form schema lacks `companyName` and legacy `latitude`/`longitude`;
+    // widen access for those.
+    const p = payload as PostSiteInput & { companyName?: string; latitude?: string; longitude?: string };
+    const body = {
+      stationName: p.name ?? undefined,
       // backend requires companyName for post-site creation
-      companyName: (payload as any).companyName ?? (payload as any).name ?? undefined,
-      clientAccountId: (payload as any).clientId ?? undefined,
-      address: (payload as any).address ?? undefined,
-      secondAddress: (payload as any).addressLine2 ?? undefined,
-      postalCode: (payload as any).postalCode ?? undefined,
-      city: (payload as any).city ?? undefined,
-      country: (payload as any).country ?? undefined,
-      description: (payload as any).description ?? undefined,
-      contactEmail: (payload as any).email ?? undefined,
-      contactPhone: (payload as any).phone ?? undefined,
-      fax: (payload as any).fax ?? undefined,
-      categoryIds: (payload as any).categoryId ? [(payload as any).categoryId] : [],
-      active: typeof (payload as any).status === 'string' ? (payload as any).status === 'active' : true,
-      latitud: (payload as any).latitud ?? (payload as any).latitude ?? undefined,
-      longitud: (payload as any).longitud ?? (payload as any).longitude ?? undefined,
-      stationSchedule: (payload as any).stationSchedule ?? undefined,
-      startingTimeInDay: (payload as any).startingTimeInDay ?? undefined,
-      finishTimeInDay: (payload as any).finishTimeInDay ?? undefined,
-      serviceType: (payload as any).serviceType ?? undefined,
-      serviceConfig: (payload as any).serviceConfig ?? undefined,
+      companyName: p.companyName ?? p.name ?? undefined,
+      clientAccountId: p.clientId ?? undefined,
+      address: p.address ?? undefined,
+      secondAddress: p.addressLine2 ?? undefined,
+      postalCode: p.postalCode ?? undefined,
+      city: p.city ?? undefined,
+      country: p.country ?? undefined,
+      description: p.description ?? undefined,
+      contactEmail: p.email ?? undefined,
+      contactPhone: p.phone ?? undefined,
+      fax: p.fax ?? undefined,
+      categoryIds: p.categoryId ? [p.categoryId] : [],
+      active: typeof p.status === 'string' ? p.status === 'active' : true,
+      latitud: p.latitud ?? p.latitude ?? undefined,
+      longitud: p.longitud ?? p.longitude ?? undefined,
+      stationSchedule: p.stationSchedule ?? undefined,
+      startingTimeInDay: p.startingTimeInDay ?? undefined,
+      finishTimeInDay: p.finishTimeInDay ?? undefined,
+      serviceType: p.serviceType ?? undefined,
+      serviceConfig: p.serviceConfig ?? undefined,
     };
     const { data } = await api.post(`/tenant/${tenantId}/post-site`, body);
     invalidateEntity("stations");
@@ -210,42 +257,43 @@ const stationService = {
     // legacy `/stations/:id` and `/post-site/:id` patterns. If that fails,
     // attempt a direct `/post-site/:id` GET as a last resort and proceed with
     // an empty fallback object so update still attempts to submit.
-    let existing: any = {};
+    let existing: RawStationRow = {};
     try {
       existing = await stationService.get(id);
     } catch (err) {
       console.error(`stationService.update: failed to load existing station/post-site ${id}`, err);
       try {
-        const res = await api.get(`/tenant/${tenantId}/post-site/${id}`, { toast: { silentError: true } });
+        const res = await api.get<RawStationRow>(`/tenant/${tenantId}/post-site/${id}`, { toast: { silentError: true } });
         existing = res.data || {};
       } catch (e) {
         console.error(`stationService.update: fallback direct post-site GET also failed for ${id}`, e);
         existing = {};
       }
     }
-    const body: any = {
-      stationName: (payload as any).name ?? existing.stationName ?? existing.name,
+    const p = payload as Partial<PostSiteInput> & { companyName?: string; latitude?: string; longitude?: string };
+    const body = {
+      stationName: p.name ?? existing.stationName ?? existing.name,
       // include companyName for backend compatibility
-      companyName: (payload as any).companyName ?? (payload as any).name ?? existing.companyName ?? existing.stationName ?? existing.name,
-      clientAccountId: (payload as any).clientId ?? existing.clientAccountId ?? existing.clientId,
-      address: (payload as any).address ?? existing.address,
-      secondAddress: (payload as any).addressLine2 ?? existing.secondAddress ?? existing.addressLine2,
-      postalCode: (payload as any).postalCode ?? existing.postalCode ?? existing.zipCode,
-      city: (payload as any).city ?? existing.city,
-      country: (payload as any).country ?? existing.country,
-      description: (payload as any).description ?? existing.description,
-      contactPhone: (payload as any).phone ?? existing.contactPhone ?? existing.phone,
-      fax: (payload as any).fax ?? existing.fax,
-      categoryIds: (payload as any).categoryId ? [(payload as any).categoryId] : (existing.categoryIds || []),
-      contactEmail: (payload as any).email ?? existing.contactEmail ?? existing.email,
-      active: typeof (payload as any).status === 'string' ? (payload as any).status === 'active' : existing.active,
-      latitud: (payload as any).latitud ?? (payload as any).latitude ?? existing.latitud ?? existing.latitude,
-      longitud: (payload as any).longitud ?? (payload as any).longitude ?? existing.longitud ?? existing.longitude,
-      stationSchedule: (payload as any).stationSchedule ?? existing.stationSchedule,
-      startingTimeInDay: (payload as any).startingTimeInDay ?? existing.startingTimeInDay,
-      finishTimeInDay: (payload as any).finishTimeInDay ?? existing.finishTimeInDay,
-      serviceType: (payload as any).serviceType ?? existing.serviceType ?? undefined,
-      serviceConfig: (payload as any).serviceConfig ?? existing.serviceConfig ?? undefined,
+      companyName: p.companyName ?? p.name ?? existing.companyName ?? existing.stationName ?? existing.name,
+      clientAccountId: p.clientId ?? existing.clientAccountId ?? existing.clientId,
+      address: p.address ?? existing.address,
+      secondAddress: p.addressLine2 ?? existing.secondAddress ?? existing.addressLine2,
+      postalCode: p.postalCode ?? existing.postalCode ?? existing.zipCode,
+      city: p.city ?? existing.city,
+      country: p.country ?? existing.country,
+      description: p.description ?? existing.description,
+      contactPhone: p.phone ?? existing.contactPhone ?? existing.phone,
+      fax: p.fax ?? existing.fax,
+      categoryIds: p.categoryId ? [p.categoryId] : (existing.categoryIds || []),
+      contactEmail: p.email ?? existing.contactEmail ?? existing.email,
+      active: typeof p.status === 'string' ? p.status === 'active' : existing.active,
+      latitud: p.latitud ?? p.latitude ?? existing.latitud ?? existing.latitude,
+      longitud: p.longitud ?? p.longitude ?? existing.longitud ?? existing.longitude,
+      stationSchedule: p.stationSchedule ?? existing.stationSchedule,
+      startingTimeInDay: p.startingTimeInDay ?? existing.startingTimeInDay,
+      finishTimeInDay: p.finishTimeInDay ?? existing.finishTimeInDay,
+      serviceType: p.serviceType ?? existing.serviceType ?? undefined,
+      serviceConfig: p.serviceConfig ?? existing.serviceConfig ?? undefined,
     };
     const { data } = await api.put(`/tenant/${tenantId}/post-site/${id}`, body);
     invalidateEntity("stations");

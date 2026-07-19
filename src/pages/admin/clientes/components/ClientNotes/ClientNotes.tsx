@@ -19,6 +19,18 @@ type Props = {
     client?: Client & { firstName?: string };
 };
 
+// A client note row from getClientNotes.
+interface NoteAuthor { fullName?: string; name?: string; firstName?: string; lastName?: string; }
+interface ClientNote {
+    id: string;
+    title: string;
+    description: string;
+    noteDate?: string | null;
+    createdAt?: string;
+    createdBy?: NoteAuthor | null;
+    createdById?: string | null;
+}
+
 export default function ClientNotes({ client }: Props) {
     const { t } = useTranslation();
     const actionRef = useRef<HTMLDivElement>(null);
@@ -29,12 +41,12 @@ export default function ClientNotes({ client }: Props) {
     const [actionSelection, setActionSelection] = useState<string>('actions.action');
     const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [notesData, setNotesData] = useState<any[]>([]);
+    const [notesData, setNotesData] = useState<ClientNote[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
     const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[]>([]);
-    const [detailsNote, setDetailsNote] = useState<any | null>(null);
+    const [detailsNote, setDetailsNote] = useState<ClientNote | null>(null);
 
     // selection state for checkboxes (master + per-row)
     const [selectedNoteIds, setSelectedNoteIds] = useState<string[]>([]);
@@ -134,7 +146,7 @@ export default function ClientNotes({ client }: Props) {
             toast.error(t('clients.notes.validation.dateRequired', 'Date is required'));
             return;
         }
-        const payload: any = {
+        const payload: { title: string; description: string; noteDate: string | null; attachment: null } = {
             title: formData.title,
             description: formData.description,
             noteDate: formData.date || null,
@@ -272,7 +284,7 @@ export default function ClientNotes({ client }: Props) {
                                         <td className="px-4 py-3 text-sm text-foreground">{note.noteDate || note.noteDate === null ? note.noteDate : note.createdAt?.split('T')?.[0]}</td>
                                         <td className="px-4 py-3 text-sm text-foreground">
                                             {(() => {
-                                                const cb = note.createdBy as any;
+                                                const cb = note.createdBy;
                                                 const name = cb ? ((cb.fullName || cb.name || cb.firstName || '') + (cb.lastName ? ' ' + cb.lastName : '')) : '';
                                                 return (name && name.trim()) ? name : (note.createdById || '-');
                                             })()}
@@ -289,7 +301,7 @@ export default function ClientNotes({ client }: Props) {
                                                         <Eye className="h-4 w-4 text-muted-foreground" />
                                                         {t('actions.viewDetails', 'Details')}
                                                     </button>
-                                                    <button onClick={() => { setFormData({ title: note.title, description: note.description, date: note.noteDate || note.createdAt?.split('T')?.[0], attachments: [] }); setIsEditing(true); setEditingNoteId(note.id); setShowModal(true); setOpenPopoverId(null); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-muted/30"><Pencil className="h-4 w-4" />{t('actions.edit') || 'Edit'}</button>
+                                                    <button onClick={() => { setFormData({ title: note.title, description: note.description, date: note.noteDate || note.createdAt?.split('T')?.[0] || '', attachments: [] }); setIsEditing(true); setEditingNoteId(note.id); setShowModal(true); setOpenPopoverId(null); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-muted/30"><Pencil className="h-4 w-4" />{t('actions.edit') || 'Edit'}</button>
                                                     <button onClick={() => { setConfirmDeleteIds([note.id]); setOpenPopoverId(null); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-muted/30 text-red-600"><Trash className="h-4 w-4" />{t('actions.delete') || 'Delete'}</button>
                                                 </PopoverContent>
                                             </Popover>
@@ -306,7 +318,7 @@ export default function ClientNotes({ client }: Props) {
                                                 items={filtered}
                                                 loading={false}
                                                 emptyMessage={t('clients.empty.title') as string}
-                                                renderCard={(note: any) => (
+                                                renderCard={(note: ClientNote) => (
                                                     <div>
                                                         <div className="flex items-start justify-between">
                                                             <div>
@@ -416,9 +428,9 @@ export default function ClientNotes({ client }: Props) {
                         <div className="text-sm text-foreground mb-2"><strong>{t('clients.notes.Details.Title', 'Title')}: </strong>{detailsNote.title}</div>
                         <div className="text-sm text-foreground mb-2"><strong>{t('clients.notes.Details.Date', 'Date')}: </strong>{detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0]}</div>
                         <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.Details.Description', 'Description')}: </strong><div className="mt-1 whitespace-pre-wrap">{detailsNote.description}</div></div>
-                        <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.addedBy', 'Added by')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdBy || detailsNote.createdById || '-'}</div>
+                        <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.addedBy', 'Added by')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdById || '-'}</div>
                         <div className="flex justify-end gap-3">
-                            <button onClick={() => { setFormData({ title: detailsNote.title, description: detailsNote.description, date: detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0], attachments: [] }); setIsEditing(true); setEditingNoteId(detailsNote.id); setShowModal(true); setDetailsNote(null); }} className="px-4 py-2 bg-primary text-white rounded-md">{t('actions.edit') || 'Edit'}</button>
+                            <button onClick={() => { setFormData({ title: detailsNote.title, description: detailsNote.description, date: detailsNote.noteDate || detailsNote.createdAt?.split("T")?.[0] || "", attachments: [] }); setIsEditing(true); setEditingNoteId(detailsNote.id); setShowModal(true); setDetailsNote(null); }} className="px-4 py-2 bg-primary text-white rounded-md">{t('actions.edit') || 'Edit'}</button>
                         </div>
                     </div>
                 </div>

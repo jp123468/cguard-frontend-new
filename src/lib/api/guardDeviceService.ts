@@ -24,7 +24,7 @@ export interface GuardDevice {
 /** Devices a guard has reported (bind/flag) — guard-detail "Dispositivo" tab. */
 export const guardDeviceService = {
   async list(userId: string): Promise<GuardDevice[]> {
-    const resp: any = await ApiService.get(
+    const resp: { rows?: GuardDevice[]; data?: { rows?: GuardDevice[] } } = await ApiService.get(
       `/tenant/${tenantId()}/guard-device/by-guard/${userId}`,
     );
     const data = (resp && (resp.data || resp)) || resp;

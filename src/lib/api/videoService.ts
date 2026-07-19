@@ -164,7 +164,7 @@ export const videoService = {
   devices(): Promise<Device[]> {
     // The endpoint returns { rows, count }, not a bare array — unwrap it (mirrors
     // relaySites). Without this the list was always empty, so saved devices "vanished".
-    return ApiService.get(`/tenant/${tid()}/video/devices`).then((r: any) =>
+    return ApiService.get(`/tenant/${tid()}/video/devices`).then((r: Device[] | { rows?: Device[] }) =>
       Array.isArray(r) ? r : r?.rows ?? [],
     );
   },
@@ -177,7 +177,7 @@ export const videoService = {
   updateDevice(id: string, body: Partial<Device> & { password?: string }): Promise<Device> {
     return ApiService.put(`/tenant/${tid()}/video/device/${id}`, body);
   },
-  deleteDevice(id: string): Promise<any> {
+  deleteDevice(id: string): Promise<void> {
     return ApiService.delete(`/tenant/${tid()}/video/device/${id}`);
   },
   testDevice(id: string): Promise<{ status: string }> {
@@ -186,7 +186,7 @@ export const videoService = {
   syncCameras(id: string): Promise<Camera[]> {
     return ApiService.post(`/tenant/${tid()}/video/device/${id}/cameras`);
   },
-  setGateway(id: string, body: { streamGatewayBase: string; streamFormat?: "hls" | "webrtc" }): Promise<any> {
+  setGateway(id: string, body: { streamGatewayBase: string; streamFormat?: "hls" | "webrtc" }): Promise<void> {
     return ApiService.put(`/tenant/${tid()}/video/device/${id}/gateway`, body);
   },
   gatewayConfig(id: string): Promise<{ deviceName: string; cameraCount: number; gatewayBase: string | null; format: string; yaml: string }> {
@@ -195,7 +195,7 @@ export const videoService = {
 
   // --- Relay sites (remote cameras) ---
   relaySites(): Promise<RelaySite[]> {
-    return ApiService.get(`/tenant/${tid()}/video/relay-sites`).then((r: any) =>
+    return ApiService.get(`/tenant/${tid()}/video/relay-sites`).then((r: RelaySite[] | { rows?: RelaySite[] }) =>
       Array.isArray(r) ? r : r?.rows ?? [],
     );
   },
@@ -205,7 +205,7 @@ export const videoService = {
   updateRelaySite(id: string, body: Partial<RelaySite> & { regenToken?: boolean }): Promise<RelaySite> {
     return ApiService.put(`/tenant/${tid()}/video/relay-site/${id}`, body);
   },
-  deleteRelaySite(id: string): Promise<any> {
+  deleteRelaySite(id: string): Promise<void> {
     return ApiService.delete(`/tenant/${tid()}/video/relay-site/${id}`);
   },
   relayBundle(id: string): Promise<RelayBundle> {
@@ -232,7 +232,7 @@ export const videoService = {
 
   // --- Events ---
   events(params?: { status?: string; cameraId?: string }): Promise<VideoEvent[]> {
-    return ApiService.get(`/tenant/${tid()}/video/events${qstr(params)}`).then((r: any) => (Array.isArray(r) ? r : r?.rows ?? []));
+    return ApiService.get(`/tenant/${tid()}/video/events${qstr(params)}`).then((r: VideoEvent[] | { rows?: VideoEvent[] }) => (Array.isArray(r) ? r : r?.rows ?? []));
   },
   createEvent(body: Partial<VideoEvent>): Promise<VideoEvent> {
     return ApiService.post(`/tenant/${tid()}/video/event`, body);
@@ -240,24 +240,24 @@ export const videoService = {
   updateEvent(id: string, body: Partial<VideoEvent>): Promise<VideoEvent> {
     return ApiService.patch(`/tenant/${tid()}/video/event/${id}`, body);
   },
-  eventToIncident(id: string, body: any): Promise<any> {
+  eventToIncident(id: string, body: Record<string, unknown>): Promise<{ id?: string; incidentId?: string }> {
     return ApiService.post(`/tenant/${tid()}/video/event/${id}/incident`, body);
   },
 
   // --- Clips ---
   clips(params?: { cameraId?: string }): Promise<Clip[]> {
-    return ApiService.get(`/tenant/${tid()}/video/clips${qstr(params)}`).then((r: any) => (Array.isArray(r) ? r : r?.rows ?? []));
+    return ApiService.get(`/tenant/${tid()}/video/clips${qstr(params)}`).then((r: Clip[] | { rows?: Clip[] }) => (Array.isArray(r) ? r : r?.rows ?? []));
   },
   createClip(body: { videoCameraId: string; startAt: string; endAt: string; label?: string }): Promise<Clip> {
     return ApiService.post(`/tenant/${tid()}/video/clip`, body);
   },
-  deleteClip(id: string): Promise<any> {
+  deleteClip(id: string): Promise<void> {
     return ApiService.delete(`/tenant/${tid()}/video/clip/${id}`);
   },
   shareClip(id: string): Promise<ShareResult> {
     return ApiService.post(`/tenant/${tid()}/video/clip/${id}/share`);
   },
-  clipToIncident(id: string, body: any): Promise<any> {
+  clipToIncident(id: string, body: Record<string, unknown>): Promise<{ id?: string; incidentId?: string }> {
     return ApiService.post(`/tenant/${tid()}/video/clip/${id}/incident`, body);
   },
 

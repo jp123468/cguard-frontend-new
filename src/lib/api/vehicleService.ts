@@ -10,9 +10,9 @@ const getTenantId = (): string => {
 };
 
 const vehicleService = {
-  async list(params?: Record<string, any>) {
+  async list(params?: Record<string, unknown>) {
     const tenantId = getTenantId();
-    const qs = params ? `?${new URLSearchParams(params as any).toString()}` : '';
+    const qs = params ? `?${new URLSearchParams(params as Record<string, string>).toString()}` : '';
     try {
       const { data: resp } = await api.get<any>(`/tenant/${tenantId}/vehicle${qs}`, { toast: { silentError: true } });
       // Normalize response shapes used across the app
@@ -46,13 +46,13 @@ const vehicleService = {
   },
 
   // Optional CRUD helpers to match backend capabilities
-  async create(data: Record<string, any>) {
+  async create(data: Record<string, unknown>) {
     const tenantId = getTenantId();
     const { data: resp } = await api.post<any>(`/tenant/${tenantId}/vehicle`, { data });
     return resp;
   },
 
-  async update(id: string, data: Record<string, any>) {
+  async update(id: string, data: Record<string, unknown>) {
     const tenantId = getTenantId();
     const { data: resp } = await api.put<any>(`/tenant/${tenantId}/vehicle/${id}`, { data });
     return resp;

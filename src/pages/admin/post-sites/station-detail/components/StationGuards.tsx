@@ -19,6 +19,9 @@ interface StationDetail extends Station {
 type Props = { station: StationDetail; stationId: string; postSiteId: string };
 type PosType = 'fijo' | 'sacafranco';
 
+// A scheduler position row from `/station/:id/positions`.
+interface PositionRow { id: string; type?: string; startTime?: string; endTime?: string; name?: string }
+
 interface Assignment {
   id: string;                    // row key: `a:<assignmentId>` or `s:<userId>`
   assignmentId: string | null;   // guardAssignment id, if any
@@ -81,7 +84,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
   const [showShiftModal, setShowShiftModal] = useState(false);
 
   const [rows, setRows] = useState<Assignment[]>([]);
-  const [positions, setPositions] = useState<any[]>([]);
+  const [positions, setPositions] = useState<PositionRow[]>([]);
   const [guards, setGuards] = useState<{ id: string; label: string }[]>([]);
   // Vigilantes with an active rotation ANYWHERE — excluded from the picker so an
   // occupied vigilante can never be chosen.
@@ -204,7 +207,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
     // Reuse a FREE position of this type (never one already occupied by an active
     // assignment) — so we never put two vigilantes on the same puesto.
     const occupiedPos = new Set(rows.filter((r) => r.positionId).map((r) => String(r.positionId)));
-    const free = positions.find((p) => (p.type || 'fijo') === type && !occupiedPos.has(String(p.id)));
+    const free = positions.find((p: PositionRow) => (p.type || 'fijo') === type && !occupiedPos.has(String(p.id)));
     if (free) return free.id;
     try {
       const created: any = await ApiService.post(`/tenant/${tenantId}/station/${encodeURIComponent(stationId)}/positions`, {
@@ -294,7 +297,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
   // operator picks each guard's start day and the backend phases the assignment
   // to it — "empieza hoy" ⇒ trabaja hoy.
   const isAlternation = useMemo(() => {
-    const fijos = (positions || []).filter((p: any) => (p.type || 'fijo') !== 'sacafranco');
+    const fijos = (positions || []).filter((p: PositionRow) => (p.type || 'fijo') !== 'sacafranco');
     const blocks = new Map<string, number>();
     for (const p of fijos) {
       const k = `${p.startTime || ''}|${p.endTime || ''}`;

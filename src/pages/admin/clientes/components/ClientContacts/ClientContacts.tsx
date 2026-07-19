@@ -12,14 +12,18 @@ import { EmptyState } from '@/components/kit';
 import { Button } from '@/components/ui/button';
 
 
-type PostSite = {
-  id?: string;
+type PostSiteRaw = {
+  id?: string | number;
   name?: string;
   companyName?: string;
   clientAccountName?: string;
   address?: string;
   contactEmail?: string;
-} | string;
+};
+type PostSite = PostSiteRaw | string;
+
+// Normalized dropdown option for the "post site" selector.
+type PostSiteOption = { id: string; label: string; raw: PostSiteRaw | string };
 
 type Contact = {
   id: string;
@@ -32,7 +36,7 @@ type Contact = {
   allowGuard?: boolean;
 };
 
-export default function ClientContacts({ client }: { client: Client & { contacts?: Contact[]; postSites?: unknown[] } }) {
+export default function ClientContacts({ client }: { client: Client & { contacts?: Contact[]; postSites?: PostSiteRaw[] } }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [phoneCountry, setPhoneCountry] = useState<string>('us');
   const initial: Contact[] = Array.isArray(client?.contacts) ? client.contacts : [];
@@ -70,8 +74,8 @@ export default function ClientContacts({ client }: { client: Client & { contacts
   const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[]>([]);
   const drawerAllowGuard = useRef<boolean>(false);
 
-  const [postSites, setPostSites] = useState<any[]>(
-    (Array.isArray(client?.postSites) ? client.postSites : []).map((ps: any) => ({
+  const [postSites, setPostSites] = useState<PostSiteOption[]>(
+    (Array.isArray(client?.postSites) ? client.postSites : []).map((ps: PostSiteRaw) => ({
       id: String(ps.id || ps),
       label: ps.name || ps.companyName || ps.clientAccountName || ps.address || ps.contactEmail || String(ps.id || ps),
       raw: ps,
@@ -83,7 +87,7 @@ export default function ClientContacts({ client }: { client: Client & { contacts
     let mounted = true;
     async function loadPostSites() {
       if (!client || !client.id) {
-        setPostSites((Array.isArray(client?.postSites) ? client.postSites : []).map((ps: any) => ({
+        setPostSites((Array.isArray(client?.postSites) ? client.postSites : []).map((ps: PostSiteRaw) => ({
           id: String(ps.id || ps),
           label: ps.name || ps.companyName || ps.address || ps.contactEmail || String(ps.id || ps),
           raw: ps,
@@ -94,8 +98,8 @@ export default function ClientContacts({ client }: { client: Client & { contacts
       try {
         const resp = await clientService.getClientPostSites(client.id, { limit: 9999, offset: 0 });
         if (!mounted) return;
-        const rows = Array.isArray(resp?.rows) ? resp.rows : [];
-        const normalized = rows.map((r: any) => ({
+        const rows: PostSiteRaw[] = Array.isArray(resp?.rows) ? resp.rows : [];
+        const normalized = rows.map((r: PostSiteRaw) => ({
           id: String(r.id),
           label: r.name || r.companyName || r.clientAccountName || r.address || r.contactEmail || String(r.id),
           raw: r,
@@ -104,7 +108,7 @@ export default function ClientContacts({ client }: { client: Client & { contacts
         console.debug('[ClientContacts] loaded postSites', client.id, { count: normalized.length, sample: normalized.slice(0, 3) });
       } catch (err) {
         console.warn('[ClientContacts] failed to load post sites for client', client?.id, err);
-        setPostSites((Array.isArray(client?.postSites) ? client.postSites : []).map((ps: any) => ({
+        setPostSites((Array.isArray(client?.postSites) ? client.postSites : []).map((ps: PostSiteRaw) => ({
           id: String(ps.id || ps),
           label: ps.name || ps.companyName || ps.address || ps.contactEmail || String(ps.id || ps),
           raw: ps,
@@ -228,25 +232,25 @@ export default function ClientContacts({ client }: { client: Client & { contacts
       name: nameVal,
       email: emailVal,
       mobile: mobileVal,
-      postSite: typeof form.postSite === 'string' ? form.postSite : (form.postSite && (form.postSite as any).id ? String((form.postSite as any).id) : undefined),
-      description: (form as any).description || '',
-      allowGuard: !!(form as any).allowGuard,
+      postSite: typeof form.postSite === 'string' ? form.postSite : (form.postSite && form.postSite.id ? String(form.postSite.id) : undefined),
+      description: form.description || '',
+      allowGuard: !!form.allowGuard,
     };
 
-    const isEditing = !!(form && (form as any).id);
+    const isEditing = !!(form && form.id);
 
     try {
       if (isEditing) {
         // Update
         if (client && client.id) {
-          const resp = await clientService.updateClientContact(client.id, String((form as any).id), payload);
+          const resp = await clientService.updateClientContact(client.id, String(form.id), payload);
           const updated = resp && resp.data ? resp.data : resp;
           setContacts(prev => prev.map(c => c.id === updated.id ? updated : c));
           const msg = resp && resp.messageCode ? t(resp.messageCode) : (resp && resp.message ? resp.message : t('clients.contacts.contactUpdated'));
           toast.success(msg);
         } else {
           // local fallback
-          setContacts(prev => prev.map(c => c.id === (form as any).id ? ({ ...c, ...payload }) as any : c));
+          setContacts(prev => prev.map(c => c.id === form.id ? ({ ...c, ...payload }) as any : c));
           toast.success(t('clients.contacts.contactUpdated'));
         }
       } else {
@@ -273,7 +277,7 @@ export default function ClientContacts({ client }: { client: Client & { contacts
     } catch (err) {
       console.warn('[ClientContacts] failed to save contact on server, falling back to local', err);
       if (isEditing) {
-        setContacts(prev => prev.map(c => c.id === (form as any).id ? ({ ...c, ...payload }) as any : c));
+        setContacts(prev => prev.map(c => c.id === form.id ? ({ ...c, ...payload }) as any : c));
         toast.error(t('clients.contacts.contactCreateFailed', { defaultValue: 'Could not update contact' }));
       } else {
         setContacts(prev => [{ id: String(Date.now()), ...payload }, ...prev]);
@@ -293,7 +297,7 @@ export default function ClientContacts({ client }: { client: Client & { contacts
   // - a string id
   // - an object with name/companyName/clientAccountName fields
   // - absent but contact may include postSiteId/postSiteName/postSiteIds
-  function resolvePostSiteLabel(contact: any) {
+  function resolvePostSiteLabel(contact: Contact & { postSiteName?: string; postSiteId?: string; postSiteIds?: string[] }) {
     if (!contact) return '-';
 
     // direct object
@@ -305,9 +309,9 @@ export default function ClientContacts({ client }: { client: Client & { contacts
     // if postSite is a plain string, it may be an id or already a label
     if (ps && typeof ps === 'string') {
       // try find in postSites by id or by exact label
-      const matchById = (postSites || []).find((p: any) => String(p.id) === String(ps));
+      const matchById = (postSites || []).find((p) => String(p.id) === String(ps));
       if (matchById) return matchById.label;
-      const matchByLabel = (postSites || []).find((p: any) => String(p.label) === String(ps));
+      const matchByLabel = (postSites || []).find((p) => String(p.label) === String(ps));
       if (matchByLabel) return matchByLabel.label;
       // fallback to the raw string (might already be a readable name)
       return ps;
@@ -316,14 +320,14 @@ export default function ClientContacts({ client }: { client: Client & { contacts
     // fallback: check other contact fields
     if (contact.postSiteName) return contact.postSiteName;
     if (contact.postSiteId) {
-      const match = (postSites || []).find((p: any) => String(p.id) === String(contact.postSiteId));
+      const match = (postSites || []).find((p) => String(p.id) === String(contact.postSiteId));
       if (match) return match.label;
       return contact.postSiteId;
     }
     if (contact.postSiteIds && Array.isArray(contact.postSiteIds) && contact.postSiteIds.length) {
       const ids = contact.postSiteIds.map(String);
-      const matches = (postSites || []).filter((p: any) => ids.includes(String(p.id)));
-      if (matches.length) return matches.map((m: any) => m.label).join(', ');
+      const matches = (postSites || []).filter((p) => ids.includes(String(p.id)));
+      if (matches.length) return matches.map((m) => m.label).join(', ');
     }
 
     return '-';
@@ -510,7 +514,7 @@ export default function ClientContacts({ client }: { client: Client & { contacts
             items={filtered}
             loading={false}
             emptyMessage={t('clients.empty.title') as string}
-            renderCard={(c: any) => (
+            renderCard={(c: Contact) => (
               <div>
                 <div className="flex items-start justify-between">
                   <div>
@@ -539,7 +543,7 @@ export default function ClientContacts({ client }: { client: Client & { contacts
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary [&_svg]:size-4">
                   <Users />
                 </div>
-                <h3 className="font-display text-lg font-semibold">{form && (form as any).id ? t('clients.contacts.editcontact') : t('clients.contacts.form.AddClientContact')}</h3>
+                <h3 className="font-display text-lg font-semibold">{form && form.id ? t('clients.contacts.editcontact') : t('clients.contacts.form.AddClientContact')}</h3>
               </div>
               <button onClick={handleCloseAdd} className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition"><X className="h-4 w-4" /></button>
             </div>
@@ -579,24 +583,24 @@ export default function ClientContacts({ client }: { client: Client & { contacts
               </div>
               <div>
                 <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Description')}</label>
-                <textarea className="w-full border rounded-md px-3 py-2 min-h-[90px]" value={(form as any).description || ''} onChange={e => handleChange('description', e.target.value)} placeholder={t('clients.contacts.form.descriptioninput', 'Enter - description')} rows={6} />
+                <textarea className="w-full border rounded-md px-3 py-2 min-h-[90px]" value={form.description || ''} onChange={e => handleChange('description', e.target.value)} placeholder={t('clients.contacts.form.descriptioninput', 'Enter - description')} rows={6} />
 
               </div>
               <div>
                 <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.AssignPostSite')}</label>
                 <select
                   className="w-full border rounded-md h-10 px-3"
-                  value={typeof form.postSite === 'string' ? form.postSite : (form.postSite && (form.postSite as any).id ? String((form.postSite as any).id) : '')}
+                  value={typeof form.postSite === 'string' ? form.postSite : (form.postSite && form.postSite.id ? String(form.postSite.id) : '')}
                   onChange={e => handleChange('postSite', e.target.value)}
                 >
                   <option value="">--</option>
-                  {(Array.isArray(postSites) ? postSites : []).map((ps: any) => (
+                  {(Array.isArray(postSites) ? postSites : []).map((ps) => (
                     <option key={ps.id} value={ps.id}>{ps.label}</option>
                   ))}
                 </select>
               </div>
               <div className="flex items-center gap-2">
-                <input id="allowGuard" type="checkbox" className="h-4 w-4" checked={!!(form as any).allowGuard} onChange={e => handleChange('allowGuard', e.target.checked)} />
+                <input id="allowGuard" type="checkbox" className="h-4 w-4" checked={!!form.allowGuard} onChange={e => handleChange('allowGuard', e.target.checked)} />
                 <label htmlFor="allowGuard" className="text-sm text-foreground">{t('clients.contacts.form.checkbox')}</label>
               </div>
             </div>
@@ -607,7 +611,7 @@ export default function ClientContacts({ client }: { client: Client & { contacts
                 disabled={!canSubmit}
                 className={`${canSubmit ? 'cg-gradient-brand hover:brightness-[1.04] hover:shadow-lg' : 'bg-primary/60 cursor-not-allowed opacity-60'} text-primary-foreground transition-all duration-300 ease-out px-5 py-2 rounded-lg shadow-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30`}
               >
-                {(form && (form as any).id) ? (t('save') || 'Save') : (t('clients.contacts.form.Addcontact') || 'ADD')}
+                {(form && form.id) ? (t('save') || 'Save') : (t('clients.contacts.form.Addcontact') || 'ADD')}
               </button>
             </div>
           </div>

@@ -19,6 +19,12 @@ const today = () => localToday();
 
 interface Candidate { id: string; name: string; busy: Set<string>; freeForGaps: number; busyOnGaps: number; }
 
+// Raw API rows read while ranking candidates.
+interface AssignmentRow { positionId?: string | null; isRelief?: boolean; guardId?: string; guard?: { id?: string } | null }
+interface GuardAutoRow { guardId?: string; id?: string; fullName?: string; label?: string; name?: string }
+interface ShiftRow { guardId?: string; guard?: { id?: string } | null; startTime?: string }
+interface PositionRow { id: string; type?: string }
+
 /**
  * Assign a Sacafranco (relief) to cover the fijos' rest-day gaps. Shows each
  * candidate as a card with the next-14-day availability strip — the station's gap
@@ -55,14 +61,14 @@ export default function SacafrancoAssignModal({
         ApiService.get(`/tenant/${tenantId}/guard-assignments?status=active`),
         ApiService.get(`/tenant/${tenantId}/shift?limit=999`),
       ]);
-      const guards = Array.isArray(guardsRes) ? guardsRes : (guardsRes?.rows || []);
-      const asg = Array.isArray(asgRes) ? asgRes : (asgRes?.rows || []);
-      const shifts = Array.isArray(shiftsRes) ? shiftsRes : (shiftsRes?.rows || []);
+      const guards: GuardAutoRow[] = Array.isArray(guardsRes) ? guardsRes : (guardsRes?.rows || []);
+      const asg: AssignmentRow[] = Array.isArray(asgRes) ? asgRes : (asgRes?.rows || []);
+      const shifts: ShiftRow[] = Array.isArray(shiftsRes) ? shiftsRes : (shiftsRes?.rows || []);
 
       // A guard with an active rotation (fijo or relief) can't take another.
       const occupied = new Set<string>(
-        asg.filter((a: any) => a.positionId || a.isRelief)
-          .map((a: any) => String(a.guardId || a.guard?.id || '')).filter(Boolean),
+        asg.filter((a: AssignmentRow) => a.positionId || a.isRelief)
+          .map((a: AssignmentRow) => String(a.guardId || a.guard?.id || '')).filter(Boolean),
       );
       // Busy dates per guard (works somewhere that day).
       const busyBy: Record<string, Set<string>> = {};
@@ -72,9 +78,9 @@ export default function SacafrancoAssignModal({
         (busyBy[gid] = busyBy[gid] || new Set()).add(localDateKey(sh.startTime));
       }
       const cands: Candidate[] = guards
-        .map((g: any) => ({ id: String(g.guardId || g.id || ''), name: g.fullName || g.label || g.name || 'Vigilante' }))
-        .filter((g: any) => g.id && !occupied.has(g.id))
-        .map((g: any) => {
+        .map((g: GuardAutoRow) => ({ id: String(g.guardId || g.id || ''), name: g.fullName || g.label || g.name || 'Vigilante' }))
+        .filter((g) => g.id && !occupied.has(g.id))
+        .map((g) => {
           const busy = busyBy[g.id] || new Set<string>();
           const busyOnGaps = gapDates.filter(d => busy.has(d)).length;
           return { ...g, busy, busyOnGaps, freeForGaps: gapDates.length - busyOnGaps };
@@ -94,7 +100,7 @@ export default function SacafrancoAssignModal({
       // Ensure the station has a Sacafranco position to assign into.
       const posRes: any = await ApiService.get(`/tenant/${tenantId}/station/${stationId}/positions`);
       const posList = Array.isArray(posRes) ? posRes : (posRes?.rows || []);
-      let sf = posList.find((p: any) => p.type === 'sacafranco');
+      let sf = posList.find((p: PositionRow) => p.type === 'sacafranco');
       if (!sf) {
         const created: any = await ApiService.post(`/tenant/${tenantId}/station/${stationId}/positions`, {
           data: { name: 'Sacafranco', type: 'sacafranco', startTime: '07:00', endTime: '19:00', platoonOffset: 0, sortOrder: 2, guardsNeeded: 1 },

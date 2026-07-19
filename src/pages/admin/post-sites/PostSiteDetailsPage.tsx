@@ -42,7 +42,7 @@ export default function PostSiteDetailsPage() {
         setSite(data);
         // Ensure tenantId is available globally for components that rely on localStorage fallback
         try {
-          const tid = data?.tenantId || (data?.tenant && (data.tenant.id || data.tenant.tenantId));
+          const tid = data?.tenantId || (data?.tenant && typeof data.tenant === "object" && (data.tenant.id || data.tenant.tenantId));
           if (tid) {
             setGlobalTenantId(tid);
           }

@@ -41,7 +41,7 @@ export const radioCheckService = {
   async getSettings() {
     return unwrap(await api.get(`/tenant/${getTenantId()}/radio-check/settings`));
   },
-  async saveSettings(patch: Record<string, any>) {
+  async saveSettings(patch: Record<string, unknown>) {
     return unwrap(await api.put(`/tenant/${getTenantId()}/radio-check/settings`, { data: patch }));
   },
 };

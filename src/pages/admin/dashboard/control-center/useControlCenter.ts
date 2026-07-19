@@ -55,9 +55,18 @@ interface LocationUpdate {
 }
 
 const num = (v: unknown) => (typeof v === "number" ? v : Number(v) || 0);
-const count = (r: any) => (!r ? 0 : r.total ?? r.count ?? (Array.isArray(r.rows) ? r.rows.length : Array.isArray(r) ? r.length : 0));
-const rows = (r: any): any[] => (Array.isArray(r) ? r : r?.rows ?? r?.data ?? []);
-const coord = (v: any) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
+const count = (r: unknown): number => {
+  if (!r) return 0;
+  if (Array.isArray(r)) return r.length;
+  const o = r as { total?: number; count?: number; rows?: unknown[] };
+  return o.total ?? o.count ?? (Array.isArray(o.rows) ? o.rows.length : 0);
+};
+const rows = (r: unknown): unknown[] => {
+  if (Array.isArray(r)) return r;
+  const o = r as { rows?: unknown[]; data?: unknown[] } | null | undefined;
+  return o?.rows ?? o?.data ?? [];
+};
+const coord = (v: unknown): number | null => { const n = parseFloat(v as string); return Number.isFinite(n) ? n : null; };
 
 async function safe<T>(p: Promise<T>, fallback: T): Promise<T> {
   try { return await p; } catch { return fallback; }
@@ -104,11 +113,11 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
       ]);
       if (!alive) return;
 
-      const stationRows = rows(stationsR);
+      const stationRows = rows(stationsR) as StationRow[];
       const postRows = rows(postsR);
-      const activeRows = rows(active);
-      const incidentRows = rows(incidentsR);
-      const userRows = rows(usersR);
+      const activeRows = rows(active) as ActiveGuardRow[];
+      const incidentRows = rows(incidentsR) as IncidentRow[];
+      const userRows = rows(usersR) as UserRow[];
 
       // ── live entities for the map ──
       const entities: MapEntity[] = [];
@@ -182,7 +191,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
 
       // Primary feed: recent platform events (the rich activity stream). Falls back
       // to incidents only when there are no events yet.
-      const eventRows = rows(eventsR);
+      const eventRows = rows(eventsR) as EventRow[];
       const eventActivity: ActivityItem[] = eventRows.map((e: EventRow) => {
         const type = String(e.eventType || e.type || "");
         const p: NonNullable<EventRow["payload"]> = e.payload || {};
@@ -234,7 +243,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
       const mine = ++locSeqRef.current;
       const active = await safe(securityGuardService.activeLocations(), null as any);
       if (mine !== locSeqRef.current) return;
-      const activeRows = rows(active);
+      const activeRows = rows(active) as ActiveGuardRow[];
       setState((s) => {
         const others = s.entities.filter((e) => e.kind !== "guard");
         const guards: MapEntity[] = [];

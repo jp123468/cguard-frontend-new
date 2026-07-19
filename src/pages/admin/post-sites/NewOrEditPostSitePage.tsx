@@ -22,7 +22,7 @@ export default function NewOrEditPostSitePage() {
             try {
                 const data = await clientService.getClients({});
                 const rows = Array.isArray(data?.rows) ? data.rows : [];
-                setClients(rows.map((c: any) => ({
+                setClients(rows.map((c: { id: string; commercialName?: string; name?: string; lastName?: string }) => ({
                     id: c.id,
                     name: c.commercialName || [c.name, c.lastName].filter(Boolean).join(' '),
                 })));

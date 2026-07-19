@@ -29,12 +29,12 @@ export async function listBanners() {
   return data?.rows ?? [];
 }
 
-export async function createBanner(data: any) {
+export async function createBanner(data: Record<string, unknown>) {
   const { data: response } = await api.post(resourceUrl('banner-superior-app'), { data });
   return response;
 }
 
-export async function updateBanner(id: string, data: any) {
+export async function updateBanner(id: string, data: Record<string, unknown>) {
   const { data: response } = await api.put(resourceUrl(`banner-superior-app/${id}`), { data });
   return response;
 }
@@ -55,12 +55,12 @@ export async function listServices() {
   return data?.rows ?? [];
 }
 
-export async function updateService(id: string, data: any) {
+export async function updateService(id: string, data: Record<string, unknown>) {
   const { data: response } = await api.put(resourceUrl(`service/${id}`), { data });
   return response;
 }
 
-export async function createService(data: any) {
+export async function createService(data: Record<string, unknown>) {
   const { data: response } = await api.post(resourceUrl('service'), { data });
   return response;
 }
@@ -71,12 +71,12 @@ export async function deleteService(id: string) {
   });
 }
 
-export async function createCertification(data: any) {
+export async function createCertification(data: Record<string, unknown>) {
   const { data: response } = await api.post(resourceUrl('certification'), { data });
   return response;
 }
 
-export async function updateCertification(id: string, data: any) {
+export async function updateCertification(id: string, data: Record<string, unknown>) {
   const { data: response } = await api.put(resourceUrl(`certification/${id}`), { data });
   return response;
 }

@@ -8,6 +8,24 @@ import type {
     ClientListResponse,
 } from "@/types/client";
 
+/**
+ * Shape of a client row as it comes back RAW from the backend, before the
+ * frontend field remapping (zipCode -> postalCode, addressComplement ->
+ * addressLine2, active coerced to boolean). The backend also carries
+ * categoryIds for category-usage checks.
+ */
+interface RawClientRow extends Omit<Client, "active"> {
+    zipCode?: string;
+    addressComplement?: string;
+    active?: boolean | number | null;
+    categoryIds?: string[];
+}
+
+interface RawClientListResponse {
+    rows?: RawClientRow[];
+    count: number;
+}
+
 // Variable global para almacenar el tenantId
 let globalTenantId: string | null = null;
 
@@ -95,28 +113,26 @@ export const clientService = {
             }
         }
 
-        const { data } = await api.get<any>(
+        const { data } = await api.get<RawClientListResponse>(
             `/tenant/${tenantId}/client-account?${params.toString()}`,
             // Prevent global interceptor from showing duplicate toasts; component will show one
             { toast: { silentError: true } }
         );
         // Mapear zipCode/addressComplement y normalizar active a boolean
-        if (data.rows) {
-            data.rows = data.rows.map((client: any) => {
-                const normalizedActive = client.active === true || client.active === 1
-                    ? true
-                    : client.active === false || client.active === 0
-                    ? false
-                    : true; // fallback activo si falta en lista
-                return {
-                    ...client,
-                    postalCode: client.zipCode || client.postalCode,
-                    addressLine2: client.addressComplement || client.addressLine2,
-                    active: normalizedActive,
-                };
-            });
-        }
-        return data;
+        const rows: Client[] = (data.rows ?? []).map((client) => {
+            const normalizedActive = client.active === true || client.active === 1
+                ? true
+                : client.active === false || client.active === 0
+                ? false
+                : true; // fallback activo si falta en lista
+            return {
+                ...client,
+                postalCode: client.zipCode || client.postalCode,
+                addressLine2: client.addressComplement || client.addressLine2,
+                active: normalizedActive,
+            };
+        });
+        return { rows, count: data.count };
         });
     },
 
@@ -125,7 +141,7 @@ export const clientService = {
      */
     async getClient(id: string): Promise<Client> {
         const tenantId = getTenantId();
-            const { data } = await api.get<any>(
+            const { data } = await api.get<RawClientRow>(
                 `/tenant/${tenantId}/client-account/${id}`,
                 // Prevent global interceptor from showing duplicate toasts; component will show one
                 { toast: { silentError: true } }
@@ -174,7 +190,7 @@ export const clientService = {
             payload.addressComplement = input.addressLine2;
             delete payload.addressLine2;
         }
-        const { data } = await api.post<any>(`/tenant/${tenantId}/client-account`,
+        const { data } = await api.post<RawClientRow>(`/tenant/${tenantId}/client-account`,
             payload
         );
         invalidateEntity("clients");
@@ -183,7 +199,7 @@ export const clientService = {
             ...data,
             postalCode: data.zipCode || data.postalCode,
             addressLine2: data.addressComplement || data.addressLine2,
-        };
+        } as unknown as Client;
     },
 
     /**
@@ -223,7 +239,7 @@ export const clientService = {
                 try { console.debug('[clientService.updateClient] payload preview:', Object.keys(payload).reduce((acc, k) => ({ ...acc, [k]: payload[k] && payload[k].length ? (typeof payload[k] === 'string' ? `${String(payload[k]).slice(0, 100)}` : payload[k]) : payload[k] }), {})); } catch (e) {}
             } catch (e) {}
 
-            const { data } = await api.patch<any>(
+            const { data } = await api.patch<RawClientRow>(
                 `/tenant/${tenantId}/client-account/${id}`,
                 payload
             );
@@ -233,7 +249,7 @@ export const clientService = {
             ...data,
             postalCode: data.zipCode || data.postalCode,
             addressLine2: data.addressComplement || data.addressLine2,
-        };
+        } as unknown as Client;
     },
 
     /**
@@ -408,15 +424,15 @@ export const clientService = {
         
         // Obtener todos los clientes y filtrar manualmente
         // ya que el backend puede no soportar filtrado por array JSON
-        const { data } = await api.get<any>(
+        const { data } = await api.get<RawClientListResponse>(
             `/tenant/${tenantId}/client-account?limit=9999&offset=0`
         );
-        
-        
+
+
         // Contar manualmente cuántos clientes tienen esta categoría
         let count = 0;
         if (data.rows) {
-            count = data.rows.filter((client: any) => {
+            count = data.rows.filter((client) => {
                 const categoryIds = client.categoryIds || [];
                 const hasCategory = Array.isArray(categoryIds) && categoryIds.includes(categoryId);
                 if (hasCategory) {
@@ -462,7 +478,7 @@ export const clientService = {
         return data;
     },
 
-    async createClientContact(clientId: string, payload: any) {
+    async createClientContact(clientId: string, payload: Record<string, unknown>) {
         const tenantId = getTenantId();
         const { data } = await api.post<any>(
             `/tenant/${tenantId}/client-account/${clientId}/contacts`,
@@ -472,7 +488,7 @@ export const clientService = {
         return data;
     },
 
-    async updateClientContact(clientId: string, contactId: string, payload: any) {
+    async updateClientContact(clientId: string, contactId: string, payload: Record<string, unknown>) {
         const tenantId = getTenantId();
         const { data } = await api.put<any>(
             `/tenant/${tenantId}/client-account/${clientId}/contacts/${contactId}`,
@@ -507,7 +523,7 @@ export const clientService = {
         return data;
     },
 
-    async createClientNote(clientId: string, payload: any) {
+    async createClientNote(clientId: string, payload: Record<string, unknown>) {
         const tenantId = getTenantId();
         const { data } = await api.post<any>(
             `/tenant/${tenantId}/client-account/${clientId}/notes`,
@@ -516,7 +532,7 @@ export const clientService = {
         return data;
     },
 
-    async updateClientNote(clientId: string, noteId: string, payload: any) {
+    async updateClientNote(clientId: string, noteId: string, payload: Record<string, unknown>) {
         const tenantId = getTenantId();
         const { data } = await api.put<any>(
             `/tenant/${tenantId}/client-account/${clientId}/notes/${noteId}`,
@@ -566,7 +582,7 @@ export const clientService = {
     /**
      * Get incidents for a client (by station ids) - supports filters and pagination
      */
-    async getClientIncidents(clientId: string, options: { limit?: number; offset?: number; filter?: any } = {}) {
+    async getClientIncidents(clientId: string, options: { limit?: number; offset?: number; filter?: Record<string, unknown> } = {}) {
         const tenantId = getTenantId();
         const params = new URLSearchParams();
         if (options.limit !== undefined) params.append('limit', String(options.limit));
@@ -738,7 +754,7 @@ export const clientService = {
         const tenantId = getTenantId();
         const { data } = await api.get<any>(`/tenant/${tenantId}/security-guard/autocomplete?query=${encodeURIComponent(query)}&limit=${limit}`, { toast: { silentError: true } });
         const arr = (data?.data ?? data) || [];
-        return Array.isArray(arr) ? arr.map((g: any) => ({ id: String(g.id ?? g.value), label: g.label ?? g.fullName ?? g.name ?? '' })) : [];
+        return Array.isArray(arr) ? arr.map((g: { id?: string | number; value?: string | number; label?: string; fullName?: string; name?: string }) => ({ id: String(g.id ?? g.value), label: g.label ?? g.fullName ?? g.name ?? '' })) : [];
     },
     async assignGuardToPosition(payload: { guardId: string; stationId: string; positionId: string; startDate?: string; isRelief?: boolean }) {
         const tenantId = getTenantId();
@@ -773,17 +789,17 @@ export const clientService = {
         const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/contract`, { toast: { silentError: true } });
         return data?.data ?? data;
     },
-    async updateClientContract(clientId: string, payload: any) {
+    async updateClientContract(clientId: string, payload: Record<string, unknown>) {
         const tenantId = getTenantId();
         const { data } = await api.patch<any>(`/tenant/${tenantId}/client-account/${clientId}/contract`, payload);
         return data?.data ?? data;
     },
-    async createContractService(clientId: string, payload: any) {
+    async createContractService(clientId: string, payload: Record<string, unknown>) {
         const tenantId = getTenantId();
         const { data } = await api.post<any>(`/tenant/${tenantId}/client-account/${clientId}/contract-services`, payload);
         return data?.data ?? data;
     },
-    async updateContractService(clientId: string, serviceId: string, payload: any) {
+    async updateContractService(clientId: string, serviceId: string, payload: Record<string, unknown>) {
         const tenantId = getTenantId();
         const { data } = await api.put<any>(`/tenant/${tenantId}/client-account/${clientId}/contract-services/${serviceId}`, payload);
         return data?.data ?? data;
@@ -793,12 +809,12 @@ export const clientService = {
         const { data } = await api.delete<any>(`/tenant/${tenantId}/client-account/${clientId}/contract-services/${serviceId}`);
         return data?.data ?? data;
     },
-    async createContractRenewal(clientId: string, payload: any) {
+    async createContractRenewal(clientId: string, payload: Record<string, unknown>) {
         const tenantId = getTenantId();
         const { data } = await api.post<any>(`/tenant/${tenantId}/client-account/${clientId}/contract-renewals`, payload);
         return data?.data ?? data;
     },
-    async updateContractRenewal(clientId: string, renewalId: string, payload: any) {
+    async updateContractRenewal(clientId: string, renewalId: string, payload: Record<string, unknown>) {
         const tenantId = getTenantId();
         const { data } = await api.put<any>(`/tenant/${tenantId}/client-account/${clientId}/contract-renewals/${renewalId}`, payload);
         return data?.data ?? data;
@@ -816,7 +832,7 @@ export const clientService = {
     async sendPortalInvitation(userId: string, email?: string): Promise<{ sent: boolean; recipient: string }> {
         const tenantId = getTenantId();
         const body = email ? { email } : {};
-        const { data } = await api.post<any>(`/tenant/${tenantId}/user/${userId}/send-portal-invitation`, body);
+        const { data } = await api.post<{ sent: boolean; recipient: string; data?: { sent: boolean; recipient: string } }>(`/tenant/${tenantId}/user/${userId}/send-portal-invitation`, body);
         return data?.data || data;
     },
 
@@ -828,7 +844,7 @@ export const clientService = {
     async sendClientPortalInvitation(clientAccountId: string, email?: string): Promise<{ sent: boolean; recipient: string }> {
         const tenantId = getTenantId();
         const body = email ? { email } : {};
-        const { data } = await api.post<any>(`/tenant/${tenantId}/client-account/${clientAccountId}/send-portal-invitation`, body);
+        const { data } = await api.post<{ sent: boolean; recipient: string; data?: { sent: boolean; recipient: string } }>(`/tenant/${tenantId}/client-account/${clientAccountId}/send-portal-invitation`, body);
         return data?.data || data;
     },
 
@@ -839,7 +855,7 @@ export const clientService = {
     async sendClientAppInvitation(clientAccountId: string, email?: string): Promise<{ sent: boolean; recipient: string }> {
         const tenantId = getTenantId();
         const body = email ? { email } : {};
-        const { data } = await api.post<any>(`/tenant/${tenantId}/client-account/${clientAccountId}/send-app-invitation`, body);
+        const { data } = await api.post<{ sent: boolean; recipient: string; data?: { sent: boolean; recipient: string } }>(`/tenant/${tenantId}/client-account/${clientAccountId}/send-app-invitation`, body);
         return data?.data || data;
     },
 };

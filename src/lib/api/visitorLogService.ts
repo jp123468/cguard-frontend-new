@@ -88,13 +88,13 @@ export const visitorLogService = {
     return data;
   },
 
-  async create(payload: any) {
+  async create(payload: Record<string, unknown>) {
     const tenantId = getTenantId();
     const { data } = await api.post(`/tenant/${tenantId}/visitor-log`, { data: payload });
     return data;
   },
 
-  async update(id: string, payload: any) {
+  async update(id: string, payload: Record<string, unknown>) {
     const tenantId = getTenantId();
     const { data } = await api.put(`/tenant/${tenantId}/visitor-log/${id}`, { data: payload });
     return data;
@@ -113,9 +113,9 @@ export const visitorLogService = {
     await api.post(`/tenant/${tenantId}/visitor-log/delete`, { ids });
   },
 
-  async import(data: any, importHash?: string) {
+  async import(data: unknown, importHash?: string) {
     const tenantId = getTenantId();
-    const body: any = { data };
+    const body: Record<string, unknown> = { data };
     if (importHash) body.importHash = importHash;
     const { data: resp } = await api.post(`/tenant/${tenantId}/visitor-log/import`, body);
     return resp;

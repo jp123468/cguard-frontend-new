@@ -10,8 +10,16 @@ import { userService } from "@/lib/api/userService";
 import DepartmentsTable, { DepartmentRow } from "./DepartmentTable";
 import DepartmentDialog, { DepartmentDialogValues } from "./DepartmentDialog";
 
-const errMsg = (e: any, fallback: string) =>
-  e?.response?.data?.message || e?.response?.data || e?.message || fallback;
+const errMsg = (e: unknown, fallback: string): string => {
+  const err = e as { response?: { data?: { message?: string } | string }; message?: string } | undefined;
+  const data = err?.response?.data;
+  return (
+    (data && typeof data === "object" ? data.message : undefined) ||
+    (typeof data === "string" ? data : undefined) ||
+    err?.message ||
+    fallback
+  );
+};
 
 export default function DepartmentPage() {
   const { hasPermission } = usePermissions();
@@ -49,8 +57,8 @@ export default function DepartmentPage() {
       .then((users) => {
         setManagers(
           users
-            .map((u: { id: string; fullName?: string; firstName?: string; lastName?: string; email?: string }) => ({
-              id: u.id,
+            .map((u) => ({
+              id: u.id ?? "",
               name:
                 u.fullName ||
                 [u.firstName, u.lastName].filter(Boolean).join(" ") ||

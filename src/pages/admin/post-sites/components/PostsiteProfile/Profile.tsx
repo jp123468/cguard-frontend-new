@@ -130,7 +130,9 @@ export default function PostSiteProfile({ site }: { site?: any }) {
     };
 
     const [categoryNames, setCategoryNames] = useState<string[] | null>(null);
-    const [activeStatus, setActiveStatus] = useState<any>(null);
+    // Shape comes straight from stationService.activeStatus (stations + on-duty guards).
+    type ActiveStatus = Awaited<ReturnType<typeof stationService.activeStatus>>;
+    const [activeStatus, setActiveStatus] = useState<ActiveStatus | null>(null);
     const [activeStatusLoading, setActiveStatusLoading] = useState(false);
 
     useEffect(() => {
@@ -381,7 +383,7 @@ export default function PostSiteProfile({ site }: { site?: any }) {
                     )
                 ) : (
                     <div className="divide-y divide-border">
-                        {activeStatus.stations.map((station: any) => (
+                        {activeStatus.stations.map((station) => (
                             <div key={station.id} className="px-6 py-4">
                                 {/* Station header */}
                                 <div className="flex items-center gap-2 mb-3">
@@ -399,7 +401,7 @@ export default function PostSiteProfile({ site }: { site?: any }) {
                                 {/* Active guards grid */}
                                 {station.isActive && (station.activeGuards?.length ?? 0) > 0 && (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                                        {station.activeGuards?.map((guard: any) => (
+                                        {station.activeGuards?.map((guard) => (
                                             <div key={guard.id} className="flex flex-col items-center gap-1.5 bg-emerald-500/10 border border-emerald-100 rounded-xl p-3">
                                                 {guard.photoUrl ? (
                                                     <img

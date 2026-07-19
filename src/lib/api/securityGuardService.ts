@@ -12,33 +12,33 @@ const getTenantId = (): string => {
 };
 
 export const securityGuardService = {
-  async create(input: any) {
+  async create(input: Record<string, unknown>) {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/security-guard`, input);
     return resp && resp.data !== undefined ? resp.data : resp;
   },
 
-  async invite(entries: any[]) {
+  async invite(entries: Record<string, unknown>[]) {
     const tenantId = getTenantId();
     // Use the dedicated invite endpoint so the server sends invitation emails/SMS
     const resp = await api.post(`/tenant/${tenantId}/security-guard/invite`, { entries });
     return resp && resp.data !== undefined ? resp.data : resp;
   },
 
-  async resendInvite(input: any) {
+  async resendInvite(input: Record<string, unknown>) {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/security-guard/invite`, input);
     return resp && resp.data !== undefined ? resp.data : resp;
   },
 
-  async joinByCode(code: string, entries: any[]) {
+  async joinByCode(code: string, entries: Record<string, unknown>[]) {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/security-guard`, { code, entries });
 
     return resp && resp.data !== undefined ? resp.data : resp;
   },
 
-  async inviteByLink(link: string, entries: any[]) {
+  async inviteByLink(link: string, entries: Record<string, unknown>[]) {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/security-guard`, { link, entries });
 
@@ -56,7 +56,7 @@ export const securityGuardService = {
     return resp && resp.data !== undefined ? resp.data : resp;
   },
 
-  async update(id: string, input: any) {
+  async update(id: string, input: Record<string, unknown>) {
     const tenantId = getTenantId();
     const resp = await api.patch(`/tenant/${tenantId}/security-guard/${id}`, input);
 
@@ -98,9 +98,9 @@ export const securityGuardService = {
     return resp && resp.data !== undefined ? resp.data : resp;
   },
 
-  async list(params?: Record<string, any>) {
+  async list(params?: Record<string, unknown>) {
     const tenantId = getTenantId();
-    const qs = params ? `?${new URLSearchParams(params).toString()}` : "";
+    const qs = params ? `?${new URLSearchParams(params as Record<string, string>).toString()}` : "";
     const resp = await api.get(`/tenant/${tenantId}/security-guard${qs}`);
 
     return resp && resp.data !== undefined ? resp.data : resp;
@@ -125,9 +125,9 @@ export const securityGuardService = {
     return (data?.points || []) as Array<{ lat: number; lng: number; at: string; speed?: number; accuracy?: number; battery?: number }>;
   },
 
-  async export(format: "excel" | "pdf" | "csv", params?: Record<string, any>) {
+  async export(format: "excel" | "pdf" | "csv", params?: Record<string, unknown>) {
     const tenantId = getTenantId();
-    const qs = params ? `?${new URLSearchParams(params).toString()}&format=${format}` : `?format=${format}`;
+    const qs = params ? `?${new URLSearchParams(params as Record<string, string>).toString()}&format=${format}` : `?format=${format}`;
     const response = await api.get(`/tenant/${tenantId}/security-guard/export${qs}`, {
       responseType: "blob",
       // prevent global error toast; page will show its own
@@ -162,13 +162,13 @@ export const securityGuardService = {
     return data;
   },
 
-  async createSecurityGuardNote(guardId: string, payload: any) {
+  async createSecurityGuardNote(guardId: string, payload: Record<string, unknown>) {
     const tenantId = getTenantId();
     const { data } = await api.post<any>(`/tenant/${tenantId}/security-guard/${guardId}/notes`, payload);
     return data;
   },
 
-  async updateSecurityGuardNote(guardId: string, noteId: string, payload: any) {
+  async updateSecurityGuardNote(guardId: string, noteId: string, payload: Record<string, unknown>) {
     const tenantId = getTenantId();
     const { data } = await api.put<any>(`/tenant/${tenantId}/security-guard/${guardId}/notes/${noteId}`, payload);
     return data;
@@ -191,7 +191,7 @@ export const securityGuardService = {
     return data;
   },
 
-  async createSecurityGuardLicense(guardId: string, payload: any) {
+  async createSecurityGuardLicense(guardId: string, payload: Record<string, unknown>) {
     const tenantId = getTenantId();
     const { data } = await api.post<any>(`/tenant/${tenantId}/security-guard/${guardId}/licenses`, payload);
     return data;
@@ -212,7 +212,7 @@ export const securityGuardService = {
     return response && response.data !== undefined ? response.data : response;
   },
 
-  async updateSecurityGuardLicense(guardId: string, licenseId: string, payload: any) {
+  async updateSecurityGuardLicense(guardId: string, licenseId: string, payload: Record<string, unknown>) {
     const tenantId = getTenantId();
     const { data } = await api.put<any>(`/tenant/${tenantId}/security-guard/${guardId}/licenses/${licenseId}`, payload);
     return data;
@@ -320,7 +320,7 @@ export const securityGuardService = {
 
     if (!uploadUrl) throw new Error('Upload URL not available');
 
-    return await new Promise<any>((resolve, reject) => {
+    return await new Promise<{ new: boolean; name: string; sizeInBytes: number; privateUrl?: string | null; publicUrl?: string | null }>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
 
       xhr.upload.onprogress = function (e) {
@@ -408,7 +408,7 @@ export const securityGuardService = {
   },
 
   /** Persist already-uploaded document descriptors for the guard. */
-  async addDocuments(guardId: string, documents: any[]) {
+  async addDocuments(guardId: string, documents: Record<string, unknown>[]) {
     const tenantId = getTenantId();
     const resp = await api.post(`/tenant/${tenantId}/security-guard/${guardId}/documents`, { data: { documents } });
     return resp?.data ?? resp;

@@ -12,7 +12,9 @@
 
       const handleSubmit = async (values: ChangePasswordValues) => {
         try {
-          const resp: any = await AccountService.changePassword(values.oldPassword, values.newPassword);
+          const resp = (await AccountService.changePassword(values.oldPassword, values.newPassword)) as
+            | { message?: string; messageCode?: string; data?: { message?: string } }
+            | undefined;
 
           // Backend returns either { messageCode, message } or plain data
           const message = (resp && (resp.message || resp.data?.message)) || (resp && resp.message) || t('auth.change_password_success', { defaultValue: 'Password updated' });

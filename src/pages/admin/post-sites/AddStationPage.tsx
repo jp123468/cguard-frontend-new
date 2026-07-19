@@ -51,8 +51,11 @@ function turnoToScheduleType(turno: 'diurno' | 'nocturno' | '24h' | 'custom'): '
 type TurnoType = 'diurno' | 'nocturno' | '24h' | 'custom';
 const ALL_DAYS = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
 
+// One jornada (turno block) persisted on stationSchedule.
+interface Jornada { tipo: string; startTime: string; endTime: string; guardsCount: string; days: string[] }
+
 const TURNO_OPTIONS: {
-  key: TurnoType; label: string; sub: string; start: string; end: string; guards: number; Icon: any;
+  key: TurnoType; label: string; sub: string; start: string; end: string; guards: number; Icon: React.ComponentType<{ className?: string }>;
 }[] = [
   { key: 'diurno',   label: '12h Diurno',     sub: '07:00 – 19:00',     start: '07:00', end: '19:00', guards: 1, Icon: Sun },
   { key: 'nocturno', label: '12h Nocturno',   sub: '19:00 – 07:00',     start: '19:00', end: '07:00', guards: 1, Icon: Moon },
@@ -79,7 +82,7 @@ function windowMinutes(start: string, end: string): number {
 // Build the station's stationSchedule jornadas (the turno) from the selected
 // type. Custom with a per-guard block length emits ONE jornada PER BLOCK so
 // the horario/calendar reads the real per-vigilante coverage.
-function buildJornadas(turnoType: TurnoType, start: string, end: string, blockHours?: number): any[] {
+function buildJornadas(turnoType: TurnoType, start: string, end: string, blockHours?: number): Jornada[] {
   if (turnoType === '24h') {
     return [
       { tipo: 'Diurno',   startTime: '07:00', endTime: '19:00', guardsCount: '1', days: ALL_DAYS },
@@ -176,7 +179,7 @@ export default function AddStationPage() {
         const data = await postSiteService.get(id);
         if (!mounted) return;
         setSite(data);
-        const tid = data?.tenantId || (data?.tenant && (data.tenant.id || data.tenant.tenantId));
+        const tid = data?.tenantId || (data?.tenant && typeof data.tenant === "object" && (data.tenant.id || data.tenant.tenantId));
         if (tid) setGlobalTenantId(tid);
       } catch (e) {
         console.error(e);

@@ -290,7 +290,7 @@ export const alarmService = {
   updatePanel(id: string, body: Partial<AlarmPanel> & { dc09Key?: string }): Promise<AlarmPanel> {
     return ApiService.put(`/tenant/${tid()}/alarm/panel/${id}`, body);
   },
-  deletePanel(id: string): Promise<any> {
+  deletePanel(id: string): Promise<void> {
     return ApiService.delete(`/tenant/${tid()}/alarm/panel/${id}`);
   },
 
@@ -304,7 +304,7 @@ export const alarmService = {
   updateZone(id: string, body: Partial<AlarmZone>): Promise<AlarmZone> {
     return ApiService.put(`/tenant/${tid()}/alarm/zone/${id}`, body);
   },
-  deleteZone(id: string): Promise<any> {
+  deleteZone(id: string): Promise<void> {
     return ApiService.delete(`/tenant/${tid()}/alarm/zone/${id}`);
   },
 
@@ -318,7 +318,7 @@ export const alarmService = {
   updateContact(id: string, body: Partial<AlarmContact> & { passcode?: string }): Promise<AlarmContact> {
     return ApiService.put(`/tenant/${tid()}/alarm/contact/${id}`, body);
   },
-  deleteContact(id: string): Promise<any> {
+  deleteContact(id: string): Promise<void> {
     return ApiService.delete(`/tenant/${tid()}/alarm/contact/${id}`);
   },
 
@@ -332,7 +332,7 @@ export const alarmService = {
   updateActionPlan(id: string, body: Partial<ActionPlan>): Promise<ActionPlan> {
     return ApiService.put(`/tenant/${tid()}/alarm/action-plan/${id}`, body);
   },
-  deleteActionPlan(id: string): Promise<any> {
+  deleteActionPlan(id: string): Promise<void> {
     return ApiService.delete(`/tenant/${tid()}/alarm/action-plan/${id}`);
   },
 
@@ -343,7 +343,7 @@ export const alarmService = {
   createSchedule(panelId: string, body: Partial<OpenCloseSchedule>): Promise<OpenCloseSchedule> {
     return ApiService.post(`/tenant/${tid()}/alarm/panel/${panelId}/schedule`, body);
   },
-  deleteSchedule(id: string): Promise<any> {
+  deleteSchedule(id: string): Promise<void> {
     return ApiService.delete(`/tenant/${tid()}/alarm/schedule/${id}`);
   },
 
@@ -369,7 +369,7 @@ export const alarmService = {
   close(id: string, body: { disposition: AlarmCaseDisposition }): Promise<AlarmCase> {
     return ApiService.post(`/tenant/${tid()}/alarm/case/${id}/close`, body);
   },
-  caseToIncident(id: string, body: any): Promise<any> {
+  caseToIncident(id: string, body: Record<string, unknown>): Promise<{ id?: string; incidentId?: string }> {
     return ApiService.post(`/tenant/${tid()}/alarm/case/${id}/incident`, body);
   },
   addNote(id: string, body: { detail: string }): Promise<AlarmAuditLog> {
@@ -390,7 +390,7 @@ export const alarmService = {
   logCall(id: string, body: { alarmContactId?: string; contactName?: string; phone?: string; outcome: string; note?: string }): Promise<{ call: any; ecvSatisfied: boolean; attempts: number }> {
     return ApiService.post(`/tenant/${tid()}/alarm/case/${id}/call`, body);
   },
-  dispatchPolice(id: string, body: { note?: string; override?: boolean }): Promise<any> {
+  dispatchPolice(id: string, body: { note?: string; override?: boolean }): Promise<{ police?: { message?: string } }> {
     return ApiService.post(`/tenant/${tid()}/alarm/case/${id}/dispatch`, { type: "police", ...body });
   },
   falseAlarmReport(params?: { days?: number }): Promise<{ days: number; overall: any; panels: any[] }> {

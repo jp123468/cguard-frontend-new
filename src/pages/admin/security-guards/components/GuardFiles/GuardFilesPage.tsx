@@ -9,12 +9,24 @@ import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
 import { PageContainer, PageHeader, Section, EmptyState, SkeletonCards } from '@/components/kit';
 import { Button } from '@/components/ui/button';
+import type { GuardDetail } from '../../guardDetailTypes';
+
+/**
+ * A file row. NOTE: files live only in local component state — no file API is
+ * wired, so uploads are lost on reload (see FLAGGED in audit).
+ */
+interface FileRow {
+  id: string;
+  name: string;
+  date?: string;
+  addedBy?: string;
+}
 
 export default function GuardFilesPage() {
   const { id } = useParams();
-  const [guard, setGuard] = useState<any>(null);
+  const [guard, setGuard] = useState<GuardDetail | null>(null);
   const [loading, setLoading] = useState(false);
-  const [filesData, setFilesData] = useState<any[]>([]);
+  const [filesData, setFilesData] = useState<FileRow[]>([]);
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const actionRef = useRef<HTMLDivElement | null>(null);
@@ -31,13 +43,13 @@ export default function GuardFilesPage() {
     setLoading(true);
     securityGuardService
       .get(id)
-      .then((data: any) => {
+      .then((data: GuardDetail & { guard?: GuardDetail }) => {
         if (!mounted) return;
         const g = data.guard ?? data;
         const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
         setGuard({ ...g, fullName });
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         console.error('Error cargando vigilante:', err);
         toast.error(t('guards.files.toasts.loadError', { defaultValue: 'Could not load guard' }));
       })
@@ -160,7 +172,7 @@ export default function GuardFilesPage() {
                     items={filesData || []}
                     loading={false}
                     emptyMessage={t('guards.files.empty.title', { defaultValue: 'No Files Found' }) as string}
-                    renderCard={(f: any) => (
+                    renderCard={(f: FileRow) => (
                       <div className="p-4 bg-card border rounded-xl">
                         <div className="flex items-center justify-between">
                           <div>

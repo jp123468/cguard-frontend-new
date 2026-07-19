@@ -156,7 +156,7 @@ export default function EditDispatchPage() {
       try {
         const res = await IncidentTypesService.list("", 1, 100);
         if (res && Array.isArray(res.rows)) {
-          setTiposIncidente(res.rows.map((t: any) => ({ id: t.id, name: t.name })));
+          setTiposIncidente(res.rows.map((t: { id: string; name: string }) => ({ id: t.id, name: t.name })));
         }
       } catch (e) {
         console.error("Error cargando tipos de incidente:", e);

@@ -91,7 +91,7 @@ export default function NominaSettings() {
   const save = async () => {
     setSaving(true);
     try {
-      const saved = await attendanceService.saveSettings(s);
+      const saved = await attendanceService.saveSettings((s ?? {}) as Record<string, unknown>);
       setS(saved);
       toast.success("Configuración guardada");
     } catch (e) {

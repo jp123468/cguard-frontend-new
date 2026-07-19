@@ -84,6 +84,28 @@ interface StationDraft {
   existingScheduleType?: string; // current engine scheduleType (to detect changes)
 }
 
+// Client detail fields consulted for the "same address as client" toggle.
+interface ClientDetail {
+  address?: string;
+  addressLine2?: string;
+  city?: string;
+  country?: string;
+  postalCode?: string;
+  latitude?: number | string;
+  longitude?: number | string;
+}
+// An uploaded file association (site photo).
+interface FileAsset { downloadUrl?: string; publicUrl?: string }
+// A raw station row from stationService.list, read in edit mode.
+interface StationApiRow {
+  id?: string;
+  stationName?: string;
+  name?: string;
+  description?: string;
+  scheduleType?: string;
+  stationSchedule?: string;
+}
+
 // Map the station's turnos (jornadas) to the scheduling engine's scheduleType.
 // Day = matutina, night = nocturna; both → 24h; otherwise custom. Sacafranco
 // jornadas are relief, not a station coverage type.
@@ -458,7 +480,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
   const [addressConfirmed, setAddressConfirmed] = useState(false);
   const [showAddressFields, setShowAddressFields] = useState(false);
   const [useClientAddress, setUseClientAddress] = useState(false);
-  const [clientData, setClientData] = useState<any>(null);
+  const [clientData, setClientData] = useState<ClientDetail | null>(null);
 
   // Step 3: service config — stored as flat map, custom items tracked separately
   const [serviceConfig, setServiceConfig] = useState<Record<string, any>>({});
@@ -477,7 +499,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
   // Images (site photo — stored on post site)
   const [placeFile, setPlaceFile] = useState<File | null>(null);
   const [placePreview, setPlacePrev] = useState<string | null>(null);
-  const [placeExisting, setPlaceExisting] = useState<any>(null);
+  const [placeExisting, setPlaceExisting] = useState<FileAsset | null>(null);
 
   // Auto-inject client from context (create mode only — edit loads from API)
   useEffect(() => {
@@ -531,7 +553,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
         // Load existing stations
         try {
           const stationsResp = await stationService.list({ postSite: id } as any, { limit: 100, offset: 0 });
-          const loadedStations: StationDraft[] = (stationsResp.rows || []).map((r: any) => {
+          const loadedStations: StationDraft[] = ((stationsResp.rows || []) as unknown as StationApiRow[]).map((r: StationApiRow) => {
             let jornadas: JornadaDraft[] = [];
             try {
               const raw = r.stationSchedule;

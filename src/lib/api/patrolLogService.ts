@@ -7,7 +7,7 @@ const getTenantId = (): string => {
 };
 
 const patrolLogService = {
-  async create(data: Record<string, any>) {
+  async create(data: Record<string, unknown>) {
     const tenantId = getTenantId();
     const payload = { ...data, tenantId };
     const { data: resp } = await api.post<any>(`/tenant/${tenantId}/patrolLog`, { data: payload });

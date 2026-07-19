@@ -59,6 +59,26 @@ export interface CreateSupervisorBody {
   turnoEnd?: string;
 }
 
+/** One resolved coverage position (station list + rotation window). */
+export interface SupervisorCoveragePosition {
+  id: string;
+  name: string;
+  zone: string | null;
+  rotationStyleName: string | null;
+  window: string | null;
+  mobileStation: { id: string; name: string } | null;
+  stations: { id: string; name: string }[];
+}
+
+/** A generated upcoming shift row in the supervisor schedule plan. */
+export interface SupervisorScheduleRow {
+  date: string | null;
+  start: string;
+  end: string;
+  kind: string;
+  position: { id: string; name: string; zone: string | null } | null;
+}
+
 export const supervisorService = {
   list: (): Promise<{ rows: Supervisor[]; count: number }> =>
     ApiService.get(`/tenant/${tid()}/supervisors`),
@@ -69,9 +89,9 @@ export const supervisorService = {
   update: (userId: string, body: Partial<Supervisor>): Promise<Supervisor> =>
     ApiService.put(`/tenant/${tid()}/supervisors/${userId}`, body),
   // Zone/stations the supervisor covers (resolved from their puesto assignments).
-  getCoverage: (userId: string): Promise<{ positions: any[] }> =>
+  getCoverage: (userId: string): Promise<{ positions: SupervisorCoveragePosition[] }> =>
     ApiService.get(`/tenant/${tid()}/supervisors/${userId}/coverage`),
   // Generated upcoming schedule (rotation plan) for the supervisor.
-  getSchedule: (userId: string): Promise<{ rows: any[]; position: any }> =>
+  getSchedule: (userId: string): Promise<{ rows: SupervisorScheduleRow[]; position: SupervisorScheduleRow['position'] }> =>
     ApiService.get(`/tenant/${tid()}/supervisors/${userId}/schedule`),
 };

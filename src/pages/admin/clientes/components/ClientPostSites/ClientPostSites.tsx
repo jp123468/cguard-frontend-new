@@ -14,6 +14,20 @@ import {
   Building2, Search, MapPin, Users, Clock, BarChart3, ChevronLeft, ChevronRight,
   MoreVertical, Pencil, Trash2, ExternalLink, LocateFixed,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
+
+// A post-site row from getClientPostSites (raw businessInfo columns).
+interface PostSiteRow {
+  id: string | number;
+  latitud?: number | string | null; latitude?: number | string | null;
+  longitud?: number | string | null; longitude?: number | string | null;
+  placePictureUrl?: Array<{ downloadUrl?: string }> | null;
+  city?: string; address?: string; active?: boolean;
+}
+interface SedeMeta { lat?: number; lng?: number; thumb?: string | null; city?: string; address?: string; active?: boolean; }
+// A site node from getOperation().sites.
+interface OperationStation { id: string; guards?: Array<{ id: string }>; }
+interface OperationSite { id: string; name: string; address?: string; city?: string; active?: boolean; stations?: OperationStation[]; }
 
 type Sede = {
   id: string;
@@ -62,8 +76,8 @@ export default function ClientPostSites({ client }: { client: Client }) {
       ]);
       if (!mounted) return;
       if (ov?.tenantTimezone) setTz(ov.tenantTimezone);
-      const psRows: any[] = Array.isArray(ps) ? ps : (ps?.rows ?? []);
-      const meta = new Map<string, any>();
+      const psRows: PostSiteRow[] = Array.isArray(ps) ? ps : (ps?.rows ?? []);
+      const meta = new Map<string, SedeMeta>();
       for (const r of psRows) {
         meta.set(String(r.id), {
           lat: r.latitud != null ? Number(r.latitud) : (r.latitude != null ? Number(r.latitude) : undefined),
@@ -72,12 +86,12 @@ export default function ClientPostSites({ client }: { client: Client }) {
           city: r.city, address: r.address, active: r.active,
         });
       }
-      const list: Sede[] = (op?.sites || []).map((s: any, i: number) => {
+      const list: Sede[] = (op?.sites || []).map((s: OperationSite) => {
         const guards = new Set<string>();
-        (s.stations || []).forEach((st: any) => (st.guards || []).forEach((g: any) => guards.add(String(g.id))));
+        (s.stations || []).forEach((st) => (st.guards || []).forEach((g) => guards.add(String(g.id))));
         const stations = (s.stations || []).length;
         const required = stations; // 1 fijo por estación
-        const m = meta.get(String(s.id)) || {};
+        const m: SedeMeta = meta.get(String(s.id)) || {};
         const cov = required > 0 ? Math.min(100, Math.round((guards.size / required) * 100)) : 0;
         return {
           id: s.id, code: '', name: s.name,
@@ -337,7 +351,7 @@ export default function ClientPostSites({ client }: { client: Client }) {
   );
 }
 
-function Stat({ icon, label, value }: { icon: any; label: string; value: any }) {
+function Stat({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
   return (
     <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">{icon}{label}</div>

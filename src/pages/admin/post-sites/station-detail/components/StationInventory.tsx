@@ -7,9 +7,27 @@ import type { Station } from '@/types';
 
 type Props = { station: Station; stationId: string; postSiteId: string };
 
+// An inventory-assignment row. Item + guard are read via several backend aliases
+// (camel/snake case), so this stays permissive.
+interface InvGuardRef { firstName?: string; first_name?: string; lastName?: string; last_name?: string; name?: string; fullName?: string }
+interface InvItemRef { name?: string; serialNumber?: string; code?: string; condition?: string }
+interface InventoryRow {
+  id?: string;
+  returnedAt?: string | null;
+  inventoryItem?: InvItemRef | null;
+  item?: InvItemRef | null;
+  itemName?: string;
+  name?: string;
+  serialNumber?: string;
+  condition?: string;
+  assignedTo?: InvGuardRef | null;
+  guard?: InvGuardRef | null;
+  securityGuard?: InvGuardRef | null;
+}
+
 export default function StationInventory({ stationId }: Props) {
   const { t } = useTranslation();
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<InventoryRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +41,7 @@ export default function StationInventory({ stationId }: Props) {
         const res: any = await inventoryAssignmentService.list(
           { filter: { stationId }, limit: 200, offset: 0 } as any
         );
-        const list = (res?.rows ?? []).filter((a: any) => !a.returnedAt);
+        const list = (res?.rows ?? []).filter((a: InventoryRow) => !a.returnedAt);
         if (mounted) setRows(list);
       } catch (e: any) {
         if (mounted) setError(e?.message || t('station.inventory.loadError', 'Error al cargar inventario'));
@@ -78,7 +96,7 @@ export default function StationInventory({ stationId }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {rows.map((r: any, i: number) => {
+              {rows.map((r: InventoryRow, i: number) => {
                 const item = r.inventoryItem || r.item || {};
                 const name = item.name || r.itemName || r.name || '-';
                 const serial = item.serialNumber || item.code || r.serialNumber || '-';

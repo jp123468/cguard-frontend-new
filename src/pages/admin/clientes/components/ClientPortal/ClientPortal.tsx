@@ -10,9 +10,16 @@ import {
   Globe, Mail, CheckCircle2, AlertCircle, Loader2, Smartphone, Users, ShieldCheck,
   KeyRound, ArrowRight, Building2, AlertTriangle, FileBarChart, ClipboardList, MapPin, Bell,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 type Props = { client?: Client & { contactEmail?: string; contactName?: string; userId?: string } };
 type Kind = 'portal' | 'app';
+
+// Row from GET /client-account/:id/access-users (clientAccountAccessUsers.ts).
+interface AccessUser {
+  id: string; pivotId: string | null; userId: string | null; isTitular: boolean;
+  name: string; email: string | null; role: string; status?: string;
+}
 
 const PORTAL_FEATURES = [
   { icon: MapPin, label: 'Sedes y estaciones', desc: 'Ubicaciones y cobertura de su operación' },
@@ -23,7 +30,7 @@ const PORTAL_FEATURES = [
   { icon: Bell, label: 'Notificaciones', desc: 'Avisos de turno, SOS y alertas' },
 ];
 
-function Kpi({ icon, value, label, accent = 'primary' }: any) {
+function Kpi({ icon, value, label, accent = 'primary' }: { icon: ReactNode; value: ReactNode; label: string; accent?: string }) {
   const ACC: Record<string, string> = {
     primary: 'bg-primary/12 text-primary', green: 'bg-emerald-500/12 text-emerald-600',
     orange: 'bg-orange-500/12 text-orange-600', blue: 'bg-blue-500/12 text-blue-600', slate: 'bg-muted text-muted-foreground',
@@ -47,12 +54,12 @@ export default function ClientPortal({ client }: Props) {
   const linked = !!client?.userId;
   // Real access roster from /access-users (client.portalUsers never existed in
   // the backend — this card always said 0/1 while Accesos showed the truth).
-  const [accessUsers, setAccessUsers] = useState<any[]>([]);
+  const [accessUsers, setAccessUsers] = useState<AccessUser[]>([]);
   useEffect(() => {
     let alive = true;
     if (!client?.id) return;
     clientService.getClientAccessUsers(client.id)
-      .then((r: any) => { if (alive) setAccessUsers(Array.isArray(r) ? r : (r?.rows ?? [])); })
+      .then((r) => { if (alive) setAccessUsers(Array.isArray(r) ? r : (r?.rows ?? [])); })
       .catch(() => { /* keep empty */ });
     return () => { alive = false; };
   }, [client?.id]);

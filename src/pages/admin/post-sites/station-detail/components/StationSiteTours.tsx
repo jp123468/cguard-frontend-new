@@ -29,6 +29,20 @@ interface Checkpoint {
   radius: number | null;
 }
 
+// A site-tour (ronda) row from `/site-tour`.
+interface SiteTourRow { id: string | number; name?: string; tourName?: string; description?: string; active?: boolean }
+// A raw checkpoint/tag row from `/site-tour/:id/tags`.
+interface TagRow {
+  id: string | number;
+  name?: string;
+  tagIdentifier?: string;
+  latitude?: number | string | null;
+  latitud?: number | string | null;
+  longitude?: number | string | null;
+  longitud?: number | string | null;
+  geofenceRadius?: number | string | null;
+}
+
 const num = (v: any): number | null => {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
@@ -42,7 +56,7 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
   const stationLat = num(station?.latitud ?? station?.latitude);
   const stationLng = num(station?.longitud ?? station?.longitude);
 
-  const [tours, setTours] = useState<any[]>([]);
+  const [tours, setTours] = useState<SiteTourRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -84,7 +98,7 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
     try {
       const res: any = await ApiService.get(`/tenant/${tenantId}/site-tour/${encodeURIComponent(tourId)}/tags?_=${Date.now()}`);
       const rows = Array.isArray(res) ? res : (res?.rows ?? []);
-      setCps((m) => ({ ...m, [tourId]: rows.map((r: any) => ({
+      setCps((m) => ({ ...m, [tourId]: rows.map((r: TagRow) => ({
         id: String(r.id), name: r.name || r.tagIdentifier || '—', tagIdentifier: r.tagIdentifier || String(r.id),
         latitude: num(r.latitude ?? r.latitud), longitude: num(r.longitude ?? r.longitud), radius: num(r.geofenceRadius),
       })) }));
@@ -203,7 +217,7 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
           </div>
         ) : (
           <ul className="divide-y border-t">
-            {tours.map((r: any) => {
+            {tours.map((r: SiteTourRow) => {
               const id = String(r.id);
               const name = r.name || r.tourName || r.description || '—';
               const active = r.active !== false;

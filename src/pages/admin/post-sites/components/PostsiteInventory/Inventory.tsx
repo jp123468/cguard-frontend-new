@@ -293,8 +293,8 @@ export default function Inventory({ site }: { site?: PostSite }) {
         const stRes: any = await import('@/services/api/apiService').then(m =>
           m.ApiService.get(`/tenant/${tenantId}/station?postSiteId=${encodeURIComponent(postSiteId)}&limit=999`)
         );
-        const stations: any[] = Array.isArray(stRes) ? stRes : (stRes?.rows ?? []);
-        await Promise.all(stations.map(async (st: any) => {
+        const stations: { id?: string; stationId?: string; stationName?: string; name?: string }[] = Array.isArray(stRes) ? stRes : (stRes?.rows ?? []);
+        await Promise.all(stations.map(async (st) => {
           const sid = st.id || st.stationId;
           if (!sid) return;
           try {

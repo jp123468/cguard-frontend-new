@@ -16,15 +16,43 @@ const CELL: Record<string, { label: string; cls: string }> = {
 const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-all placeholder:text-muted-foreground hover:border-ring/40 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]';
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
+// ── Shape of GET /client-account/:id/schedule (clientAccountSchedule.ts) ──
+type CellStatus = 'day' | 'night' | 'rest' | 'none';
+interface ScheduleDay { date: string; dow: string; day: number; isToday: boolean; weekend: boolean; }
+interface ScheduleCell { date: string; status: CellStatus; }
+interface ScheduleRow {
+  stationId: string;
+  stationName: string;
+  positionId: string;
+  positionName: string;
+  positionType: string;
+  window: string | null;
+  assignmentId: string | null;
+  guardId: string | null;
+  guardName: string | null;
+  rotationStyleName: string | null;
+  cells: ScheduleCell[];
+}
+interface ScheduleData {
+  sedes: Array<{ id: string; name: string }>;
+  selectedSedeId: string | null;
+  startDate: string;
+  endDate: string;
+  days: ScheduleDay[];
+  stations: Array<{ id: string; name: string; scheduleType: string | null; rotationStyleName: string | null }>;
+  rows: ScheduleRow[];
+  updatedAt: string;
+}
+
 export default function ScheduleCard({ clientId, sedeId }: { clientId: string; sedeId: string }) {
   const { hasPermission } = usePermissions();
   const canEdit = hasPermission('stationEdit');
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ScheduleData | null>(null);
   const [loading, setLoading] = useState(true);
   const [start, setStart] = useState<string | undefined>(undefined);
   const [guardOptions, setGuardOptions] = useState<Array<{ id: string; label: string }>>([]);
 
-  const [editRow, setEditRow] = useState<any>(null);
+  const [editRow, setEditRow] = useState<ScheduleRow | null>(null);
   const [pickGuard, setPickGuard] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -39,12 +67,12 @@ export default function ScheduleCard({ clientId, sedeId }: { clientId: string; s
   useEffect(() => { setLoading(true); load(); /* eslint-disable-next-line */ }, [clientId, sedeId, start]);
   useEffect(() => { clientService.guardAutocomplete('', 300).then(setGuardOptions).catch(() => setGuardOptions([])); }, [clientId]);
 
-  const days: any[] = data?.days || [];
-  const rows: any[] = data?.rows || [];
+  const days: ScheduleDay[] = data?.days || [];
+  const rows: ScheduleRow[] = data?.rows || [];
 
   // Group rows by station for a station label spanning its positions.
   const grouped = useMemo(() => {
-    const out: Array<{ stationName: string; rows: any[] }> = [];
+    const out: Array<{ stationName: string; rows: ScheduleRow[] }> = [];
     for (const r of rows) {
       const last = out[out.length - 1];
       if (last && last.stationName === r.stationName) last.rows.push(r);
@@ -59,7 +87,7 @@ export default function ScheduleCard({ clientId, sedeId }: { clientId: string; s
     setStart(ymd(cur));
   };
 
-  const openEdit = (row: any) => { if (!canEdit) return; setEditRow(row); setPickGuard(row.guardId || ''); };
+  const openEdit = (row: ScheduleRow) => { if (!canEdit) return; setEditRow(row); setPickGuard(row.guardId || ''); };
   const saveGuard = async () => {
     if (!editRow) return;
     setSaving(true);
@@ -141,7 +169,7 @@ export default function ScheduleCard({ clientId, sedeId }: { clientId: string; s
                         {canEdit && <button onClick={() => openEdit(r)} className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-primary" title="Cambiar vigilante"><UserPlus className="h-3.5 w-3.5" /></button>}
                       </div>
                     </td>
-                    {r.cells.map((c: any) => {
+                    {r.cells.map((c) => {
                       const m = CELL[c.status] || CELL.none;
                       return <td key={c.date} className="border-b p-0.5 text-center"><span className={`grid h-7 w-full min-w-[26px] place-items-center rounded text-[11px] font-bold ${m.cls}`}>{m.label}</span></td>;
                     })}

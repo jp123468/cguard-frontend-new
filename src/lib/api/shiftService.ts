@@ -6,7 +6,7 @@ const getTenantId = (): string => {
   return t;
 };
 
-const buildQuery = (params?: Record<string, any>): string => {
+const buildQuery = (params?: Record<string, unknown>): string => {
   if (!params) return "";
   const p = new URLSearchParams();
   for (const k of Object.keys(params)) {
@@ -59,7 +59,7 @@ export function guardDisplayName(
 }
 
 const shiftService = {
-  async list(params?: Record<string, any>): Promise<{ rows: ShiftRecord[]; count: number }> {
+  async list(params?: Record<string, unknown>): Promise<{ rows: ShiftRecord[]; count: number }> {
     const tenantId = getTenantId();
     const qs = buildQuery(params);
     const resp = await api.get(`/tenant/${tenantId}/shift${qs}`);

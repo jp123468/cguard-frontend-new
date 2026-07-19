@@ -12,7 +12,7 @@ const getTenantId = (): string => {
   return t;
 };
 
-const buildQuery = (params?: Record<string, any>): string => {
+const buildQuery = (params?: Record<string, unknown>): string => {
   if (!params) return "";
   const p = new URLSearchParams();
   for (const k of Object.keys(params)) {

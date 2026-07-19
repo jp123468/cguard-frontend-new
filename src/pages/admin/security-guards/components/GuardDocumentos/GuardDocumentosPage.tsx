@@ -7,6 +7,7 @@ import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import { Section, EmptyState, SkeletonCards, Modal } from '@/components/kit';
 import securityGuardService from '@/lib/api/securityGuardService';
+import type { FileDescriptor } from '../../guardDetailTypes';
 
 const GOLD = '#C8860A';
 const ACCEPT = 'image/*,application/pdf';
@@ -97,7 +98,7 @@ export default function GuardDocumentosPage() {
 
     setUploading(true);
     try {
-      const descriptors: any[] = [];
+      const descriptors: FileDescriptor[] = [];
       for (const f of valid) {
         try {
           const uploaded = await securityGuardService.uploadFileToStorage(f, 'securityGuardDocument');
@@ -108,7 +109,7 @@ export default function GuardDocumentosPage() {
         }
       }
       if (descriptors.length > 0) {
-        await securityGuardService.addDocuments(id, descriptors);
+        await securityGuardService.addDocuments(id, descriptors as unknown as Record<string, unknown>[]);
         toast.success(t('guards.documents.uploaded', { defaultValue: 'Documentos subidos correctamente' }));
         await loadDocs();
       }

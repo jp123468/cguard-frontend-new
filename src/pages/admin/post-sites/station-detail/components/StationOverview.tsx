@@ -28,6 +28,16 @@ interface StationDetail extends Station {
 
 type Props = { station: StationDetail; stationId: string; postSiteId: string };
 
+// A guard-shift row from /guard-shift — the attendance/clock-in record. Note the
+// backend nests the guard's display name under guardName.fullName (an object).
+interface RecentShiftRow {
+  id?: string;
+  punchInTime?: string | null;
+  punchOutTime?: string | null;
+  status?: string;
+  guardName?: { fullName?: string } | null;
+}
+
 // A station's "horario" = the scheduling engine's scheduleType, configured via
 // /auto-positions (the same path Programador › Horario uses). The turno picker
 // maps to scheduleType so assigned guards abide by the station's horario.
@@ -99,7 +109,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
   const [stationAddress, setStationAddress] = useState('');
   // Actividad reciente de la estación (marcaciones) — alimenta cobertura en
   // vivo + la lista de actividad del modo lectura.
-  const [recentShifts, setRecentShifts] = useState<any[] | null>(null);
+  const [recentShifts, setRecentShifts] = useState<RecentShiftRow[] | null>(null);
 
   useEffect(() => {
     if (!stationId) return;
@@ -281,9 +291,9 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
           ? (Number(station.numberOfGuardsInStation) || 1)
           : station.scheduleType ? 1 : 0;
     const rows = recentShifts || [];
-    const openNow = rows.filter((r: any) => !r.punchOutTime);
+    const openNow = rows.filter((r) => !r.punchOutTime);
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    const todayCount = rows.filter((r: any) => r.punchInTime && new Date(r.punchInTime) >= today).length;
+    const todayCount = rows.filter((r) => r.punchInTime && new Date(r.punchInTime) >= today).length;
     const STATUS_TONE: Record<string, { label: string; tone: 'green' | 'orange' | 'red' | 'slate' | 'primary' }> = {
       on_time: { label: 'A tiempo', tone: 'green' },
       late: { label: 'Tarde', tone: 'orange' },
@@ -306,7 +316,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             label="De turno ahora"
             accent={openNow.length ? 'green' : 'red'}
             value={recentShifts === null ? '…' : openNow.length}
-            hint={openNow.length ? openNow.map((r: any) => r.guardName?.fullName || 'Vigilante').join(', ') : 'Nadie fichado'}
+            hint={openNow.length ? openNow.map((r) => r.guardName?.fullName || 'Vigilante').join(', ') : 'Nadie fichado'}
           />
           <StatCard icon={<Users />} label="Fijos requeridos" accent="blue" value={fijos || '—'} />
           <StatCard icon={<Activity />} label="Marcaciones hoy" value={recentShifts === null ? '…' : todayCount} />
@@ -342,9 +352,9 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
               </div>
             ) : (
               <ul className="divide-y divide-border/40">
-                {rows.slice(0, 8).map((r: any) => {
+                {rows.slice(0, 8).map((r) => {
                   const gname = r.guardName?.fullName || 'Vigilante';
-                  const st = STATUS_TONE[r.status];
+                  const st = r.status ? STATUS_TONE[r.status] : undefined;
                   return (
                     <li key={r.id} className="flex items-center gap-3 py-2.5">
                       <span
@@ -404,7 +414,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {assignedGuards.map((g: any, i: number) => {
                 const gname = g.fullName || g.name || `${g.firstName || ''} ${g.lastName || ''}`.trim() || g.email || '-';
-                const onNow = openNow.some((r: any) => (r.guardName?.fullName || '') === gname);
+                const onNow = openNow.some((r) => (r.guardName?.fullName || '') === gname);
                 return (
                   <div key={g.id || i} className="flex items-center gap-2.5 rounded-xl border bg-card px-3 py-2">
                     <span

@@ -56,6 +56,8 @@ function Stars({ value }: { value: number }) {
 }
 
 interface GuardOption { id: string; fullName: string; }
+// Loose shape of a securityGuard row from securityGuardService.list().
+interface RawGuardListRow { id?: string | number; fullName?: string; guard?: { fullName?: string } }
 
 // ── component ────────────────────────────────────────────────────────────────
 
@@ -98,10 +100,10 @@ export default function GuardRatings() {
   useEffect(() => {
     (async () => {
       try {
-        const resp: any = await securityGuardService.list({ limit: 500, offset: 0 } as any);
-        const items: any[] = Array.isArray(resp) ? resp : (resp.rows ?? []);
+        const resp: unknown = await securityGuardService.list({ limit: 500, offset: 0 });
+        const items: RawGuardListRow[] = Array.isArray(resp) ? resp : ((resp as { rows?: RawGuardListRow[] })?.rows ?? []);
         const opts: GuardOption[] = items
-          .map((item: any) => {
+          .map((item) => {
             const id = item.id ?? null;
             const fullName = item.fullName ?? item.guard?.fullName ?? "";
             return id ? { id: String(id), fullName } : null;

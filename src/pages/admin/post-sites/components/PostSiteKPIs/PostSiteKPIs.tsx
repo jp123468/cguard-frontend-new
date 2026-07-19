@@ -344,7 +344,7 @@ export default function PostSiteKPIs({ site }: Props) {
             { limit: 500, offset: 0 },
           );
           const stRows = Array.isArray(stRes?.rows) ? stRes.rows : [];
-          stationIdsByPostSite[psId] = new Set(stRows.map((s: any) => String(s.id)));
+          stationIdsByPostSite[psId] = new Set(stRows.map((s) => String(s.id)));
         }
       } catch {
         /* if station resolution fails, postSite counts fall back to 0 */
@@ -396,7 +396,7 @@ export default function PostSiteKPIs({ site }: Props) {
 
   // Close menu when clicking outside
   useEffect(() => {
-    const onDocClick = (e: any) => {
+    const onDocClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target) return;
       if (target.closest('[data-kpi-menu]') || target.closest('[data-kpi-menu-button]')) return;

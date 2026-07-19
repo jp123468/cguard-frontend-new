@@ -24,9 +24,9 @@ const routeService = {
     const tenantId = getTenantId();
     await api.delete(`/tenant/${tenantId}/route/${routeId}/run?date=${encodeURIComponent(date)}`);
   },
-  async list(params?: Record<string, any>) {
+  async list(params?: Record<string, unknown>) {
     const tenantId = getTenantId();
-    const qs = params ? `?${new URLSearchParams(params as any).toString()}` : '';
+    const qs = params ? `?${new URLSearchParams(params as Record<string, string>).toString()}` : '';
     const { data: resp } = await api.get<any>(`/tenant/${tenantId}/route${qs}`);
     if (!resp) return { rows: [], count: 0 };
     if (Array.isArray(resp)) return { rows: resp, count: resp.length };
@@ -47,14 +47,14 @@ const routeService = {
     return resp;
   },
 
-  async create(data: Record<string, any>) {
+  async create(data: Record<string, unknown>) {
     const tenantId = getTenantId();
     const payload = { ...data, tenantId };
     const { data: resp } = await api.post<any>(`/tenant/${tenantId}/route`, { data: payload });
     return resp;
   },
 
-  async update(id: string, data: Record<string, any>) {
+  async update(id: string, data: Record<string, unknown>) {
     const tenantId = getTenantId();
     const payload = { ...data, tenantId };
     const { data: resp } = await api.put<any>(`/tenant/${tenantId}/route/${id}`, { data: payload });

@@ -14,6 +14,13 @@ interface StationDetail extends Station {
   finishTimeInDay?: string | null;
 }
 
+// A scheduler position row from `/station/:id/positions`.
+interface PositionRow { id: string; type?: string }
+// A raw shift row from `/shift` (only the fields this modal reads).
+interface ShiftRow { id?: string; startTime?: string; start?: string; endTime?: string; end?: string }
+// A guard autocomplete row.
+interface GuardAutoRow { guardId?: string; id?: string; value?: string; fullName?: string; name?: string; label?: string; email?: string }
+
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -49,7 +56,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
   const [selectedPositionId, setSelectedPositionId] = useState('');
   const [shiftStart, setShiftStart] = useState('');
   const [shiftEnd, setShiftEnd] = useState('');
-  const [positions, setPositions] = useState<any[]>([]);
+  const [positions, setPositions] = useState<PositionRow[]>([]);
   // Occupancy (tenant-wide active rotations) so we never offer a vigilante who
   // already has an assignment, nor a puesto that's already taken.
   const [occupiedGuardIds, setOccupiedGuardIds] = useState<Set<string>>(new Set());
@@ -59,11 +66,11 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
   // through day AND night, staggered by the engine); sacafranco shown separately.
   // A puesto already taken is flagged `occupied` (disabled in the UI).
   const positionOptions = useMemo(() => {
-    const fijos = positions.filter((p: any) => (p.type || 'fijo') !== 'sacafranco');
-    const sacas = positions.filter((p: any) => (p.type || 'fijo') === 'sacafranco');
+    const fijos = positions.filter((p: PositionRow) => (p.type || 'fijo') !== 'sacafranco');
+    const sacas = positions.filter((p: PositionRow) => (p.type || 'fijo') === 'sacafranco');
     return [
-      ...fijos.map((p: any, i: number) => ({ id: p.id, label: `Vigilante ${i + 1}`, type: 'fijo' as const, occupied: occupiedPositionIds.has(String(p.id)) })),
-      ...sacas.map((p: any, i: number) => ({ id: p.id, label: sacas.length > 1 ? `Sacafranco ${i + 1}` : 'Sacafranco', type: 'sacafranco' as const, occupied: occupiedPositionIds.has(String(p.id)) })),
+      ...fijos.map((p: PositionRow, i: number) => ({ id: p.id, label: `Vigilante ${i + 1}`, type: 'fijo' as const, occupied: occupiedPositionIds.has(String(p.id)) })),
+      ...sacas.map((p: PositionRow, i: number) => ({ id: p.id, label: sacas.length > 1 ? `Sacafranco ${i + 1}` : 'Sacafranco', type: 'sacafranco' as const, occupied: occupiedPositionIds.has(String(p.id)) })),
     ];
   }, [positions, occupiedPositionIds]);
 
@@ -91,7 +98,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
       try {
         const res: any = await ApiService.get(`/tenant/${tenantId}/security-guard/autocomplete?limit=200`);
         const list = Array.isArray(res) ? res : (res?.rows ?? []);
-        setGuardsOptions(list.map((r: any) => ({ id: r.guardId || r.id || r.value, label: r.fullName || r.name || r.label || r.email || '' })).filter((g: any) => g.id));
+        setGuardsOptions(list.map((r: GuardAutoRow) => ({ id: r.guardId || r.id || r.value || '', label: r.fullName || r.name || r.label || r.email || '' })).filter((g: { id: string; label: string }) => g.id));
       } catch { setGuardsOptions([]); } finally { setLoadingGuards(false); }
     })();
     ApiService.get(`/tenant/${tenantId}/station/${stationId}/positions`).then((r: any) => setPositions(Array.isArray(r) ? r : (r?.rows ?? []))).catch(() => {});
@@ -128,7 +135,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
   };
 
   // Fetch the station's current shifts (fresh — avoids stale-overlap conflicts).
-  const fetchCurrentShifts = async (): Promise<any[]> => {
+  const fetchCurrentShifts = async (): Promise<ShiftRow[]> => {
     try {
       const r: any = await ApiService.get(`/tenant/${tenantId}/shift?filter[station]=${encodeURIComponent(stationId)}&limit=999&_=${Date.now()}`);
       return Array.isArray(r) ? r : (r?.rows ?? []);
@@ -136,14 +143,14 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
   };
 
   // Replace whatever already occupies a slot at this station (one turno per slot).
-  const deleteOverlappingShifts = async (list: any[], start: Date, end: Date) => {
+  const deleteOverlappingShifts = async (list: ShiftRow[], start: Date, end: Date) => {
     const s = start.getTime(); const e = end.getTime();
-    const matched = list.filter((r: any) => {
-      const rs = new Date(r.startTime || r.start).getTime();
-      const re = new Date(r.endTime || r.end).getTime();
+    const matched = list.filter((r: ShiftRow) => {
+      const rs = new Date(r.startTime || r.start || '').getTime();
+      const re = new Date(r.endTime || r.end || '').getTime();
       return Number.isFinite(rs) && Number.isFinite(re) && rs < e && re > s;
     });
-    const ids = matched.map((r: any) => r.id).filter(Boolean);
+    const ids = matched.map((r: ShiftRow) => r.id).filter(Boolean);
     if (ids.length) {
       await ApiService.delete(`/tenant/${tenantId}/shift?ids=${ids.join(',')}`);
       matched.forEach((m) => { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); });
@@ -179,7 +186,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
     // generates the staggered rotation (one starts day, the other night, swapping
     // each cycle) from the station's patrón de rotación. Same path as Programador.
     if (!selectedPositionId) { toast.error('Seleccione el puesto (Vigilante)'); return; }
-    const pos = positions.find((p: any) => p.id === selectedPositionId);
+    const pos = positions.find((p: PositionRow) => p.id === selectedPositionId);
     setSaving(true);
     try {
       await ApiService.post(`/tenant/${tenantId}/guard-assignment`, {

@@ -46,7 +46,7 @@ import visitorLogService from "@/lib/api/visitorLogService";
 import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { clientService } from '@/lib/api/clientService';
-import { postSiteService } from '@/lib/api/postSiteService';
+import { postSiteService, type PostSiteFilters } from '@/lib/api/postSiteService';
 import { stationService } from '@/lib/api/stationService';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from "sonner";
@@ -395,7 +395,7 @@ export default function Visitors() {
         }));
 
         const csv = [keys.join(',')]
-            .concat(rowsCsv.map((r) => keys.map((k) => `"${String((r as any)[k] ?? '').replace(/"/g, '""')}"`).join(',')))
+            .concat(rowsCsv.map((r) => keys.map((k) => `"${String((r as Record<string, unknown>)[k] ?? '').replace(/"/g, '""')}"`).join(',')))
             .join('\n');
 
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -607,7 +607,7 @@ export default function Visitors() {
                     setPostSitesForFilter([]);
                     return;
                 }
-                const resp = await postSiteService.list({ clientId: filters.client }, { limit: 200, offset: 0 } as any);
+                const resp = await postSiteService.list({ clientId: filters.client }, { limit: 200, offset: 0 });
                 setPostSitesForFilter(resp.rows || []);
                 // clear dependent selects when client changes
                 setFilters((s) => ({ ...s, site: '', guard: '' }));
@@ -626,7 +626,7 @@ export default function Visitors() {
                     setPostSitesForNewVisitor([]);
                     return;
                 }
-                const resp = await postSiteService.list({ clientId: newVisitor.client }, { limit: 200, offset: 0 } as any);
+                const resp = await postSiteService.list({ clientId: newVisitor.client }, { limit: 200, offset: 0 });
                 setPostSitesForNewVisitor(resp.rows || []);
                 setNewVisitor((s) => ({ ...s, site: '', guard: '' }));
             } catch (e) {
@@ -644,7 +644,7 @@ export default function Visitors() {
                     setGuardsForFilter([]);
                     return;
                 }
-                const resp = await securityGuardService.list({ 'filter[clientId]': filters.client, limit: 200, offset: 0 } as any);
+                const resp = await securityGuardService.list({ 'filter[clientId]': filters.client, limit: 200, offset: 0 });
                 const list = Array.isArray(resp) ? resp : (resp.rows || []);
                 setGuardsForFilter(list || []);
             } catch (e) {
@@ -664,7 +664,7 @@ export default function Visitors() {
                     setNewVisitor((s) => ({ ...s, station: '', guard: '' }));
                     return;
                 }
-                const resp = await stationService.list({ postSite: newVisitor.site } as any, { limit: 200, offset: 0 } as any);
+                const resp = await stationService.list({ postSite: newVisitor.site } as PostSiteFilters & { postSite: string }, { limit: 200, offset: 0 });
                 setStationsForNewVisitor(resp.rows || []);
                 // clear dependent selects when site changes
                 setNewVisitor((s) => ({ ...s, station: '', guard: '' }));
@@ -684,7 +684,7 @@ export default function Visitors() {
                     return;
                 }
 
-                const resp = await securityGuardService.list({ 'filter[stationId]': newVisitor.station, limit: 200, offset: 0 } as any);
+                const resp = await securityGuardService.list({ 'filter[stationId]': newVisitor.station, limit: 200, offset: 0 });
                 const list = Array.isArray(resp) ? resp : (resp.rows || []);
                 setGuardsForNewVisitor(list || []);
             } catch (e) {
@@ -704,7 +704,7 @@ export default function Visitors() {
             }
 
             try {
-                const pResp = await postSiteService.list({}, { limit: 100, offset: 0 } as any);
+                const pResp = await postSiteService.list({}, { limit: 100, offset: 0 });
                 const rows = pResp.rows || [];
                 setPostSites(rows);
                 // Do not preload per-client lists — keep them empty until a client is selected
@@ -715,7 +715,7 @@ export default function Visitors() {
             }
 
             try {
-                const gResp = await securityGuardService.list({ limit: 100, offset: 0 } as any);
+                const gResp = await securityGuardService.list({ limit: 100, offset: 0 });
                 // securityGuardService.list returns { rows, count } or array
                 const guardsList = Array.isArray(gResp) ? gResp : (gResp.rows || []);
                 setGuards(guardsList || []);

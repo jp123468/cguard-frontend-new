@@ -84,6 +84,40 @@ type TenantLegalDoc = {
   mimeType?: string;
 };
 
+// The tenant record as read back from tenantService.findById. Only the fields
+// this form consumes are named. `settings` may arrive as a single object or an
+// array (legacy vs. current backend shapes).
+type TenantSettingsLike = { logoUrl?: string };
+type TenantRecord = {
+  name?: string;
+  website?: string;
+  address?: string;
+  billingAddress?: string;
+  addressLine2?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  email?: string;
+  licenseNumber?: string;
+  license?: string;
+  taxNumber?: string;
+  ruc?: string;
+  timezone?: string;
+  phone?: string | number;
+  logoUrl?: string;
+  logo?: { downloadUrl?: string };
+  settings?: TenantSettingsLike | TenantSettingsLike[];
+  legalDocuments?: TenantLegalDoc[];
+};
+// findById may wrap the record as { data } or { tenant }, or return it directly.
+type TenantResponse = TenantRecord & { data?: TenantRecord; tenant?: TenantRecord };
+
+// Resolve a logo URL from the settings blob regardless of object/array shape.
+const readSettingsLogo = (settings: TenantSettingsLike | TenantSettingsLike[] | undefined): string | undefined =>
+  Array.isArray(settings) ? settings[0]?.logoUrl : settings?.logoUrl;
+
 // Minimal shapes for the Google Maps geocoder results consumed below.
 type GeocodeComponent = { types: string[]; long_name: string };
 type GeocodeResult = {
@@ -243,11 +277,10 @@ export default function ProfileCompanyForm() {
         toast.success('Logo subido correctamente');
         // Refresh tenant to get new logoUrl for preview
         try {
-          const res: any = await tenantService.findById(String(resolvedTenantId));
-          const t = (res && (res.data || res.tenant)) ? (res.data || res.tenant) : res;
+          const res = (await tenantService.findById(String(resolvedTenantId))) as TenantResponse;
+          const t: TenantRecord = (res && (res.data || res.tenant)) ? (res.data || res.tenant)! : res;
           if (t) {
-            const settingsLogoUrl = Array.isArray(t.settings) ? (t.settings[0] && t.settings[0].logoUrl) : (t.settings && (t.settings.logoUrl || t.settings[0]?.logoUrl));
-            setLogo(t.logoUrl || settingsLogoUrl || null);
+            setLogo(t.logoUrl || readSettingsLogo(t.settings) || null);
           }
         } catch (e) {
           // ignore
@@ -269,11 +302,11 @@ export default function ProfileCompanyForm() {
         const tenantId = resolvedTenantId;
         if (!tenantId) return;
 
-        const res: any = await tenantService.findById(String(tenantId));
+        const res = (await tenantService.findById(String(tenantId))) as TenantResponse;
         if (!mounted || !res) return;
 
         // Normalize response shape: some endpoints return { data: tenant } or { tenant: {...} }
-        const t = (res && (res.data || res.tenant)) ? (res.data || res.tenant) : res;
+        const t: TenantRecord = (res && (res.data || res.tenant)) ? (res.data || res.tenant)! : res;
         console.debug('Loaded tenant (normalized):', t, 'rawResponse:', res);
 
         setForm((s) => ({
@@ -282,12 +315,12 @@ export default function ProfileCompanyForm() {
           website: t.website ?? "",
           address: t.address ?? "",
           billingAddress: t.billingAddress ?? "",
-          addressLine2: (t as any).addressLine2 ?? "",
-          city: (t as any).city ?? "",
-          postalCode: (t as any).postalCode ?? "",
-          country: (t as any).country ?? "",
-          latitude: (t as any).latitude ? String((t as any).latitude) : "",
-          longitude: (t as any).longitude ? String((t as any).longitude) : "",
+          addressLine2: t.addressLine2 ?? "",
+          city: t.city ?? "",
+          postalCode: t.postalCode ?? "",
+          country: t.country ?? "",
+          latitude: t.latitude ? String(t.latitude) : "",
+          longitude: t.longitude ? String(t.longitude) : "",
           email: t.email ?? "",
           license: t.licenseNumber ?? t.license ?? "",
           ruc: t.taxNumber ?? t.ruc ?? "",
@@ -295,14 +328,13 @@ export default function ProfileCompanyForm() {
         }));
 
         // Keep the business location cache in sync
-        cacheTenantLocation((t as any).latitude, (t as any).longitude);
+        cacheTenantLocation(t.latitude, t.longitude);
 
         if (t.phone) setPhoneE164(String(t.phone));
 
         // Set existing logo preview if available
         try {
-          const settingsLogoUrl = Array.isArray(t.settings) ? (t.settings[0] && t.settings[0].logoUrl) : (t.settings && (t.settings.logoUrl || t.settings[0]?.logoUrl));
-          const existingLogo = t.logoUrl || settingsLogoUrl || (t.logo && t.logo.downloadUrl);
+          const existingLogo = t.logoUrl || readSettingsLogo(t.settings) || (t.logo && t.logo.downloadUrl);
           if (existingLogo) setLogo(String(existingLogo));
         } catch (e) {
           // ignore
@@ -381,7 +413,7 @@ export default function ProfileCompanyForm() {
       await tenantService.uploadLegalDocument(file, String(resolvedTenantId));
       toast.success('Documento subido correctamente');
       // Refresh document list
-      const res: any = await tenantService.findById(String(resolvedTenantId));
+      const res = (await tenantService.findById(String(resolvedTenantId))) as TenantResponse;
       if (Array.isArray(res.legalDocuments)) {
         setCompanyDocuments(
           res.legalDocuments.map((doc: TenantLegalDoc) => ({

@@ -3,10 +3,12 @@ import { Search, Plus, X, StickyNote, Calendar, User, Trash2, Paperclip, Downloa
 import { useTranslation } from 'react-i18next';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import AppLayout from '@/layouts/app-layout';
+import { useParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
 import api from '@/lib/api';
+import type { GuardDetail, GuardNote, NoteAttachment, FileDescriptor } from '../../guardDetailTypes';
 
 const GOLD = '#C8860A';
 
@@ -14,15 +16,17 @@ const GOLD = '#C8860A';
 // supervisor route injects `notesApi` + `entityId` (+navKey/title) to reuse this
 // exact page against the supervisor's user-keyed notes. Guard usage passes none
 // of the new props, so its behaviour is unchanged.
+type NotePayload = { title: string; description: string; noteDate: string };
+
 type NotesApi = {
-    list: (id: string) => Promise<any>;
-    create: (id: string, payload: any) => Promise<any>;
-    remove?: (id: string, noteId: string) => Promise<any>;
-    update?: (id: string, noteId: string, payload: any) => Promise<any>;
+    list: (id: string) => Promise<unknown>;
+    create: (id: string, payload: NotePayload) => Promise<unknown>;
+    remove?: (id: string, noteId: string) => Promise<unknown>;
+    update?: (id: string, noteId: string, payload: NotePayload) => Promise<unknown>;
 };
 
 type Props = {
-    guard?: any;
+    guard?: GuardDetail;
     entityId?: string;
     navKey?: string;
     title?: string;
@@ -61,7 +65,7 @@ function renderWithLineBreaks(text: string): React.ReactNode {
     ));
 }
 
-function fmtDate(v: any): string {
+function fmtDate(v: string | number | Date | null | undefined): string {
     if (!v) return '';
     const d = new Date(v);
     if (isNaN(d.getTime())) return String(v);
@@ -74,12 +78,15 @@ function initials(name: string): string {
 }
 
 export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', title = 'guards.nav.notas', notesApi = guardNotesApi }: Props) {
-    const resolvedId: string | undefined = entityId ?? guard?.id;
+    // The guard route (/guards/:id/notas) mounts this page WITHOUT a `guard`
+    // prop or entityId, so fall back to the route id (the securityGuard id).
+    const { id: routeId } = useParams();
+    const resolvedId: string | undefined = entityId ?? guard?.id ?? routeId;
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
-    const [notesData, setNotesData] = useState<any[]>([]); // Vacío inicialmente
+    const [notesData, setNotesData] = useState<GuardNote[]>([]); // Vacío inicialmente
     const [showModal, setShowModal] = useState(false);
-    const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<GuardNote | null>(null);
     const [deleting, setDeleting] = useState(false);
 
     // Form state
@@ -109,7 +116,7 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
         // Save note to backend
         (async () => {
             try {
-                const payload: any = {
+                const payload: NotePayload = {
                     title: formData.title,
                     description: formData.description,
                     noteDate: formData.date,
@@ -121,7 +128,7 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                 }
 
                 // Upload attachments (pdf/images) to storage and collect metadata
-                            const attachments: any[] = [];
+                            const attachments: FileDescriptor[] = [];
                             const files = formData.attachments || [];
                             for (let i = 0; i < files.length; i++) {
                     const f = files[i];
@@ -160,15 +167,15 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                 // Create the note first (without attachments). We'll create attachment metadata afterwards.
                 // The create adapter may return the raw {messageCode,message,data} API wrapper,
                 // so unwrap to get the actual note object (and its real id).
-                const created = await notesApi.create(resolvedId, payload);
-                const createdNote = created?.data ?? created;
-                const noteId = createdNote?.id ?? created?.id;
+                const created = await notesApi.create(resolvedId, payload) as { data?: GuardNote; id?: string } | GuardNote;
+                const createdNote = (created && 'data' in created ? created.data : created) as GuardNote | undefined;
+                const noteId = createdNote?.id ?? (created as { id?: string })?.id;
 
                 // For each uploaded file, create an attachment record linked to the created note
                 if (tenantId && attachments.length > 0) {
                     for (const up of attachments) {
                         try {
-                            const attPayload: any = {
+                            const attPayload = {
                                 name: up.name,
                                 mimeType: up.mimeType || '',
                                 sizeInBytes: up.sizeInBytes || up.size || 0,
@@ -206,9 +213,9 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
     const loadNotes = useCallback(async () => {
         if (!resolvedId) return;
         try {
-            const resp: any = await notesApi.list(resolvedId);
+            const resp = await notesApi.list(resolvedId) as { rows?: GuardNote[]; data?: GuardNote[] } | GuardNote[];
             // resp may be { rows, count }, a { data } wrapper, or a bare array.
-            const items = resp?.rows ?? resp?.data ?? resp ?? [];
+            const items = Array.isArray(resp) ? resp : (resp?.rows ?? resp?.data ?? []);
             setNotesData(Array.isArray(items) ? items : []);
         } catch (err) {
             console.error('Failed to load notes', err);
@@ -251,7 +258,7 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
     const q = searchQuery.trim().toLowerCase();
     const filteredNotes = !q
         ? notesData
-        : notesData.filter((n: any) => {
+        : notesData.filter((n: GuardNote) => {
             const hay = [n?.title, n?.description, n?.addedBy].filter(Boolean).join(' ').toLowerCase();
             return hay.includes(q);
         });
@@ -321,10 +328,10 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                             </div>
                         ) : (
                             <ul className="space-y-3">
-                                {filteredNotes.map((note: any, idx: number) => {
+                                {filteredNotes.map((note: GuardNote, idx: number) => {
                                     const author = note?.addedBy || note?.createdBy?.fullName || '';
                                     const when = fmtDate(note?.noteDate ?? note?.date ?? note?.createdAt);
-                                    const attachments: any[] = Array.isArray(note?.attachments) ? note.attachments : [];
+                                    const attachments: NoteAttachment[] = Array.isArray(note?.attachments) ? note.attachments : [];
                                     return (
                                         <li
                                             key={note?.id ?? idx}
@@ -369,7 +376,7 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                                                     {/* Attachments */}
                                                     {attachments.length > 0 && (
                                                         <div className="mt-3 flex flex-wrap gap-2">
-                                                            {attachments.map((att: any, ai: number) => {
+                                                            {attachments.map((att: NoteAttachment, ai: number) => {
                                                                 const href = att?.publicUrl ?? att?.privateUrl ?? att?.downloadUrl ?? '';
                                                                 const mime = att?.mimeType || '';
                                                                 const isImg = mime.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp|svg|avif|heic)$/i.test(att?.name || '');

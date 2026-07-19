@@ -31,10 +31,18 @@ interface TenantLike {
   name?: string | null;
 }
 
-const num = (v: any): number | null => {
-  const n = parseFloat(v);
+const num = (v: unknown): number | null => {
+  const n = parseFloat(v as string);
   return Number.isFinite(n) ? n : null;
 };
+
+/** Loose shape of the IP-geolocation responses (ipwho.is / ipapi.co). */
+interface IpGeoResponse {
+  success?: boolean;
+  error?: boolean | string;
+  latitude?: number | string;
+  longitude?: number | string;
+}
 
 function readCache<T>(key: string, maxAgeMs: number): T | null {
   try {
@@ -63,7 +71,7 @@ async function ipCenter(): Promise<MapCenter | null> {
 
   const tryFetch = async (
     url: string,
-    pick: (j: any) => [any, any] | null,
+    pick: (j: IpGeoResponse) => [number | string | undefined, number | string | undefined] | null,
   ): Promise<MapCenter | null> => {
     try {
       const ctrl = new AbortController();

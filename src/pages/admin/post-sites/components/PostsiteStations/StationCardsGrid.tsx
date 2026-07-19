@@ -28,12 +28,26 @@ const SCHEDULE_LABEL: Record<string, string> = {
     custom: 'Personalizado',
 };
 
+// The normalized station card shape produced by Stations.tsx.
+export interface StationCard {
+    id?: string;
+    stationId?: string;
+    name?: string;
+    nickname?: string;
+    numberOfGuardsInStation?: string | number | null;
+    assignedGuards?: unknown[];
+    scheduleType?: string | null;
+    jornadas?: unknown[];
+    hasPolygon?: boolean;
+    geofenceRadius?: number | null;
+}
+
 export default function StationCardsGrid({
     stations,
     onOpen,
     onDelete,
 }: {
-    stations: any[];
+    stations: StationCard[];
     onOpen: (id: string) => void;
     onDelete: (id: string) => void;
 }) {

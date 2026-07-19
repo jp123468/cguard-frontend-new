@@ -180,11 +180,11 @@ export default function Visits() {
             return;
         }
         postSiteService
-            .list({ clientId: filters.clientId }, { limit: 200, offset: 0 } as any)
+            .list({ clientId: filters.clientId }, { limit: 200, offset: 0 })
             .then((resp) => setSites(resp?.rows || []))
             .catch((e) => console.error("Failed to load post sites", e));
         securityGuardService
-            .list({ "filter[clientId]": filters.clientId, limit: 200, offset: 0 } as any)
+            .list({ "filter[clientId]": filters.clientId, limit: 200, offset: 0 })
             .then((resp) => setGuards(Array.isArray(resp) ? resp : resp?.rows || []))
             .catch((e) => console.error("Failed to load guards", e));
         setFilters((s) => ({ ...s, siteId: "", guardId: "" }));

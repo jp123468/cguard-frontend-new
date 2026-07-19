@@ -68,12 +68,37 @@ import {
   deleteService,
 } from './MobilService';
 
+// Stored file relation as produced by securityGuardService.uploadFileToStorage
+// and returned (with a token-based downloadUrl added server-side) on read.
+interface UploadedFile {
+  id?: string;
+  new?: boolean;
+  name?: string;
+  sizeInBytes?: number;
+  privateUrl?: string | null;
+  publicUrl?: string | null;
+  downloadUrl?: string;
+  fileToken?: string | null;
+}
+
+// A service row from the mobile Pricebook (GET /tenant/:id/service).
+interface MobileService {
+  id: string;
+  title?: string;
+  description?: string;
+  price?: string | number | null;
+  publishedOnMobile?: boolean;
+  iconName?: string | null;
+  serviceImages?: UploadedFile[];
+  iconImage?: UploadedFile[];
+}
+
 interface BannerItem {
   id: string;
   title: string;
   description?: string;
   link?: string;
-  imageUrl?: any[];
+  imageUrl?: UploadedFile[];
 }
 
 interface CertificationItem {
@@ -83,16 +108,45 @@ interface CertificationItem {
   description: string;
   acquisitionDate?: string;
   expirationDate?: string;
-  image?: any[];
-  icon?: any[];
+  image?: UploadedFile[];
+  icon?: UploadedFile[];
 }
+
+// Payloads POSTed/PUT to MobilService (create/update endpoints). Declared as
+// type aliases (not interfaces) so they carry an implicit index signature and
+// stay assignable to the services' Record<string, unknown> parameter.
+type BannerPayload = {
+  title: string;
+  description?: string;
+  imageUrl: UploadedFile[];
+  link?: string;
+};
+
+type CertificationPayload = {
+  title: string;
+  code: string;
+  description: string;
+  acquisitionDate?: string;
+  expirationDate?: string;
+  image: UploadedFile[];
+  icon: UploadedFile[];
+};
+
+type ServicePayload = {
+  title: string;
+  description?: string;
+  price: string | number | null;
+  publishedOnMobile: boolean;
+  iconName: string | null;
+  serviceImages: UploadedFile[];
+};
 
 const defaultBannerForm = {
   title: '',
   description: '',
   link: '',
   imageFile: null as File | null,
-  imageUrl: [] as any[],
+  imageUrl: [] as UploadedFile[],
 };
 
 const defaultCertificationForm = {
@@ -103,8 +157,8 @@ const defaultCertificationForm = {
   expirationDate: '',
   imageFile: null as File | null,
   iconFile: null as File | null,
-  image: [] as any[],
-  icon: [] as any[],
+  image: [] as UploadedFile[],
+  icon: [] as UploadedFile[],
 };
 
 export default function MobilPage() {
@@ -134,7 +188,7 @@ export default function MobilPage() {
     // `?privateUrl=` path below is reached only when neither token nor public
     // URL is present; it can't use the useFileUrl hook because this helper runs
     // inside `.map()` render callbacks.
-    const resolveFileUrl = (file: any) => {
+    const resolveFileUrl = (file?: UploadedFile) => {
     const rawUrl = file?.downloadUrl || file?.publicUrl || file?.privateUrl || '';
     const url = String(rawUrl || '').trim();
     if (!url) return '';
@@ -299,7 +353,7 @@ export default function MobilPage() {
 
     setLoading(true);
     try {
-      const payload: any = {
+      const payload: BannerPayload = {
         title: bannerForm.title,
         description: bannerForm.description,
         imageUrl: bannerForm.imageUrl,
@@ -341,7 +395,7 @@ export default function MobilPage() {
 
     setLoading(true);
     try {
-      const payload: any = {
+      const payload: CertificationPayload = {
         title: certForm.title,
         code: certForm.code,
         description: certForm.description,
@@ -426,16 +480,16 @@ export default function MobilPage() {
   const bannerTitle = editingBannerId ? 'Editar Banner Superior' : 'Nuevo Banner Superior';
   const certTitle = editingCertificateId ? 'Editar Certificación' : 'Nueva Certificación';
 
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<MobileService[]>([]);
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const defaultServiceForm = {
     title: '',
     description: '',
-    price: '' as any,
+    price: '' as string | number,
     publishedOnMobile: false,
     iconName: '' as string,
-    images: [] as any[], // existing serviceImages (file objects)
+    images: [] as UploadedFile[], // existing serviceImages (file objects)
     newImageFiles: [] as File[], // newly selected images to upload on save
   };
   const [serviceForm, setServiceForm] = useState(defaultServiceForm);
@@ -647,10 +701,10 @@ export default function MobilPage() {
                         <Label>Imágenes del servicio</Label>
                         <p className="mb-1.5 text-xs text-muted-foreground">Se muestran en la pantalla de detalle del servicio en la app. Puedes agregar varias.</p>
                         <div className="flex flex-wrap gap-2">
-                          {serviceForm.images.map((img: any, i: number) => (
+                          {serviceForm.images.map((img: UploadedFile, i: number) => (
                             <div key={`ex-${i}`} className="relative size-16 overflow-hidden rounded-lg border border-border">
                               <img src={resolveFileUrl(img)} alt="" className="size-full object-cover" />
-                              <button type="button" onClick={() => setServiceForm((p) => ({ ...p, images: p.images.filter((_: any, j: number) => j !== i) }))} className="absolute right-0.5 top-0.5 grid size-4 place-items-center rounded-full bg-black/60 text-white">
+                              <button type="button" onClick={() => setServiceForm((p) => ({ ...p, images: p.images.filter((_: UploadedFile, j: number) => j !== i) }))} className="absolute right-0.5 top-0.5 grid size-4 place-items-center rounded-full bg-black/60 text-white">
                                 <Trash2 className="size-2.5" />
                               </button>
                             </div>
@@ -693,12 +747,12 @@ export default function MobilPage() {
                       <Button variant="brand" onClick={async () => {
                         try {
                           // Upload any newly selected images, then keep existing + new.
-                          const uploadedImages: any[] = [];
+                          const uploadedImages: UploadedFile[] = [];
                           for (const file of serviceForm.newImageFiles) {
                             const up = await uploadServiceImage(file);
                             if (up) uploadedImages.push(up);
                           }
-                          const payload: any = {
+                          const payload: ServicePayload = {
                             title: serviceForm.title,
                             description: serviceForm.description,
                             price: serviceForm.price || null,
@@ -873,8 +927,8 @@ export default function MobilPage() {
                   image: resolveBannerImageUrl(item),
                 }))}
                 services={services
-                  .filter((s: any) => s.publishedOnMobile)
-                  .map((s: any) => ({
+                  .filter((s) => s.publishedOnMobile)
+                  .map((s) => ({
                     title: s.title,
                     description: s.description,
                     image: resolveFileUrl(s.serviceImages?.[0]) || resolveFileUrl(s.iconImage?.[0]) || undefined,

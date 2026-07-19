@@ -20,6 +20,7 @@ import { clientService } from "@/lib/api/clientService";
 import { postSiteService } from "@/lib/api/postSiteService";
 import { ApiService } from "@/services/api/apiService";
 import userService from "@/lib/api/userService";
+import type { AdminUser, TenantUser } from "./adminUserTypes";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -199,7 +200,7 @@ export default function NewAdminUserPage() {
     });
   }, []);
   const [loading, setLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
   const [aclAllowedClientIds, setAclAllowedClientIds] = useState<string[] | null>(null);
   const [aclAllowedPostSiteIds, setAclAllowedPostSiteIds] = useState<string[] | null>(null);
   const prevClientIdsRef = useRef<string[] | undefined>(undefined);
@@ -433,7 +434,7 @@ export default function NewAdminUserPage() {
 
         let tenantUser = null;
         if (me && me.tenants) {
-          tenantUser = Array.isArray(me.tenants) ? me.tenants.find((t: any) => (t.tenant?.id ?? t.tenantId ?? t.tenant) === tenantId) : null;
+          tenantUser = Array.isArray(me.tenants) ? me.tenants.find((t: TenantUser) => (t.tenant?.id ?? t.tenantId ?? t.tenant) === tenantId) : null;
         }
 
         if (!tenantUser) {
@@ -494,7 +495,7 @@ export default function NewAdminUserPage() {
         if (!tenantId) throw new Error('Tenant no configurado');
         const resp = await userService.fetchUser(editUserId);
         // resp may include tenants array, search by tenant
-        const tenantObj = resp?.tenants ? resp.tenants.find((t: any) => (t.tenant?.id ?? t.tenantId ?? t.tenant) === tenantId) : null;
+        const tenantObj = resp?.tenants ? resp.tenants.find((t: TenantUser) => (t.tenant?.id ?? t.tenantId ?? t.tenant) === tenantId) : null;
         const assignedClients = tenantObj?.assignedClients || resp?.assignedClients || tenantObj?.clientIds || resp?.clientIds || [];
         const assignedSites = tenantObj?.assignedPostSites || resp?.assignedPostSites || tenantObj?.postSiteIds || resp?.postSiteIds || [];
         const assignedStations = tenantObj?.assignedStations || resp?.assignedStations || tenantObj?.stationIds || resp?.stationIds || [];

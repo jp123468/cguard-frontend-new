@@ -5,7 +5,7 @@
  * gestionar). La edición real (datos y overrides) vive en el formulario de
  * edición existente para no duplicar lógica sensible.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import AppLayout from '@/layouts/app-layout';
 import userService from '@/lib/api/userService';
@@ -16,11 +16,12 @@ import {
   UserCog, KeyRound, CheckCircle2, XCircle, Loader2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import type { AdminUser, RoleRef, TenantUser } from './adminUserTypes';
 
 const HUES = [28, 205, 150, 265, 340, 95, 180, 12];
 const hueFor = (s: string) => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return HUES[h % HUES.length]; };
 
-const photoOf = (u: any): string | null => {
+const photoOf = (u: AdminUser | null): string | null => {
   const a = u?.avatars ?? u?.avatar ?? u?.profileImage;
   const f = Array.isArray(a) ? a[0] : a;
   return (f?.downloadUrl || f?.publicUrl || (typeof f === 'string' ? f : null)) || u?.photoUrl || null;
@@ -33,9 +34,9 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
   archived: { label: 'Archivado', cls: 'bg-muted text-muted-foreground' },
 };
 
-const fmtDate = (v: any) => (v ? new Date(v).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
+const fmtDate = (v: string | number | Date | null | undefined) => (v ? new Date(v).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 
-function Field({ label, value }: { label: string; value: any }) {
+function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>
       <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
@@ -47,7 +48,7 @@ function Field({ label, value }: { label: string; value: any }) {
 export default function AdminUserDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'perfil' | 'permisos'>('perfil');
 
@@ -56,7 +57,7 @@ export default function AdminUserDetailPage() {
     let mounted = true;
     setLoading(true);
     userService.fetchUser(id)
-      .then((res: any) => { if (mounted) setUser((res?.data ?? res) || null); })
+      .then((res: (AdminUser & { data?: AdminUser }) | null) => { if (mounted) setUser((res?.data ?? res) || null); })
       .catch(() => { if (mounted) setUser(null); })
       .finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
@@ -65,7 +66,7 @@ export default function AdminUserDetailPage() {
   const tenantId = typeof localStorage !== 'undefined' ? localStorage.getItem('tenantId') : null;
   const tenantEntry = useMemo(() => {
     if (!Array.isArray(user?.tenants)) return null;
-    return user.tenants.find((t: any) => (t.tenantId === tenantId) || (t.tenant && (t.tenant.id === tenantId))) || user.tenants[0] || null;
+    return user.tenants.find((t: TenantUser) => (t.tenantId === tenantId) || (t.tenant && (t.tenant.id === tenantId))) || user.tenants[0] || null;
   }, [user, tenantId]);
 
   const name = user?.fullName || [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.name || user?.email || 'Usuario';

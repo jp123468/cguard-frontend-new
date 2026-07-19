@@ -50,7 +50,7 @@ export const supervisorPositionService = {
   get: (id: string): Promise<SupervisorPosition> => ApiService.get(`${base()}/${id}`),
   create: (body: SupervisorPositionBody): Promise<SupervisorPosition> => ApiService.post(base(), body),
   update: (id: string, body: Partial<SupervisorPositionBody> & { isActive?: boolean }): Promise<SupervisorPosition> => ApiService.put(`${base()}/${id}`, body),
-  remove: (id: string): Promise<any> => ApiService.delete(`${base()}/${id}`),
+  remove: (id: string): Promise<void> => ApiService.delete(`${base()}/${id}`),
   assign: (id: string, body: { supervisorUserId: string; platoonOffset?: number; isRelief?: boolean; startDate?: string }): Promise<SupervisorPosition> =>
     ApiService.post(`${base()}/${id}/assignments`, body),
   unassign: (id: string, assignmentId: string): Promise<SupervisorPosition> =>

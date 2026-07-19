@@ -35,7 +35,7 @@ export interface RadioDevice {
 
 export type RadioDeviceInput = Partial<RadioDevice> & { sipPassword?: string };
 
-const unwrapRows = (r: any): RadioDevice[] =>
+const unwrapRows = (r: RadioDevice[] | { rows?: RadioDevice[] }): RadioDevice[] =>
   Array.isArray(r) ? r : r?.rows ?? [];
 
 export const radioDeviceService = {
@@ -51,7 +51,7 @@ export const radioDeviceService = {
   update(id: string, body: RadioDeviceInput): Promise<RadioDevice> {
     return ApiService.put(`/tenant/${tid()}/radio-device/${id}`, body);
   },
-  remove(id: string): Promise<any> {
+  remove(id: string): Promise<void> {
     return ApiService.delete(`/tenant/${tid()}/radio-device/${id}`);
   },
   test(id: string): Promise<{ requested: boolean; dispatched: boolean; device: RadioDevice }> {

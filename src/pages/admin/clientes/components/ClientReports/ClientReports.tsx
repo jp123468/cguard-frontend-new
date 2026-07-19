@@ -9,12 +9,45 @@ import {
   TrendingUp, TrendingDown, Search, AlertTriangle, Route as RouteIcon, Users, MapPin, Clock,
   ShieldCheck, FileBarChart, CalendarClock, Plus, Trash2, Download, RefreshCw, FileText,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-all placeholder:text-muted-foreground hover:border-ring/40 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]';
 
+// ── Shape of GET /client-account/:id/reports (clientAccountReports.ts) ──
+interface ReportKpi {
+  key: string; label: string; value: number | null; deltaPct: number;
+  invert?: boolean; spark: number[]; tone: string; unit?: string; isTime?: boolean;
+}
+interface Cumplimiento {
+  pct: number | null; cumplidos: number; parciales: number; incumplidos: number;
+  cumplidosPct: number; parcialesPct: number; incumplidosPct: number; total: number; hasData: boolean;
+}
+interface IncidentePorTipo { type: string; count: number; pct: number; }
+interface IncidentePorEstado { key: string; label: string; count: number; pct: number; }
+interface ActividadDia { date: string; value: number; }
+interface QuickReport { key: string; label: string; }
+interface ProgramadoRow { id: string; name: string; cron: string; active: boolean; frequency: string | null; nextRunAt: string | null; params: Record<string, unknown>; }
+interface ReportRow { id: string; code: string; name: string; sede: string; puesto: string | null; generadoPor: string; fecha: string | null; tipo: string; formato: string; }
+interface ReportsData {
+  period: { from: string; to: string };
+  tz: string;
+  kpis: ReportKpi[];
+  cumplimiento: Cumplimiento;
+  incidentesPorTipo: IncidentePorTipo[];
+  incidentesTotal: number;
+  incidentesPorEstado: IncidentePorEstado[];
+  actividadesPorDia: ActividadDia[];
+  quickReports: QuickReport[];
+  programados: ProgramadoRow[];
+  reportsList: ReportRow[];
+  reportsTotal: number;
+  updatedAt: string;
+}
+
 const TONE_HEX: Record<string, string> = { red: '#ef4444', green: '#16a34a', blue: '#2563eb', violet: '#7c3aed', orange: '#f59e0b' };
 const TYPE_COLORS = ['#2563eb', '#06b6d4', '#f59e0b', '#f97316', '#ef4444', '#7c3aed', '#16a34a'];
-const QUICK_ICON: Record<string, any> = { incidents: AlertTriangle, rounds: RouteIcon, attendance: Users, coverage: MapPin, 'guard-activity': Users };
+const QUICK_ICON: Record<string, LucideIcon> = { incidents: AlertTriangle, rounds: RouteIcon, attendance: Users, coverage: MapPin, 'guard-activity': Users };
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const fmtDT = (iso: string) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
 const fmtD = (iso: string) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric' }); };
@@ -65,7 +98,7 @@ function AreaChart({ data }: { data: Array<{ date: string; value: number }> }) {
   );
 }
 
-function Kpi({ icon, k }: { icon: any; k: any }) {
+function Kpi({ icon, k }: { icon: ReactNode; k: ReportKpi }) {
   const up = (k.deltaPct || 0) >= 0;
   const good = k.invert ? !up : up; // for incidents/response, up is bad
   const val = k.isTime && k.value != null ? `${Math.floor(k.value / 60).toString().padStart(2, '0')}:${(k.value % 60).toString().padStart(2, '0')}` : (k.value ?? 0).toLocaleString('es-EC');
@@ -97,7 +130,7 @@ export default function ClientReports({ client }: { client: Client & { companyNa
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const perPage = 8;
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ReportsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState('');
 
@@ -112,19 +145,19 @@ export default function ClientReports({ client }: { client: Client & { companyNa
   };
   useEffect(() => { const t = setTimeout(() => load(), 250); return () => clearTimeout(t); /* eslint-disable-next-line */ }, [from, to, q, page, client.id]);
 
-  const kpis: any[] = data?.kpis || [];
-  const cumplimiento = data?.cumplimiento || {};
-  const porTipo: any[] = data?.incidentesPorTipo || [];
-  const porEstado: any[] = data?.incidentesPorEstado || [];
-  const actividades: any[] = data?.actividadesPorDia || [];
-  const quickReports: any[] = data?.quickReports || [];
-  const programados: any[] = data?.programados || [];
-  const reportsList: any[] = data?.reportsList || [];
+  const kpis: ReportKpi[] = data?.kpis || [];
+  const cumplimiento: Partial<Cumplimiento> = data?.cumplimiento || {};
+  const porTipo: IncidentePorTipo[] = data?.incidentesPorTipo || [];
+  const porEstado: IncidentePorEstado[] = data?.incidentesPorEstado || [];
+  const actividades: ActividadDia[] = data?.actividadesPorDia || [];
+  const quickReports: QuickReport[] = data?.quickReports || [];
+  const programados: ProgramadoRow[] = data?.programados || [];
+  const reportsList: ReportRow[] = data?.reportsList || [];
   const reportsTotal = data?.reportsTotal ?? 0;
   const pageCount = Math.max(1, Math.ceil(reportsTotal / perPage));
   const fmtUpdated = data?.updatedAt ? new Date(data.updatedAt).toLocaleString('es-EC', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
 
-  const KPI_ICONS: Record<string, any> = { incidentes: <AlertTriangle />, rondas: <RouteIcon />, asistencias: <Users />, checkpoints: <MapPin />, respuesta: <Clock /> };
+  const KPI_ICONS: Record<string, ReactNode> = { incidentes: <AlertTriangle />, rondas: <RouteIcon />, asistencias: <Users />, checkpoints: <MapPin />, respuesta: <Clock /> };
 
   const doExport = async (type: string) => {
     setExporting(type);
@@ -136,7 +169,7 @@ export default function ClientReports({ client }: { client: Client & { companyNa
     try { await clientService.createReportSchedule(client.id, schedForm); toast.success('Reporte programado'); setSchedOpen(false); setSchedForm({ name: '', type: 'incidents', frequency: 'weekly' }); await load(true); }
     catch { toast.error('No se pudo programar'); } finally { setSaving(false); }
   };
-  const delSchedule = async (s: any) => { if (!window.confirm(`¿Eliminar "${s.name}"?`)) return; try { await clientService.deleteReportSchedule(client.id, s.id); await load(true); } catch { toast.error('No se pudo eliminar'); } };
+  const delSchedule = async (s: ProgramadoRow) => { if (!window.confirm(`¿Eliminar "${s.name}"?`)) return; try { await clientService.deleteReportSchedule(client.id, s.id); await load(true); } catch { toast.error('No se pudo eliminar'); } };
 
   if (loading && !data) return <div className="p-8 text-sm text-muted-foreground">Cargando reportes…</div>;
 

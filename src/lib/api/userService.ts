@@ -13,7 +13,7 @@ export const userService = {
     const url = `/tenant/${tenantId}/user`;
     // NOTE: do not log the payload/response — createUser commonly carries a temp password.
     try {
-      const { data: resp } = await api.post<any>(url, data);
+      const { data: resp } = await api.post<UserCurrent>(url, data);
       return resp;
     } catch (err: any) {
       if (import.meta.env.DEV) {
@@ -32,7 +32,7 @@ export const userService = {
     // the full payload incl. roles/assignments/identity.
     // NOTE: do not log the payload/response — updateUser may carry credentials/PII.
     try {
-      const { data: resp } = await api.put<any>(url, data);
+      const { data: resp } = await api.put<UserCurrent>(url, data);
       return resp;
     } catch (err: any) {
       if (import.meta.env.DEV) {
@@ -50,10 +50,10 @@ export const userService = {
   },
 
   /** Legacy PATCH transport (firstName/lastName/phone/office fields only). */
-  async patchUser(id: string, data: Record<string, any>) {
+  async patchUser(id: string, data: Record<string, unknown>) {
     const tenantId = getTenantId();
     const url = `/tenant/${tenantId}/user/${id}`;
-    const { data: resp } = await api.patch<any>(url, data);
+    const { data: resp } = await api.patch<UserCurrent>(url, data);
     return resp;
   },
 
@@ -61,7 +61,7 @@ export const userService = {
     const tenantId = getTenantId();
     const url = `/tenant/${tenantId}/user/${id}`;
     try {
-      const { data: resp } = await api.get<any>(url, { toast: { silentError: true } });
+      const { data: resp } = await api.get<UserCurrent & { data?: UserCurrent }>(url, { toast: { silentError: true } });
       return resp?.data || resp || null;
     } catch (err: any) {
       if (import.meta.env.DEV) {
@@ -72,18 +72,18 @@ export const userService = {
   },
 
   async fetchCurrentUser(): Promise<UserCurrent | null> {
-    const { data: resp } = await api.get<any>(`/auth/me`, { toast: { silentError: true } });
+    const { data: resp } = await api.get<UserCurrent & { data?: UserCurrent }>(`/auth/me`, { toast: { silentError: true } });
     return resp?.data || resp || null;
   }
   ,
-  async listUsers(params?: Record<string, any>): Promise<any[]> {
+  async listUsers(params?: Record<string, unknown>): Promise<UserCurrent[]> {
     const tenantId = getTenantId();
     let url = `/tenant/${tenantId}/user`;
 
     if (params) {
       const query = new URLSearchParams();
 
-      const buildParams = (obj: Record<string, any>, prefix = '') => {
+      const buildParams = (obj: Record<string, unknown>, prefix = '') => {
         Object.entries(obj).forEach(([key, value]) => {
           if (value === undefined || value === null) return;
           const paramKey = prefix ? `${prefix}[${key}]` : key;
@@ -95,7 +95,7 @@ export const userService = {
               }
             });
           } else if (typeof value === 'object') {
-            buildParams(value, paramKey);
+            buildParams(value as Record<string, unknown>, paramKey);
           } else {
             query.append(paramKey, String(value));
           }
@@ -109,7 +109,7 @@ export const userService = {
       }
     }
 
-    const { data: resp } = await api.get<any>(url, { toast: { silentError: true } });
+    const { data: resp } = await api.get<UserCurrent[] | { rows?: UserCurrent[]; data?: UserCurrent[] } | null>(url, { toast: { silentError: true } });
     if (!resp) return [];
     if (Array.isArray(resp)) return resp;
     if (resp.rows && Array.isArray(resp.rows)) return resp.rows;
@@ -146,7 +146,7 @@ export const userService = {
 
     const normalizedTargets = roles.map((role) => String(role).toLowerCase().trim());
 
-    return users.filter((user: any) => {
+    return users.filter((user: UserCurrent) => {
       const userRoles = normalizeRoles(user.roles || user.role || user.rolesList || user._rolesDisplay);
       return userRoles.some((role) => normalizedTargets.includes(role));
     });
@@ -201,9 +201,9 @@ export const userService = {
 
   ,
 
-  async exportFile(format: "excel" | "pdf" | "csv", params?: Record<string, any>) {
+  async exportFile(format: "excel" | "pdf" | "csv", params?: Record<string, unknown>) {
     const tenantId = getTenantId();
-    const qs = params ? `?${new URLSearchParams(params as any).toString()}&format=${format}` : `?format=${format}`;
+    const qs = params ? `?${new URLSearchParams(params as Record<string, string>).toString()}&format=${format}` : `?format=${format}`;
     const response = await api.get(`/tenant/${tenantId}/user/export${qs}`, {
       responseType: "blob",
       toast: { silentError: true },

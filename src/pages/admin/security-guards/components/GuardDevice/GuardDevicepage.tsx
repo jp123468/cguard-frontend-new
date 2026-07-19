@@ -6,11 +6,12 @@ import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import { toast } from 'sonner';
 import guardDeviceService, { GuardDevice } from '@/lib/api/guardDeviceService';
+import type { GuardDetail } from '../../guardDetailTypes';
 
 // navKey/title default to the guard layout; a supervisor route can override them
 // to render the same device screen under the supervisor sidebar (the device
 // endpoint is user-keyed, so it works for any user id).
-type Props = { guard?: any; navKey?: string; title?: string };
+type Props = { guard?: GuardDetail; navKey?: string; title?: string };
 
 const GOLD = '#C8860A';
 

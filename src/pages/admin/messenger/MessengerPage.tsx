@@ -411,9 +411,9 @@ function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "cli
       if (!q.trim()) { setResults([]); return; }
       try {
         if (isClient) {
-          const res: any = await clientService.autocomplete(q.trim(), 15);
-          const rows = Array.isArray(res) ? res : (res?.rows || []);
-          if (active) setResults(rows.filter((r: AcRow) => r && r.id).map((r: AcRow) => ({ id: r.id, label: r.label || r.name || "Cliente" })));
+          const res: unknown = await clientService.autocomplete(q.trim(), 15);
+          const rows: AcRow[] = Array.isArray(res) ? (res as AcRow[]) : ((res as { rows?: AcRow[] })?.rows || []);
+          if (active) setResults(rows.filter((r) => r && r.id).map((r) => ({ id: r.id, label: r.label || r.name || "Cliente" })));
         } else {
           const res = await securityGuardService.autocomplete(q.trim(), 15);
           const rows = Array.isArray(res) ? res : (res?.rows || []);
@@ -430,9 +430,9 @@ function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "cli
     const t = setTimeout(async () => {
       if (!siteQ.trim()) { setSiteResults([]); return; }
       try {
-        const res: any = await postSiteService.autocomplete(siteQ.trim());
-        const rows = Array.isArray(res) ? res : (res?.rows || res?.data || []);
-        if (active) setSiteResults(rows.filter((r: AcRow) => r && r.id).map((r: AcRow) => ({ id: r.id, label: r.label || r.companyName || r.name || "Puesto" })));
+        const res: unknown = await postSiteService.autocomplete(siteQ.trim());
+        const rows: AcRow[] = Array.isArray(res) ? (res as AcRow[]) : ((res as { rows?: AcRow[]; data?: AcRow[] })?.rows || (res as { data?: AcRow[] })?.data || []);
+        if (active) setSiteResults(rows.filter((r) => r && r.id).map((r) => ({ id: r.id, label: r.label || r.companyName || r.name || "Puesto" })));
       } catch { /* ignore */ }
     }, 300);
     return () => { active = false; clearTimeout(t); };

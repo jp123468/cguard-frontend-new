@@ -20,14 +20,60 @@ import {
 
 const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-all placeholder:text-muted-foreground hover:border-ring/40 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]';
 
-const ESTADO_META: Record<string, { label: string; tone: any }> = {
+type BadgeTone = 'green' | 'blue' | 'orange' | 'red' | 'primary' | 'slate';
+
+// ── Shape of GET /client-account/:id/personnel (clientAccountPersonnel.ts) ──
+interface PersonnelActivity { type: 'ronda' | 'checkin'; label: string; time?: string; }
+interface PersonnelRow {
+  id: string;
+  guardId: string | null;
+  assignmentId?: string | null;
+  stationId?: string | null;
+  name: string;
+  code: string | null;
+  role: 'guardia' | 'supervisor' | 'patrullero' | 'operador';
+  roleLabel: string;
+  puesto: string | null;
+  sede: string | null;
+  sedeId: string | null;
+  turno: { window: string; label: string | null } | null;
+  estado: string;
+  inicioTurno: string | null;
+  ultimaActividad: PersonnelActivity | null;
+  photoUrl: string | null;
+}
+interface RoleDistribution { key: string; label: string; count: number; pct: number; }
+interface CoberturaTurno { key: string; label: string; window: string; required: number; covered: number; pct: number; }
+interface Certificacion { id: string; name: string; role: string; cert: string; expiresInDays: number; photoUrl: string | null; }
+interface Ausencia { id: string; name: string; turno: string | null; reason: string; tone: string; photoUrl: string | null; }
+interface PersonnelKpis {
+  totalAsignados: number; enTurno: number; enTurnoPct: number; fueraTurno: number; fueraTurnoPct: number;
+  descanso: number; descansoPct: number; ausentes: number; ausentesPct: number; proximosVencer: number;
+  cumplimientoCobertura: number; metaCobertura: number; horasMes: number;
+}
+interface PersonnelData {
+  tz: string;
+  sedes: Array<{ id: string; name: string }>;
+  kpis: PersonnelKpis;
+  roleDistribution: RoleDistribution[];
+  total: number;
+  personal: PersonnelRow[];
+  coberturaTurno: CoberturaTurno[];
+  certificaciones: Certificacion[];
+  ausenciasHoy: Ausencia[];
+  page: number;
+  perPage: number;
+  updatedAt: string;
+}
+
+const ESTADO_META: Record<string, { label: string; tone: BadgeTone }> = {
   en_turno:    { label: 'En turno',      tone: 'green' },
   fuera_turno: { label: 'Fuera de turno', tone: 'blue' },
   descanso:    { label: 'Descanso',      tone: 'orange' },
   ausente:     { label: 'Ausente',       tone: 'red' },
   en_ruta:     { label: 'En ruta',       tone: 'primary' },
 };
-const ROLE_META: Record<string, { label: string; tone: any; color: string }> = {
+const ROLE_META: Record<string, { label: string; tone: BadgeTone; color: string }> = {
   guardia:    { label: 'Guardia',    tone: 'slate',   color: '#2563eb' },
   supervisor: { label: 'Supervisor', tone: 'blue',    color: '#16a34a' },
   patrullero: { label: 'Patrullero', tone: 'primary', color: '#9333ea' },
@@ -69,7 +115,7 @@ export default function ClientStaff({ client }: { client: Client }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   useScrollToTopOnMount(containerRef);
 
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<PersonnelData | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [q, setQ] = useState('');
@@ -100,9 +146,9 @@ export default function ClientStaff({ client }: { client: Client }) {
   // Live refresh.
   useEffect(() => { const t = setInterval(() => load(true), 45000); return () => clearInterval(t); /* eslint-disable-next-line */ }, [q, sede, role, estado, turno, page, client.id]);
 
-  const dist: any[] = data?.roleDistribution || [];
-  const sedes: any[] = data?.sedes || [];
-  const personal: any[] = data?.personal || [];
+  const dist: RoleDistribution[] = data?.roleDistribution || [];
+  const sedes: Array<{ id: string; name: string }> = data?.sedes || [];
+  const personal: PersonnelRow[] = data?.personal || [];
 
   // Per-guard client-review level, so a service issue is visible right on the
   // roster. Click → the guard's Perfil › Reseñas. Keyed by securityGuard id.
@@ -115,24 +161,24 @@ export default function ClientStaff({ client }: { client: Client }) {
     return () => { alive = false; };
   }, [personal]);
   const total = data?.total ?? 0;
-  const coberturaTurno: any[] = data?.coberturaTurno || [];
-  const certs: any[] = data?.certificaciones || [];
-  const ausencias: any[] = data?.ausenciasHoy || [];
+  const coberturaTurno: CoberturaTurno[] = data?.coberturaTurno || [];
+  const certs: Certificacion[] = data?.certificaciones || [];
+  const ausencias: Ausencia[] = data?.ausenciasHoy || [];
   const pageCount = Math.max(1, Math.ceil(total / perPage));
   const fmtUpdated = data?.updatedAt ? new Date(data.updatedAt).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
 
   const donutSegments = useMemo(() => dist.filter((d) => d.count > 0).map((d) => ({ value: d.count, color: ROLE_META[d.key]?.color || '#94a3b8' })), [dist]);
 
-  const resetPage = (fn: (v: any) => void) => (v: any) => { fn(v); setPage(1); };
+  const resetPage = (fn: (v: string) => void) => (v: string) => { fn(v); setPage(1); };
 
-  const openWorker = (p: any) => {
+  const openWorker = (p: PersonnelRow) => {
     if (p.role === 'guardia') navigate(`/guards/${p.id}/resumen`);
     else navigate(`/supervisors/${p.guardId}`);
   };
 
   // Quitar de la estación: elimina la asignación activa (guardAssignment) —
   // el vigilante vuelve al grupo sin asignación y sus turnos futuros se borran.
-  const removeFromStation = async (p: any) => {
+  const removeFromStation = async (p: PersonnelRow) => {
     if (!p.assignmentId) { toast.error('Este trabajador no tiene una asignación activa que quitar.'); return; }
     const ok = await confirmDialog({
       title: 'Quitar de la estación',

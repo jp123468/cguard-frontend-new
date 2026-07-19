@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { Client } from '@/types/client';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
@@ -13,10 +14,62 @@ import {
 
 const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-all placeholder:text-muted-foreground hover:border-ring/40 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]';
 
-const PRIO: Record<string, { label: string; tone: any }> = {
+type BadgeTone = 'red' | 'orange' | 'blue' | 'green';
+
+// ── Shape of GET /client-account/:id/incidents-board (clientAccountIncidentsBoard.ts) ──
+type IncidentBucket = 'abierto' | 'investigacion' | 'resuelto';
+type IncidentPriority = 'alta' | 'media' | 'baja';
+interface IncidentReporter { name: string; role: string | null; }
+interface IncidentRow {
+  id: string;
+  code: string;
+  date: string;
+  createdAt: string;
+  title: string;
+  description: string;
+  actionsTaken: string[];
+  causaProbable: string | null;
+  tipo: string | null;
+  tipoId: string | null;
+  sedeName: string;
+  sedeId: string | null;
+  puestoName: string | null;
+  puestoId: string | null;
+  reportedBy: IncidentReporter;
+  assignedName: string | null;
+  priority: IncidentPriority | null;
+  estado: IncidentBucket;
+  responseMin: number | null;
+  resolutionMs: number | null;
+  location: string | null;
+  lat: number | null;
+  lng: number | null;
+  comments: Array<string | Record<string, unknown>>;
+  evidenceCount: number;
+  dispatchStatus: string | null;
+}
+interface IncidentKpis {
+  total: number; abiertos: number; abiertosPct: number; investigacion: number; investigacionPct: number;
+  resueltos: number; resueltosPct: number; avgResponseMin: number | null; metaResponseMin: number;
+  avgResolutionDays: number | null; metaResolutionDays: number; slaPct: number; metaSlaPct: number;
+}
+interface IncidentOption { id: string; name: string; }
+interface IncidentEvidence { id?: string; url: string; name?: string; isVideo?: boolean; }
+interface IncidentBoardData {
+  from: string; to: string;
+  kpis: IncidentKpis;
+  sedes: IncidentOption[];
+  puestos: IncidentOption[];
+  tipos: IncidentOption[];
+  total: number; page: number; perPage: number;
+  incidents: IncidentRow[];
+  updatedAt: string;
+}
+
+const PRIO: Record<string, { label: string; tone: BadgeTone }> = {
   alta: { label: 'Alta', tone: 'red' }, media: { label: 'Media', tone: 'orange' }, baja: { label: 'Baja', tone: 'blue' },
 };
-const ESTADO: Record<string, { label: string; tone: any; dot: string }> = {
+const ESTADO: Record<string, { label: string; tone: BadgeTone; dot: string }> = {
   abierto: { label: 'Abierto', tone: 'red', dot: 'bg-red-500' },
   investigacion: { label: 'En investigación', tone: 'orange', dot: 'bg-orange-500' },
   resuelto: { label: 'Resuelto', tone: 'green', dot: 'bg-emerald-500' },
@@ -35,7 +88,10 @@ const resLabel = (ms: number | null) => {
 };
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-function Kpi({ icon, value, label, sub, accent = 'primary', bar }: any) {
+function Kpi({ icon, value, label, sub, accent = 'primary', bar }: {
+  icon: ReactNode; value: ReactNode; label: string; sub?: ReactNode;
+  accent?: string; bar?: number | null;
+}) {
   const ACC: Record<string, string> = {
     primary: 'bg-primary/12 text-primary', green: 'bg-emerald-500/12 text-emerald-600',
     orange: 'bg-orange-500/12 text-orange-600', red: 'bg-red-500/12 text-red-600', blue: 'bg-blue-500/12 text-blue-600', slate: 'bg-muted text-muted-foreground',
@@ -54,10 +110,10 @@ export default function ClientIncidents({ client }: { client: Client }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   useScrollToTopOnMount(containerRef);
 
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<IncidentBoardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [evidence, setEvidence] = useState<any[]>([]);
+  const [evidence, setEvidence] = useState<IncidentEvidence[]>([]);
   const [tab, setTab] = useState<'detalles' | 'evidencia' | 'bitacora'>('detalles');
 
   const today = useMemo(() => new Date(), []);
@@ -82,11 +138,11 @@ export default function ClientIncidents({ client }: { client: Client }) {
   };
   useEffect(() => { const t = setTimeout(() => load(), 250); return () => clearTimeout(t); /* eslint-disable-next-line */ }, [from, to, q, sedeId, puestoId, tipo, estado, prioridad, page, client.id]);
 
-  const incidents: any[] = data?.incidents || [];
-  const kpis = data?.kpis || {};
-  const sedes: any[] = data?.sedes || [];
-  const puestos: any[] = data?.puestos || [];
-  const tipos: any[] = data?.tipos || [];
+  const incidents: IncidentRow[] = data?.incidents || [];
+  const kpis: Partial<IncidentKpis> = data?.kpis || {};
+  const sedes: IncidentOption[] = data?.sedes || [];
+  const puestos: IncidentOption[] = data?.puestos || [];
+  const tipos: IncidentOption[] = data?.tipos || [];
   const total = data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / perPage));
   const selected = incidents.find((i) => i.id === selectedId) || null;
@@ -108,7 +164,7 @@ export default function ClientIncidents({ client }: { client: Client }) {
     catch { toast.error('No se pudo actualizar'); }
   };
 
-  const resetPage = (fn: (v: any) => void) => (v: any) => { fn(v); setPage(1); };
+  const resetPage = (fn: (v: string) => void) => (v: string) => { fn(v); setPage(1); };
 
   if (loading && !data) return <div className="p-8 text-sm text-muted-foreground">Cargando incidentes…</div>;
 
@@ -234,7 +290,7 @@ export default function ClientIncidents({ client }: { client: Client }) {
               {/* Tabs */}
               <div className="flex items-center gap-1 border-b">
                 {([['detalles', 'Detalles'], ['evidencia', `Evidencia (${selected.evidenceCount || 0})`], ['bitacora', `Bitácora (${(selected.comments || []).length})`]] as const).map(([k, l]) => (
-                  <button key={k} onClick={() => setTab(k as any)} className={`relative px-3 py-2 text-sm font-medium ${tab === k ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>{l}{tab === k && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary" />}</button>
+                  <button key={k} onClick={() => setTab(k)} className={`relative px-3 py-2 text-sm font-medium ${tab === k ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>{l}{tab === k && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary" />}</button>
                 ))}
               </div>
 
@@ -248,11 +304,11 @@ export default function ClientIncidents({ client }: { client: Client }) {
                   {Number.isFinite(selected.lat) && Number.isFinite(selected.lng) ? (
                     <div>
                       <div className="overflow-hidden rounded-xl border" style={{ height: 180 }}>
-                        <GoogleMapEmbed lat={selected.lat} lng={selected.lng} zoom={16} markers={[{ id: selected.id, lat: selected.lat, lng: selected.lng, label: selected.title, role: 'crit' }]} />
+                        <GoogleMapEmbed lat={selected.lat!} lng={selected.lng!} zoom={16} markers={[{ id: selected.id, lat: selected.lat!, lng: selected.lng!, label: selected.title, role: 'crit' }]} />
                       </div>
                       <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {selected.location || 'Ubicación'}</span>
-                        <span className="tabular-nums">{selected.lat.toFixed(4)}, {selected.lng.toFixed(4)}</span>
+                        <span className="tabular-nums">{selected.lat!.toFixed(4)}, {selected.lng!.toFixed(4)}</span>
                       </div>
                     </div>
                   ) : selected.location ? <div className="text-sm text-muted-foreground"><MapPin className="mr-1 inline h-3.5 w-3.5" />{selected.location}</div> : null}

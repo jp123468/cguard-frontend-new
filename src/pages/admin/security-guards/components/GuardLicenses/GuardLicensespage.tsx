@@ -18,22 +18,36 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select';
+import type { GuardDetail, GuardLicense, LicenseTypeOption, FileDescriptor } from '../../guardDetailTypes';
+
+/** Payload for creating/updating a guard license. */
+type LicensePayload = {
+  licenseTypeId?: string;
+  customName?: string | null;
+  number?: string;
+  expiryDate?: string | null;
+  frontImage?: FileDescriptor[];
+  backImage?: FileDescriptor[];
+};
+
+/** A paginated license list response. */
+type LicenseList = { rows: GuardLicense[]; count: number };
 
 // Licenses data API the page consumes (id bound inside each method). Defaults to
 // the guard endpoints; a supervisor route injects `licensesApi` (+navKey/title)
 // to reuse this exact page against the supervisor's user-keyed licenses. Guard
 // usage passes none of the new props → unchanged behaviour.
 type LicensesApi = {
-  get: (licenseId: string) => Promise<any>;
-  list: (pg: { limit?: number; offset?: number }) => Promise<any>;
-  create: (payload: any) => Promise<any>;
-  update: (licenseId: string, payload: any) => Promise<any>;
-  remove: (ids: string[]) => Promise<any>;
-  download: (licenseId: string) => Promise<any>;
+  get: (licenseId: string) => Promise<GuardLicense>;
+  list: (pg: { limit?: number; offset?: number }) => Promise<LicenseList>;
+  create: (payload: LicensePayload) => Promise<unknown>;
+  update: (licenseId: string, payload: LicensePayload) => Promise<unknown>;
+  remove: (ids: string[]) => Promise<unknown>;
+  download: (licenseId: string) => Promise<Blob>;
 };
 
 type Props = {
-  guard?: any;
+  guard?: GuardDetail;
   navKey?: string;
   title?: string;
   licensesApi?: LicensesApi;
@@ -43,7 +57,7 @@ const GOLD = '#C8860A';
 
 // ── Expiry status helper ─────────────────────────────────────────────────────
 // Returns a three-state badge config based on the expiry date.
-function expiryStatus(expiryDate: any, t: (k: string, o?: any) => string) {
+function expiryStatus(expiryDate: string | Date | null | undefined, t: (k: string, o?: Record<string, unknown>) => string) {
   if (!expiryDate) {
     return { txt: t('guards.licenses.status.noExpiry', { defaultValue: 'Sin vencimiento' }), cls: 'bg-muted text-foreground/60', dot: 'bg-gray-400' };
   }
@@ -60,7 +74,7 @@ function expiryStatus(expiryDate: any, t: (k: string, o?: any) => string) {
 }
 
 // ── Small presentational helpers ─────────────────────────────────────────────
-const Field = ({ label, value }: { label: string; value: any }) => (
+const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div className="min-w-0">
     <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-0.5">{label}</div>
     <div className="font-medium text-sm text-foreground truncate">{value || '—'}</div>
@@ -83,7 +97,7 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
   const [actionOpen, setActionOpen] = useState(false);
   const [actionSelection, setActionSelection] = useState<string>(() => t('guards.licenses.action.default', { defaultValue: 'Action' }));
   const [searchQuery, setSearchQuery] = useState('');
-  const [licenseData, setLicenseData] = useState<any[]>([]); // Vacío inicialmente
+  const [licenseData, setLicenseData] = useState<GuardLicense[]>([]); // Vacío inicialmente
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
@@ -97,10 +111,18 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
   const [currentLicense, setCurrentLicense] = useState('');
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
-  const [detailsData, setDetailsData] = useState<any | null>(null);
+  const [detailsData, setDetailsData] = useState<GuardLicense | null>(null);
 
-  // Form state
-  const [formData, setFormData] = useState<any>({
+  // Form state. Images may be a freshly-picked File, an existing stored
+  // descriptor, or null.
+  const [formData, setFormData] = useState<{
+    licenseType: string;
+    customLicenseName: string;
+    licenseNumber: string;
+    expiryDate: string;
+    frontImage: File | FileDescriptor | null;
+    backImage: File | FileDescriptor | null;
+  }>({
     licenseType: '',
     customLicenseName: '',
     licenseNumber: '',
@@ -109,7 +131,7 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
     backImage: null,
   });
 
-  const [licenseTypes, setLicenseTypes] = useState<any[]>([]);
+  const [licenseTypes, setLicenseTypes] = useState<LicenseTypeOption[]>([]);
   const [showCreateLicenseType, setShowCreateLicenseType] = useState(false);
   const { hasPermission } = useAuth();
 
@@ -173,7 +195,7 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
     setLoading(true);
     api
       .list({ limit, offset: (page - 1) * limit })
-      .then((data: any) => {
+      .then((data: LicenseList) => {
         if (!mounted) return;
         setLicenseData(data.rows || []);
         setTotalCount(data.count || 0);
@@ -195,7 +217,7 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
     if (!id) return;
     setLoading(true);
     try {
-      const data: any = await api.list({ limit: limitToUse, offset: (pageToUse - 1) * limitToUse });
+      const data: LicenseList = await api.list({ limit: limitToUse, offset: (pageToUse - 1) * limitToUse });
       setLicenseData(data.rows || []);
       setTotalCount(data.count || 0);
     } catch (err: any) {
@@ -214,11 +236,11 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
   useEffect(() => {
     let mounted = true;
     licenseTypeService
-      .list({ limit: 100 })
-      .then((data: any) => {
+      .list({ limit: "100" })
+      .then((data: { rows?: LicenseTypeOption[]; data?: LicenseTypeOption[] } | LicenseTypeOption[]) => {
         if (!mounted) return;
         // backend returns { rows, count }
-        const rows = data?.rows ?? data?.data ?? data ?? [];
+        const rows = Array.isArray(data) ? data : (data?.rows ?? data?.data ?? []);
         setLicenseTypes(rows);
       })
       .catch((err) => {
@@ -237,7 +259,7 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
   };
 
   // Row-level actions, preserved verbatim from the previous DataTable rowActions.
-  const startEdit = (row: any) => {
+  const startEdit = (row: GuardLicense) => {
     setCurrentLicense(row.id);
     setFormData({
       licenseType: row.licenseType?.id ?? (row.customName ? 'other' : ''),
@@ -250,14 +272,14 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
     setShowModal(true);
   };
 
-  const downloadRow = async (row: any) => {
+  const downloadRow = async (row: GuardLicense) => {
     try {
       if (row.frontImage?.[0]?.privateUrl) window.open(row.frontImage[0].privateUrl);
       else if (row.frontImage?.[0]?.publicUrl) window.open(row.frontImage[0].publicUrl);
     } catch {}
   };
 
-  const deleteRow = async (row: any) => {
+  const deleteRow = async (row: GuardLicense) => {
     try {
       await api.remove([row.id]);
       toast.success(t('guards.licenses.toasts.deleted', { defaultValue: 'Deleted' }));
@@ -281,7 +303,7 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
 
   const handleSubmitLicense = async () => {
     try {
-      const payload: any = {};
+      const payload: LicensePayload = {};
       // If user selected an existing license type, send its id. If 'other', send custom name.
       if (formData.licenseType && formData.licenseType !== 'other') {
         payload.licenseTypeId = formData.licenseType;
@@ -293,25 +315,21 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
       payload.number = formData.licenseNumber;
       payload.expiryDate = formData.expiryDate || null;
 
-      // Images: if user provided a File, upload; if existing descriptors (have id), pass through
+      // Images: if user provided a File, upload; if existing descriptor (has id), pass through
       if (formData.frontImage) {
-        if ((formData.frontImage as any) instanceof File) {
-          const front = await securityGuardService.uploadGuardLicenseImage(formData.frontImage as File);
+        if (formData.frontImage instanceof File) {
+          const front = await securityGuardService.uploadGuardLicenseImage(formData.frontImage);
           payload.frontImage = [front];
-        } else if (Array.isArray(formData.frontImage)) {
-          payload.frontImage = formData.frontImage;
-        } else if ((formData.frontImage as any).id) {
+        } else if (formData.frontImage.id) {
           payload.frontImage = [formData.frontImage];
         }
       }
 
       if (formData.backImage) {
-        if ((formData.backImage as any) instanceof File) {
-          const back = await securityGuardService.uploadGuardLicenseImage(formData.backImage as File);
+        if (formData.backImage instanceof File) {
+          const back = await securityGuardService.uploadGuardLicenseImage(formData.backImage);
           payload.backImage = [back];
-        } else if (Array.isArray(formData.backImage)) {
-          payload.backImage = formData.backImage;
-        } else if ((formData.backImage as any).id) {
+        } else if (formData.backImage.id) {
           payload.backImage = [formData.backImage];
         }
       }
@@ -336,7 +354,7 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
   };
 
   // ── Client-side search over the loaded page (purely presentational filter) ──
-  const visibleLicenses = licenseData.filter((lic: any) => {
+  const visibleLicenses = licenseData.filter((lic: GuardLicense) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     const name = (lic.licenseType?.name || lic.customName || '').toLowerCase();
@@ -427,7 +445,7 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {visibleLicenses.map((lic: any) => {
+              {visibleLicenses.map((lic: GuardLicense) => {
                 const status = expiryStatus(lic.expiryDate, t);
                 const selected = selectedIds.includes(lic.id);
                 const typeName = lic.licenseType?.name || lic.customName || t('guards.licenses.untitled', { defaultValue: 'Licencia' });
@@ -581,7 +599,7 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="__empty">{t('guards.licenses.form.selectLicenseType', { defaultValue: 'Selecciona tipo' })}</SelectItem>
-                          {licenseTypes.map((lt: any) => (
+                          {licenseTypes.map((lt: LicenseTypeOption) => (
                             <SelectItem key={lt.id} value={lt.id}>{lt.name}</SelectItem>
                           ))}
                           <SelectItem value="other">{t('guards.licenses.form.option.other', { defaultValue: 'Other' })}</SelectItem>
@@ -665,7 +683,7 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
               const added = Array.isArray(newType) ? newType[0] : newType;
                 if (added) {
                 setLicenseTypes((prev) => [...prev, added]);
-                setFormData((f: any) => ({ ...f, licenseType: String(added.id) }));
+                setFormData((f) => ({ ...f, licenseType: String(added.id) }));
               }
               setShowCreateLicenseType(false);
             } catch (err) {
@@ -739,8 +757,8 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
                       <div>
                         <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5">{t('guards.licenses.form.frontImageLabel', { defaultValue: 'Imagen frontal' })}</div>
                         <div className="flex flex-wrap gap-2">
-                          {detailsData.frontImage?.map((f: any, idx: number) => (
-                            <a key={idx} href={f.privateUrl ?? f.publicUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-xs font-medium hover:bg-muted/70 transition">
+                          {detailsData.frontImage?.map((f: FileDescriptor, idx: number) => (
+                            <a key={idx} href={f.privateUrl ?? f.publicUrl ?? undefined} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-xs font-medium hover:bg-muted/70 transition">
                               <Paperclip className="h-3.5 w-3.5" />
                               {f.name || (f.publicUrl ? t('actions.view', { defaultValue: 'Ver' }) : t('actions.download', { defaultValue: 'Descargar' }))}
                             </a>
@@ -752,8 +770,8 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
                       <div>
                         <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5">{t('guards.licenses.form.backImageLabel', { defaultValue: 'Imagen trasera' })}</div>
                         <div className="flex flex-wrap gap-2">
-                          {detailsData.backImage?.map((f: any, idx: number) => (
-                            <a key={idx} href={f.privateUrl ?? f.publicUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-xs font-medium hover:bg-muted/70 transition">
+                          {detailsData.backImage?.map((f: FileDescriptor, idx: number) => (
+                            <a key={idx} href={f.privateUrl ?? f.publicUrl ?? undefined} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-xs font-medium hover:bg-muted/70 transition">
                               <Paperclip className="h-3.5 w-3.5" />
                               {f.name || (f.publicUrl ? t('actions.view', { defaultValue: 'Ver' }) : t('actions.download', { defaultValue: 'Descargar' }))}
                             </a>

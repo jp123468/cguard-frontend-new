@@ -8,11 +8,67 @@ import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import AppLayout from '@/layouts/app-layout';
+import type { GuardDetail } from '../../guardDetailTypes';
+
+/** The linked app user carried under `guard` on the securityGuard record. */
+interface ProfileUser {
+  id?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  status?: string;
+  hasPassword?: boolean;
+  invitationTokenExpiresAt?: string;
+  lastLoginAt?: string;
+  homeAddress?: string;
+}
+
+/** A license summary shown in the sidebar. */
+interface ProfileLicense {
+  type?: string;
+  number?: string;
+  expiryDate?: string;
+}
+
+/**
+ * The full securityGuard record this page loads/edits. Only a whitelisted subset
+ * (EDITABLE_*) is actually persisted; the rest is read-only. Index signature
+ * covers dynamic field access in the edit-form builder.
+ */
+interface ProfileGuard extends Omit<GuardDetail, 'guard'> {
+  address?: string;
+  birthPlace?: string;
+  birthDate?: string;
+  hiringContractDate?: string;
+  gender?: string;
+  bloodType?: string;
+  maritalStatus?: string;
+  academicInstruction?: string;
+  guardCredentials?: string;
+  languages?: string[] | string;
+  skills?: string[] | string;
+  deviceType?: string;
+  deviceInfo?: { platform?: string; model?: string; osVersion?: string; appVersion?: string };
+  licenses?: ProfileLicense[];
+  guard?: ProfileUser;
+  [key: string]: unknown;
+}
 
 type Props = {
-  guard: any;
-  onGuardUpdate?: (updatedGuard: any) => void;
+  guard: ProfileGuard;
+  onGuardUpdate?: (updatedGuard: ProfileGuard) => void;
 };
+
+/** A guard-shift attendance row (read-only history). */
+interface GuardShiftRow {
+  id: string;
+  stationName?: string | { stationName?: string; name?: string };
+  station?: { stationName?: string; name?: string };
+  shiftSchedule?: string;
+  sessions?: Array<{ in?: string; out?: string }>;
+  punchInTime?: string;
+  punchOutTime?: string;
+}
 
 const GOLD = '#C8860A';
 
@@ -33,7 +89,7 @@ const EDITABLE_TEXT = ['governmentId', 'address', 'birthPlace', 'guardCredential
 const EDITABLE_SELECT = ['gender', 'bloodType', 'maritalStatus', 'academicInstruction'] as const;
 const EDITABLE_DATE = ['birthDate', 'hiringContractDate'] as const;
 
-function toDateInput(v: any): string {
+function toDateInput(v: string | number | Date | null | undefined): string {
   if (!v) return '';
   const d = new Date(v);
   if (isNaN(d.getTime())) return '';
@@ -54,7 +110,7 @@ const Section = ({ title, icon, action, children }: { title: string; icon?: Reac
   </div>
 );
 
-const ReadField = ({ label, value }: { label: string; value: any }) => (
+const ReadField = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div className="min-w-0">
     <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-0.5">{label}</div>
     <div className="font-medium text-sm text-foreground truncate">{value || '—'}</div>
@@ -86,14 +142,14 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
   const { id } = useParams();
   const { t } = useTranslation();
 
-  const [data, setData] = useState<any>({ ...guard });
-  const [form, setForm] = useState<any>({});
+  const [data, setData] = useState<ProfileGuard>({ ...guard });
+  const [form, setForm] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sendingInvite, setSendingInvite] = useState(false);
-  const savedRef = useRef<any>({ ...guard });
+  const savedRef = useRef<ProfileGuard>({ ...guard });
 
-  const setField = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
+  const setField = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
   // ── Load full guard ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -101,10 +157,10 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
     (async () => {
       if (!id) return;
       try {
-        const resp = await securityGuardService.get(id);
+        const resp = await securityGuardService.get(id) as ProfileGuard & { data?: ProfileGuard };
         if (!mounted) return;
-        const payload = resp && resp.id ? resp : (resp && (resp as any).data) ? (resp as any).data : resp;
-        setData((prev: any) => ({ ...prev, ...payload }));
+        const payload: ProfileGuard = resp && resp.id ? resp : (resp && resp.data) ? resp.data : resp;
+        setData((prev) => ({ ...prev, ...payload }));
         savedRef.current = { ...savedRef.current, ...payload };
         if (onGuardUpdate) onGuardUpdate(payload);
       } catch (err) {
@@ -115,10 +171,10 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
   }, [id]);
 
   const beginEdit = () => {
-    const src = data || {};
-    const next: any = {};
-    [...EDITABLE_TEXT, ...EDITABLE_SELECT].forEach((f) => { next[f] = src[f] ?? ''; });
-    EDITABLE_DATE.forEach((f) => { next[f] = toDateInput(src[f]); });
+    const src = data || ({} as ProfileGuard);
+    const next: Record<string, string> = {};
+    [...EDITABLE_TEXT, ...EDITABLE_SELECT].forEach((f) => { next[f] = (src[f] as string) ?? ''; });
+    EDITABLE_DATE.forEach((f) => { next[f] = toDateInput(src[f] as string | undefined); });
     next.languages = Array.isArray(src.languages) ? src.languages.join(', ') : (src.languages || '');
     next.skills = Array.isArray(src.skills) ? src.skills.join(', ') : (src.skills || '');
     setForm(next);
@@ -132,7 +188,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
     setSaving(true);
     try {
       // Build a CLEAN payload — ONLY backend-accepted securityGuard fields.
-      const payload: any = {};
+      const payload: Record<string, unknown> = {};
       [...EDITABLE_TEXT, ...EDITABLE_SELECT].forEach((f) => { payload[f] = form[f] ?? null; });
       EDITABLE_DATE.forEach((f) => { if (form[f]) payload[f] = form[f]; });
       payload.languages = String(form.languages || '').split(',').map((s: string) => s.trim()).filter(Boolean);
@@ -155,7 +211,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
   };
 
   // ── Attendance (read-only history) ──────────────────────────────────────────
-  const [guardShifts, setGuardShifts] = useState<any[]>([]);
+  const [guardShifts, setGuardShifts] = useState<GuardShiftRow[]>([]);
   const [loadingShifts, setLoadingShifts] = useState(false);
   useEffect(() => {
     (async () => {
@@ -163,7 +219,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
       setLoadingShifts(true);
       try {
         const tenantId = localStorage.getItem('tenantId') || '';
-        const resp: any = await ApiService.get(`/tenant/${tenantId}/guard-shift?filter[guardName]=${encodeURIComponent(id)}&limit=20`);
+        const resp = await ApiService.get(`/tenant/${tenantId}/guard-shift?filter[guardName]=${encodeURIComponent(id)}&limit=20`) as { rows?: GuardShiftRow[] } | GuardShiftRow[];
         setGuardShifts(Array.isArray(resp) ? resp : (resp && resp.rows) ? resp.rows : []);
       } catch (err) {
         console.error('Failed loading guard shifts', err);
@@ -177,16 +233,16 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
     if (!id) return;
     setSendingInvite(true);
     try {
-      const payload: any = { securityGuardId: id };
+      const payload: Record<string, unknown> = { securityGuardId: id };
       if (data?.guard?.id) payload.guard = data.guard.id;
       else if (data?.guard?.email) payload.contact = data.guard.email;
       if (data?.guard?.firstName) payload.firstName = data.guard.firstName;
       if (data?.guard?.lastName) payload.lastName = data.guard.lastName;
       await securityGuardService.resendInvite(payload);
       toast.success(t('guards.profile.access.inviteSent') || 'Invitación enviada');
-      const refreshed: any = await securityGuardService.get(id);
+      const refreshed = await securityGuardService.get(id) as ProfileGuard & { data?: ProfileGuard };
       const d = refreshed && refreshed.id ? refreshed : (refreshed && refreshed.data) ? refreshed.data : refreshed;
-      setData((prev: any) => ({ ...prev, ...d }));
+      setData((prev) => ({ ...prev, ...d }));
     } catch (err: any) {
       console.error('Send app access failed', err);
       toast.error(err?.message || t('guards.profile.access.inviteError') || 'Error al enviar invitación');
@@ -413,7 +469,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
               <Section title={t('guards.profile.cards.licenseDetails') || 'Licencias'}>
                 {data?.licenses && data.licenses.length > 0 ? (
                   <div className="space-y-3">
-                    {data.licenses.map((lic: any, idx: number) => (
+                    {data.licenses.map((lic: ProfileLicense, idx: number) => (
                       <div key={idx} className="rounded-lg border p-3">
                         <div className="grid grid-cols-2 gap-2">
                           <ReadField label={t('guards.profile.fields.licenseType') || 'Tipo'} value={lic.type} />

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TrendingUp, TrendingDown, Gift, Loader2 } from 'lucide-react';
 import PerformanceService from '@/services/performance.service';
+import type { GuardPerformance } from '../../guardDetailTypes';
 
 type FactorKey =
   | 'punctuality'
@@ -47,7 +48,7 @@ export default function GuardPerformancePanel({
 }: Props) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
-  const [perf, setPerf] = useState<any | null>(null);
+  const [perf, setPerf] = useState<GuardPerformance | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,12 +61,12 @@ export default function GuardPerformancePanel({
       ? PerformanceService.getSupervisor(supervisorUserId, period)
       : PerformanceService.getGuard(securityGuardId as string, period);
     req
-      .then((res: any) => {
+      .then((res: { data?: GuardPerformance } | GuardPerformance) => {
         if (!active) return;
-        const p = res?.data ?? res;
+        const p = (res && 'data' in res ? res.data : res) as GuardPerformance | undefined;
         setPerf(p && typeof p.score === 'number' ? p : null);
       })
-      .catch((e: any) => active && setError(e?.message || 'error'))
+      .catch((e: unknown) => active && setError((e instanceof Error ? e.message : null) || 'error'))
       .finally(() => active && setLoading(false));
     return () => {
       active = false;

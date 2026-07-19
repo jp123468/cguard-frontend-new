@@ -11,6 +11,7 @@ import { PageContainer, PageHeader, Section, EmptyState, SkeletonCards, StatusBa
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePermissions } from '@/hooks/usePermissions';
+import type { GuardDetail } from '../../guardDetailTypes';
 
 export default function GuardDepartamentoPage() {
   const { t } = useTranslation();
@@ -18,7 +19,7 @@ export default function GuardDepartamentoPage() {
   const { hasPermission } = usePermissions();
   const canEdit = hasPermission('settingsEdit');
 
-  const [guard, setGuard] = useState<any>(null);
+  const [guard, setGuard] = useState<GuardDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -33,7 +34,7 @@ export default function GuardDepartamentoPage() {
     let mounted = true;
     setLoading(true);
     Promise.all([
-      securityGuardService.get(id).then((data: any) => {
+      securityGuardService.get(id).then((data: GuardDetail & { guard?: GuardDetail }) => {
         const g = data.guard ?? data;
         return { ...g, fullName: g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim() };
       }),

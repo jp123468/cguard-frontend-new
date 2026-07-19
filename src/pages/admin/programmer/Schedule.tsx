@@ -88,6 +88,79 @@ interface ProposalChange {
   meta?: { shiftType?: string };
 }
 
+// Real coverage of the LIVE schedule (GET /scheduler/coverage).
+interface CoverageInfo {
+  coveredPct?: number;
+  gapCount?: number;
+  overstaffCount?: number;
+}
+
+// Staffing requirements + current headcount (GET /scheduler/staffing).
+interface StaffingInfo {
+  fijosNeeded?: number;
+  sacafrancosNeeded?: number;
+  totalGuardsNeeded?: number;
+  currentFijoGuards?: number;
+  currentSfGuards?: number;
+  peakDemand?: number;
+  sfRotation?: { id?: string; name?: string; dayShifts?: number; nightShifts?: number; restDays?: number };
+  stationAlerts?: StationAlert[];
+}
+
+// Result of POST /scheduler/auto-assign.
+interface AutoAssignResult {
+  assignmentsCreated?: number;
+  titularesAssigned?: number;
+  sacafrancosAssigned?: number;
+  unassignedRemaining?: number;
+}
+
+// Proposal summary + warnings (GET /scheduler/proposals/:id).
+interface ProposalCoverageWarning {
+  coveredPct?: number;
+  gapCount?: number;
+  overstaffCount?: number;
+}
+interface ProposalWarnings {
+  total?: number;
+  coverage?: ProposalCoverageWarning;
+  restViolations?: unknown[];
+  doubleBookings?: unknown[];
+  sfStyleInconsistencies?: unknown[];
+  maxConsecutiveAllowed?: number;
+}
+interface ProposalCost {
+  currency?: string;
+  hasRate?: boolean;
+  projected?: number;
+  delta?: number;
+}
+interface ProposalSummary {
+  added?: number;
+  removed?: number;
+  changed?: number;
+  guardsAffected?: number;
+  cost?: ProposalCost;
+  warnings?: ProposalWarnings;
+}
+interface ProposalData {
+  proposal?: { id?: string; summary?: ProposalSummary };
+  changes?: ProposalChange[];
+}
+
+// Post-publish implementation plan (GET /scheduler/proposals/:id/plan).
+interface PlanData {
+  plan?: { notifiedGuards?: number; totalGuards?: number };
+  items?: PlanItem[];
+}
+
+// Station-detail fields read by the "configurar estación" modal.
+interface StationConfigDetail {
+  startingTimeInDay?: string;
+  finishTimeInDay?: string;
+  restCoverage?: string;
+}
+
 // A selectable grid row = one puesto (fijo or sacafranco) with its assignments.
 interface SelRow {
   key: string; // position id
@@ -180,7 +253,7 @@ export default function Schedule() {
   const [overrides, setOverrides] = useState<ScheduleOverride[]>([]);
   const [rotationStyles, setRotationStyles] = useState<RotationStyle[]>([]);
   const [guardsPool, setGuardsPool] = useState<GuardOption[]>([]);
-  const [staffing, setStaffing] = useState<any>(null);
+  const [staffing, setStaffing] = useState<StaffingInfo | null>(null);
   const [loading, setLoading] = useState(true);       // initial load only
   const [refreshing, setRefreshing] = useState(false); // silent refetches (grid stays mounted)
   const hasLoadedRef = useRef(false);
@@ -217,7 +290,7 @@ export default function Schedule() {
   const [assignStartDate, setAssignStartDate] = useState(() => tzToday());
   const [assignSaving, setAssignSaving] = useState(false);
   const [moveFrom, setMoveFrom] = useState<GuardAssignment | null>(null); // drag-move source
-  const [coverage, setCoverage] = useState<any>(null); // real coverage of live schedule
+  const [coverage, setCoverage] = useState<CoverageInfo | null>(null); // real coverage of live schedule
 
   // Configure station form — SAME model as the station-page "Horario del
   // turno" editor (StationOverview): custom window + turno por vigilante +
@@ -933,7 +1006,7 @@ export default function Schedule() {
     // The overview payload doesn't carry the custom window/coverage — fetch the
     // station detail (best-effort) so the modal opens with the current values.
     ApiService.get(`/tenant/${tenantId}/station/${station.id}`)
-      .then((res: any) => {
+      .then((res: StationConfigDetail & { data?: StationConfigDetail }) => {
         const s = res?.data ?? res ?? {};
         if (s.startingTimeInDay) setCfgStart(String(s.startingTimeInDay).slice(0, 5));
         if (s.finishTimeInDay) setCfgEnd(String(s.finishTimeInDay).slice(0, 5));
@@ -1001,13 +1074,13 @@ export default function Schedule() {
 
   // AI Auto-assign
   const [autoAssigning, setAutoAssigning] = useState(false);
-  const [autoResult, setAutoResult] = useState<any>(null);
+  const [autoResult, setAutoResult] = useState<AutoAssignResult | null>(null);
 
   // Draft horario proposal (generate → review/diff → publish/discard).
   const [proposalLoading, setProposalLoading] = useState(false);
-  const [proposalData, setProposalData] = useState<any>(null); // { proposal, changes }
+  const [proposalData, setProposalData] = useState<ProposalData | null>(null); // { proposal, changes }
   const [publishing, setPublishing] = useState(false);
-  const [planData, setPlanData] = useState<any>(null); // implementation plan after publish
+  const [planData, setPlanData] = useState<PlanData | null>(null); // implementation plan after publish
 
   const generateDraft = async () => {
     setProposalLoading(true);
@@ -1077,7 +1150,7 @@ export default function Schedule() {
     setAiLoading(true);
     setAiRecommendation(null);
     try {
-      const result: any = await ApiService.post(`/tenant/${tenantId}/scheduler/ai-recommend`, { data: { type: 'optimize' } });
+      const result: { recommendation?: string; data?: { recommendation?: string } } = await ApiService.post(`/tenant/${tenantId}/scheduler/ai-recommend`, { data: { type: 'optimize' } });
       const rec = result?.recommendation || result?.data?.recommendation || 'Sin respuesta';
       setAiRecommendation(rec);
     } catch (e: any) {
@@ -2243,14 +2316,14 @@ export default function Schedule() {
                           </div>
                         </div>
                         {/* Hiring recommendation */}
-                        {((staffing.fijosNeeded - (staffing.currentFijoGuards || 0)) > 0 || (staffing.sacafrancosNeeded - (staffing.currentSfGuards || 0)) > 0) && (
+                        {(((staffing.fijosNeeded || 0) - (staffing.currentFijoGuards || 0)) > 0 || ((staffing.sacafrancosNeeded || 0) - (staffing.currentSfGuards || 0)) > 0) && (
                           <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-2 space-y-1">
                             <div className="text-[10px] font-semibold text-red-600"><AlertTriangle className="inline h-3 w-3 mr-1" />Contratar:</div>
-                            {(staffing.fijosNeeded - (staffing.currentFijoGuards || 0)) > 0 && (
-                              <div className="text-[10px] text-red-500">{staffing.fijosNeeded - (staffing.currentFijoGuards || 0)} fijos más</div>
+                            {((staffing.fijosNeeded || 0) - (staffing.currentFijoGuards || 0)) > 0 && (
+                              <div className="text-[10px] text-red-500">{(staffing.fijosNeeded || 0) - (staffing.currentFijoGuards || 0)} fijos más</div>
                             )}
-                            {(staffing.sacafrancosNeeded - (staffing.currentSfGuards || 0)) > 0 && (
-                              <div className="text-[10px] text-red-500">{staffing.sacafrancosNeeded - (staffing.currentSfGuards || 0)} sacafrancos más</div>
+                            {((staffing.sacafrancosNeeded || 0) - (staffing.currentSfGuards || 0)) > 0 && (
+                              <div className="text-[10px] text-red-500">{(staffing.sacafrancosNeeded || 0) - (staffing.currentSfGuards || 0)} sacafrancos más</div>
                             )}
                           </div>
                         )}
@@ -2799,7 +2872,7 @@ export default function Schedule() {
                     Costo proyectado <span className="text-muted-foreground/70">(30 días)</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold tabular-nums text-foreground">{money(cost.projected)}</span>
+                    <span className="text-sm font-bold tabular-nums text-foreground">{money(cost.projected || 0)}</span>
                     <span className={`text-xs font-semibold tabular-nums ${deltaCls}`}>
                       {delta > 0 ? '+' : ''}{money(delta)}
                     </span>

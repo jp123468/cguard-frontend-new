@@ -81,10 +81,12 @@ export default function StationHero({
         )
             .then((res: any) => {
                 if (!mounted) return;
-                const rows = (res && (res.rows || res.data?.rows)) || [];
+                // guard-shift (attendance) rows: name is nested under guardName.fullName.
+                interface OnDutyRow { id: string; punchInTime?: string; punchOutTime?: string | null; guardName?: { fullName?: string } | null }
+                const rows: OnDutyRow[] = (res && (res.rows || res.data?.rows)) || [];
                 const open = rows
-                    .filter((r: any) => !r.punchOutTime)
-                    .map((r: any) => ({
+                    .filter((r) => !r.punchOutTime)
+                    .map((r) => ({
                         id: r.id,
                         name: r.guardName?.fullName || "Vigilante",
                         since: r.punchInTime,

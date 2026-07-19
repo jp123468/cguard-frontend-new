@@ -11,7 +11,7 @@ const getTenantId = (): string => {
   return t;
 };
 
-const buildQuery = (params?: Record<string, any>): string => {
+const buildQuery = (params?: Record<string, unknown>): string => {
   if (!params) return "";
   const p = new URLSearchParams();
   for (const k of Object.keys(params)) {
@@ -60,12 +60,12 @@ export interface AttendanceRecord {
 }
 
 const attendanceService = {
-  async dashboard(params?: Record<string, any>) {
+  async dashboard(params?: Record<string, unknown>) {
     const t = getTenantId();
     return unwrap(await api.get(`/tenant/${t}/attendance/dashboard${buildQuery(params)}`));
   },
 
-  async list(params?: Record<string, any>): Promise<{ rows: AttendanceRecord[]; count: number }> {
+  async list(params?: Record<string, unknown>): Promise<{ rows: AttendanceRecord[]; count: number }> {
     const t = getTenantId();
     return unwrap(await api.get(`/tenant/${t}/attendance${buildQuery(params)}`));
   },
@@ -75,7 +75,7 @@ const attendanceService = {
     return unwrap(await api.get(`/tenant/${t}/attendance/${id}`));
   },
 
-  async exceptions(params?: Record<string, any>) {
+  async exceptions(params?: Record<string, unknown>) {
     const t = getTenantId();
     return unwrap(await api.get(`/tenant/${t}/attendance/exceptions${buildQuery(params)}`));
   },
@@ -85,7 +85,7 @@ const attendanceService = {
     return unwrap(await api.patch(`/tenant/${t}/attendance/exceptions/${id}/resolve`, { data }));
   },
 
-  async corrections(params?: Record<string, any>) {
+  async corrections(params?: Record<string, unknown>) {
     const t = getTenantId();
     return unwrap(await api.get(`/tenant/${t}/attendance/corrections${buildQuery(params)}`));
   },
@@ -96,7 +96,7 @@ const attendanceService = {
   },
 
   // ── Early clock-out approval requests ──────────────────────────────────────
-  async clockOutRequests(params?: Record<string, any>) {
+  async clockOutRequests(params?: Record<string, unknown>) {
     const t = getTenantId();
     return unwrap(
       await api.get(`/tenant/${t}/attendance/clock-out-requests${buildQuery(params)}`),
@@ -112,7 +112,7 @@ const attendanceService = {
   },
 
   // ── Late clock-in approval requests ────────────────────────────────────────
-  async clockInRequests(params?: Record<string, any>) {
+  async clockInRequests(params?: Record<string, unknown>) {
     const t = getTenantId();
     return unwrap(
       await api.get(`/tenant/${t}/attendance/clock-in-requests${buildQuery(params)}`),
@@ -139,12 +139,12 @@ const attendanceService = {
     return unwrap(await api.patch(`/tenant/${t}/attendance/${id}/reject`, { data: { notes } }));
   },
 
-  async correct(id: string, data: { field: string; correctedValue: any; reason: string }) {
+  async correct(id: string, data: { field: string; correctedValue: unknown; reason: string }) {
     const t = getTenantId();
     return unwrap(await api.post(`/tenant/${t}/attendance/${id}/correct`, { data }));
   },
 
-  async payrollSummary(params?: Record<string, any>) {
+  async payrollSummary(params?: Record<string, unknown>) {
     const t = getTenantId();
     return unwrap(await api.get(`/tenant/${t}/attendance/payroll-summary${buildQuery(params)}`));
   },
@@ -196,7 +196,7 @@ const attendanceService = {
     return unwrap(await api.get(`/tenant/${t}/attendance/settings`));
   },
 
-  async saveSettings(data: any) {
+  async saveSettings(data: Record<string, unknown>) {
     const t = getTenantId();
     return unwrap(await api.put(`/tenant/${t}/attendance/settings`, { data }));
   },

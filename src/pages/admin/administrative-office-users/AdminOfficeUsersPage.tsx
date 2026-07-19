@@ -46,7 +46,8 @@ import {
   Trash,
   UserCog,
 } from "lucide-react";
-import AdminUserCardsGrid, { type AdminUserCardAction } from "./AdminUserCardsGrid";
+import AdminUserCardsGrid, { type AdminUserCardAction, type AdminUserRow } from "./AdminUserCardsGrid";
+import type { RoleRef, ClientOption } from "./adminUserTypes";
 import { PageContainer, PageHeader, Section, StatusBadge, EmptyState } from "@/components/kit";
 import { toast } from "sonner";
 import { useTranslation } from 'react-i18next';
@@ -87,17 +88,17 @@ export default function AdminOfficeUsersPage() {
   const debouncedQuery = useDebounced(query, 450);
 
   // filas desde API
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<AdminUserRow[]>([]);
   const [isAdminUser, setIsAdminUser] = useState(false);
   const { hasPermission, hasAny } = usePermissions();
   const canManageUsers = hasAny(['userEdit', 'userDestroy', 'userImport', 'userCreate', 'userExport']);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [resendDialogOpen, setResendDialogOpen] = useState(false);
-  const [selectedUserToAct, setSelectedUserToAct] = useState<any | null>(null);
+  const [selectedUserToAct, setSelectedUserToAct] = useState<AdminUserRow | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const formatUserDisplay = (u: any) => {
+  const formatUserDisplay = (u: AdminUserRow | null) => {
     if (!u) return "";
     return (
       u.fullName ||
@@ -120,7 +121,7 @@ export default function AdminOfficeUsersPage() {
   // unrecognized shape (normalizeRolesForUser handles only a few), so the real
   // protection MUST be enforced server-side (the backend must reject suspend/
   // delete of admin users regardless of this client check).
-  const isUserAdmin = (u: any) => {
+  const isUserAdmin = (u: AdminUserRow | null | undefined) => {
     if (!u) return false;
     const r = normalizeRolesForUser(u.roles || u.role || u.rolesList || u._rolesDisplay);
     return r.includes('admin') || r.includes('super admin') || r.includes('superadmin');
@@ -129,7 +130,7 @@ export default function AdminOfficeUsersPage() {
   const loadUsers = async () => {
     try {
       const usersResp = await userService.listUsers();
-      let users: any[] = usersResp || [];
+      let users: AdminUserRow[] = usersResp || [];
 
       const normalizeRoles = (roles: any): string[] => {
         if (!roles) return [];
@@ -155,7 +156,7 @@ export default function AdminOfficeUsersPage() {
           _rolesDisplay: (normalizeRoles(u.roles || u.role || u.rolesList) || []).join(", "),
         }))
         .filter((u) => {
-          const roles = normalizeRoles(u.roles || u.role || u.rolesList || u._rolesDisplay);
+          const roles = normalizeRoles(u.roles || u.role || (u as { rolesList?: unknown }).rolesList || u._rolesDisplay);
           return !roles.includes('customer') && !roles.includes('securitysupervisor');
         });
 
@@ -249,12 +250,13 @@ export default function AdminOfficeUsersPage() {
     }
   };
 
-  const handleSuspendUser = async (user: any) => {
+  const handleSuspendUser = async (user: AdminUserRow) => {
     if (!user) return;
     if (isUserAdmin(user)) {
       toast.error(t('adminOfficeUsers.toasts.cannotSuspendAdmin', { defaultValue: 'No se puede suspender a un usuario administrador' }));
       return;
     }
+    if (!user.id) return;
     try {
       setActionLoading(true);
       await userService.suspendUser(user.id);
@@ -309,7 +311,7 @@ export default function AdminOfficeUsersPage() {
     // Apply client filter: be permissive to many possible shapes returned by backend
     if (filterClient && filterClient !== 'all') {
       const clientIdStr = String(filterClient);
-      const userHasClient = (u: any) => {
+      const userHasClient = (u: AdminUserRow) => {
         // direct fields
         const candidates = [
           u.clientId,
@@ -326,7 +328,7 @@ export default function AdminOfficeUsersPage() {
             if (cand.map(String).includes(clientIdStr)) return true;
           } else if (typeof cand === 'object') {
             // object or nested shape
-            if ((cand.id && String(cand.id) === clientIdStr) || (cand._id && String(cand._id) === clientIdStr)) return true;
+            const co = cand as { id?: unknown; _id?: unknown }; if ((co.id && String(co.id) === clientIdStr) || (co._id && String(co._id) === clientIdStr)) return true;
             // sometimes it's an array under object
             const vals = Object.values(cand).flat ? Object.values(cand).flat() : Object.values(cand);
             if (Array.isArray(vals) && vals.map(String).includes(clientIdStr)) return true;
@@ -482,7 +484,7 @@ export default function AdminOfficeUsersPage() {
   };
 
   // Acciones del menú de cada tarjeta (mismos handlers/estados que la tabla).
-  const userCardActions = (u: any): AdminUserCardAction[] => {
+  const userCardActions = (u: AdminUserRow): AdminUserCardAction[] => {
     const status = (u.status || "").toString().toLowerCase();
     const acts: AdminUserCardAction[] = [];
     if (status === "invited" || status === "pending") {
@@ -503,7 +505,7 @@ export default function AdminOfficeUsersPage() {
     return acts;
   };
 
-  const openUser = (u: any) => {
+  const openUser = (u: AdminUserRow) => {
     if (normalizeRolesForUser(u.roles || u.role || u.rolesList || u._rolesDisplay).includes('securitysupervisor')) { navigate(`/supervisors/${u.id}`); return; }
     navigate(`/back-office/${u.id}`);
   };
@@ -748,7 +750,7 @@ export default function AdminOfficeUsersPage() {
                           const roles = u.roles ?? u.role ?? [];
                           if (Array.isArray(roles)) {
                             return roles
-                              .map((r: any) => (typeof r === 'string' ? r : (r && (r.name || r.role) ? (r.name || r.role) : '')))
+                              .map((r: RoleRef) => (typeof r === "string" ? r : (r && (r.name || r.role) ? (r.name || r.role) : '')))
                               .filter(Boolean)
                               .join(', ');
                           }
@@ -757,7 +759,7 @@ export default function AdminOfficeUsersPage() {
                           return '-';
                         })()
                       }</td>
-                      <td className="px-4 py-3">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : "-"}</td>
+                      <td className="px-4 py-3">{u.lastLoginAt ? new Date(u.lastLoginAt as string).toLocaleString() : "-"}</td>
                       <td className="px-4 py-3">
                         {(() => {
                           const status = (u.status || "").toString().toLowerCase();
@@ -890,13 +892,13 @@ export default function AdminOfficeUsersPage() {
               items={pagedRows || []}
               loading={false}
               emptyMessage={t('adminOfficeUsers.noData.title', { defaultValue: 'No se encontraron resultados' }) as string}
-              renderCard={(u: any) => (
+              renderCard={(u: AdminUserRow) => (
                 <div className="p-4 bg-card border rounded-lg">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex-1">
                       <div className="text-sm font-semibold">{[u.firstName, u.lastName].filter(Boolean).join(' ') || u.name || u.email || '-'}</div>
                       <div className="text-xs text-muted-foreground">{u.email || '-'}</div>
-                      <div className="text-xs text-muted-foreground mt-1">{(u._rolesDisplay) || (Array.isArray(u.roles) ? u.roles.join(', ') : (u.roles || u.role || '-'))}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{(u._rolesDisplay) || (Array.isArray(u.roles) ? u.roles.map((r) => typeof r === 'string' ? r : (r?.name || r?.role || '')).join(', ') : (typeof u.roles === 'string' ? u.roles : typeof u.role === 'string' ? u.role : '-'))}</div>
                     </div>
                     <div className="text-xs text-muted-foreground text-right">
                       {(() => {
@@ -906,7 +908,7 @@ export default function AdminOfficeUsersPage() {
                         if (u.active === false) return t('adminOfficeUsers.statuses.inactive', { defaultValue: 'Inactivo' });
                         return t('adminOfficeUsers.statuses.active', { defaultValue: 'Activo' });
                       })()}
-                      <div className="text-xs text-muted-foreground">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : '-'}</div>
+                      <div className="text-xs text-muted-foreground">{u.lastLoginAt ? new Date(u.lastLoginAt as string).toLocaleString() : '-'}</div>
                     </div>
                   </div>
                 </div>
@@ -973,7 +975,7 @@ export default function AdminOfficeUsersPage() {
         <AlertDialogAction
           className="bg-primary text-white hover:bg-primary/90"
           onClick={async () => {
-            if (!selectedUserToAct) return;
+            if (!selectedUserToAct?.id) return;
             try {
               setActionLoading(true);
               await userService.resendInvitation(selectedUserToAct.id);
@@ -1008,12 +1010,11 @@ export default function AdminOfficeUsersPage() {
               <AlertDialogAction
                 className="bg-primary text-white hover:bg-primary/90"
                 onClick={async () => {
-                  if (!selectedUserToAct) return;
+                  if (!selectedUserToAct?.id) return;
                     try {
                       setActionLoading(true);
-                      let res: any = null;
                       try {
-                        res = await userService.restoreUser(selectedUserToAct.id);
+                        await userService.restoreUser(selectedUserToAct.id);
                       } catch (e) {
                         console.warn("Restore endpoint failed", e);
                       }
@@ -1051,7 +1052,7 @@ export default function AdminOfficeUsersPage() {
               <AlertDialogAction
                 className="bg-red-600 hover:bg-red-700"
                 onClick={async () => {
-                  if (!selectedUserToAct) return;
+                  if (!selectedUserToAct?.id) return;
                   await handleDeleteUser(selectedUserToAct.id);
                 }}
               >

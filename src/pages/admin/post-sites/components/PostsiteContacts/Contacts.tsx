@@ -30,6 +30,27 @@ interface SiteProp extends PostSite {
   postSiteId?: string;
 }
 
+// A raw contact row from the post-site / client contacts endpoint (aliases vary).
+interface ContactApiRow {
+  id?: string;
+  _id?: string;
+  name?: string;
+  fullName?: string;
+  contactName?: string;
+  label?: string;
+  email?: string;
+  contactEmail?: string;
+  mobile?: string;
+  phone?: string;
+  contactPhone?: string;
+  postSiteName?: string;
+  postSite?: string;
+  description?: string;
+  desc?: string;
+  note?: string;
+  notes?: string;
+}
+
 export default function PostSiteContacts({ site }: { site?: SiteProp }) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -109,7 +130,7 @@ export default function PostSiteContacts({ site }: { site?: SiteProp }) {
           if (!mounted) return;
           const rows = Array.isArray(resp?.rows) ? resp.rows : (Array.isArray(resp) ? resp : []);
           console.debug('[PostSiteContacts] rows length', rows.length);
-          setContacts(rows.map((r: any) => ({
+          setContacts(rows.map((r: ContactApiRow) => ({
             id: String(r.id || r._id || Date.now()),
             name: r.name || r.fullName || r.contactName || '',
             email: r.email || r.contactEmail,
@@ -128,7 +149,7 @@ export default function PostSiteContacts({ site }: { site?: SiteProp }) {
           if (!mounted) return;
           const rows = Array.isArray(resp?.rows) ? resp.rows : [];
           console.debug('[PostSiteContacts] client rows length', rows.length);
-          setContacts(rows.map((r: any) => ({
+          setContacts(rows.map((r: ContactApiRow) => ({
             id: String(r.id || r._id || Date.now()),
             name: r.name || r.fullName || r.contactName || r.label || '',
             email: r.email,

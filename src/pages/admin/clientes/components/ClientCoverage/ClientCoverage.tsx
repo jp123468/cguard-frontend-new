@@ -22,7 +22,52 @@ import {
 
 const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-all placeholder:text-muted-foreground hover:border-ring/40 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]';
 
-const STATUS_META: Record<string, { label: string; tone: any; dot: string; role: string }> = {
+// ── Shape of GET /client-account/:id/coverage (clientAccountCoverage.ts) ──
+type CoverageStatus = 'cubierto' | 'parcial' | 'sin_cobertura' | 'sin_turno';
+type BadgeTone = 'green' | 'orange' | 'red' | 'slate';
+interface CoverageSede { id: string; name: string; address: string | null; lat: number | null; lng: number | null; }
+interface CoveragePuesto {
+  id: string;
+  name: string;
+  nickname: string | null;
+  type: 'patrulla' | 'fijo';
+  lat: number | null;
+  lng: number | null;
+  window: string | null;
+  turno: string | null;
+  required: number;
+  onPost: number;
+  guards: string[];
+  assigned: string[];
+  coveragePct: number | null;
+  status: CoverageStatus;
+  lastActivity: { type: 'ronda' | 'checkin' | 'none'; time?: string };
+  hasNovelty: boolean;
+  nextShiftAt: string | null;
+}
+interface CoverageTurnoSummary { key: string; label: string; window: string; required: number; covered: number; pct: number; }
+interface CoverageSinCobertura { id: string; name: string; window: string | null; turno: string | null; requiredGuards: number; }
+interface CoverageProximo { id: string; name: string; window: string; turno: string; startsInMin: number; }
+interface CoverageKpis {
+  puestosTotales: number; puestosCubiertos: number; coberturaPct: number;
+  guardiasEnPuestos: number; guardiasRequeridas: number; puestosSinCobertura: number;
+  proximosAIniciar: number; puestosConNovedad: number; cumplimientoHoy: number;
+}
+interface CoverageData {
+  sedes: CoverageSede[];
+  selectedSedeId: string | null;
+  tz: string;
+  objetivoPct: number;
+  generalPct: number;
+  kpis: CoverageKpis;
+  puestos: CoveragePuesto[];
+  turnoSummary: CoverageTurnoSummary[];
+  sinCobertura: CoverageSinCobertura[];
+  proximos: CoverageProximo[];
+  updatedAt: string;
+}
+
+const STATUS_META: Record<string, { label: string; tone: BadgeTone; dot: string; role: string }> = {
   cubierto:      { label: 'Cubierto',      tone: 'green',  dot: 'bg-emerald-500', role: 'ok' },
   parcial:       { label: 'Parcial',       tone: 'orange', dot: 'bg-orange-500',  role: 'warn' },
   sin_cobertura: { label: 'Sin cobertura', tone: 'red',    dot: 'bg-red-500',     role: 'crit' },
@@ -43,7 +88,7 @@ export default function ClientCoverage({ client }: { client: Client }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   useScrollToTopOnMount(containerRef);
 
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<CoverageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [sedeId, setSedeId] = useState<string>('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -77,15 +122,15 @@ export default function ClientCoverage({ client }: { client: Client }) {
     // eslint-disable-next-line
   }, [sedeId, client.id]);
 
-  const sedes: any[] = data?.sedes || [];
-  const puestos: any[] = data?.puestos || [];
-  const turnoSummary: any[] = data?.turnoSummary || [];
-  const sinCobertura: any[] = data?.sinCobertura || [];
-  const proximos: any[] = data?.proximos || [];
+  const sedes: CoverageSede[] = data?.sedes || [];
+  const puestos: CoveragePuesto[] = data?.puestos || [];
+  const turnoSummary: CoverageTurnoSummary[] = data?.turnoSummary || [];
+  const sinCobertura: CoverageSinCobertura[] = data?.sinCobertura || [];
+  const proximos: CoverageProximo[] = data?.proximos || [];
 
   const selected = puestos.find((p) => p.id === selectedId) || null;
 
-  const deleteStation = async (p: any) => {
+  const deleteStation = async (p: CoveragePuesto) => {
     const ok = await confirmDialog({
       title: 'Eliminar estación',
       message: `¿Eliminar la estación "${p.name}"? Sus horarios, asignaciones y rondas (QR) quedan huérfanos — si la vuelves a crear, las rondas NO se reconectan solas. Considera editarla en su lugar.`,
@@ -130,9 +175,10 @@ export default function ClientCoverage({ client }: { client: Client }) {
 
   const mapMarkers = puestos
     .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng))
-    .map((p) => ({ id: p.id, lat: p.lat, lng: p.lng, label: p.name, role: STATUS_META[p.status]?.role || 'ok' }));
+    .map((p) => ({ id: p.id, lat: p.lat!, lng: p.lng!, label: p.name, role: STATUS_META[p.status]?.role || 'ok' }));
 
-  const selectPuesto = (p: any) => {
+  const selectPuesto = (p: CoveragePuesto | undefined) => {
+    if (!p) return;
     setSelectedId(p.id);
     if (Number.isFinite(p.lat) && Number.isFinite(p.lng)) setCenterReq((n) => n + 1);
   };
@@ -150,8 +196,8 @@ export default function ClientCoverage({ client }: { client: Client }) {
 
   const sede = sedes.find((s) => s.id === sedeId);
   const mapCenter = selected && Number.isFinite(selected.lat)
-    ? { lat: selected.lat, lng: selected.lng }
-    : sede && Number.isFinite(sede.lat) ? { lat: sede.lat, lng: sede.lng }
+    ? { lat: selected.lat!, lng: selected.lng! }
+    : sede && Number.isFinite(sede.lat) ? { lat: sede.lat!, lng: sede.lng! }
     : mapMarkers[0] ? { lat: mapMarkers[0].lat, lng: mapMarkers[0].lng } : null;
 
   const fmtUpdated = data?.updatedAt ? new Date(data.updatedAt).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
@@ -398,7 +444,7 @@ export default function ClientCoverage({ client }: { client: Client }) {
                   <div className="mt-0.5 text-xs text-muted-foreground">{selected.type === 'patrulla' ? 'Patrulla' : 'Fijo'} · {selected.window || 'Sin turno'}</div>
                   <div className="mt-1"><StatusBadge tone={(STATUS_META[selected.status] || STATUS_META.sin_turno).tone}>{(STATUS_META[selected.status] || STATUS_META.sin_turno).label}</StatusBadge></div>
                   {Number.isFinite(selected.lat)
-                    ? <div className="mt-2 text-xs text-muted-foreground">📍 {selected.lat.toFixed(6)}, {selected.lng.toFixed(6)}</div>
+                    ? <div className="mt-2 text-xs text-muted-foreground">📍 {selected.lat!.toFixed(6)}, {selected.lng!.toFixed(6)}</div>
                     : <div className="mt-2 text-xs text-orange-600">Esta estación aún no tiene ubicación exacta.</div>}
                 </div>
                 <div className="flex shrink-0 flex-col gap-2">

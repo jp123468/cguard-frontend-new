@@ -126,7 +126,7 @@ export default function StationOrders({ stationId }: Props) {
       </Section>
 
       {view === 'log' ? (
-        <ActivityLog stationId={stationId} t={t} />
+        <ActivityLog stationId={stationId} t={t as unknown as (key: string, def?: string) => string} />
       ) : /* list */ loading ? (
         <SkeletonCards count={4} className="lg:grid-cols-2" />
       ) : rows.length === 0 ? (
@@ -165,12 +165,19 @@ export default function StationOrders({ stationId }: Props) {
         </div>
       )}
 
-      {modal && <OrderModal value={modal} onChange={setModal} onClose={() => setModal(null)} onSave={save} saving={saving} t={t} />}
+      {modal && <OrderModal value={modal} onChange={setModal} onClose={() => setModal(null)} onSave={save} saving={saving} t={t as unknown as (key: string, def?: string, opts?: Record<string, unknown>) => string} />}
     </div>
   );
 }
 
-function OrderModal({ value, onChange, onClose, onSave, saving, t }: any) {
+function OrderModal({ value, onChange, onClose, onSave, saving, t }: {
+  value: Order;
+  onChange: (o: Order) => void;
+  onClose: () => void;
+  onSave: () => void;
+  saving: boolean;
+  t: (key: string, def?: string, opts?: Record<string, unknown>) => string;
+}) {
   const o: Order = value;
   const set = (patch: Partial<Order>) => onChange({ ...o, ...patch });
   const toggleDay = (d: number) => set({ days: o.days?.includes(d) ? o.days.filter((x) => x !== d) : [...(o.days || []), d] });
@@ -280,9 +287,22 @@ function Field({ label, children }: { label: React.ReactNode; children: React.Re
   );
 }
 
+/** A guard's completion of a station consigna, with captured evidence. */
+interface CompletionPhoto { downloadUrl?: string | null }
+interface CompletionRow {
+  id?: string;
+  order?: { title?: string; time?: string } | null;
+  guardName?: string;
+  completedAt: string;
+  note?: string;
+  photos?: CompletionPhoto[];
+  videoDownloadUrl?: string | null;
+  audioDownloadUrl?: string | null;
+}
+
 /** Activity log — guard completions of this station's consignas, with evidence. */
-function ActivityLog({ stationId, t }: { stationId: string; t: any }) {
-  const [rows, setRows] = useState<any[]>([]);
+function ActivityLog({ stationId, t }: { stationId: string; t: (key: string, def?: string) => string }) {
+  const [rows, setRows] = useState<CompletionRow[]>([]);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (!stationId) return;
@@ -319,7 +339,7 @@ function ActivityLog({ stationId, t }: { stationId: string; t: any }) {
           {c.note && <p className="mt-2 flex items-start gap-1.5 text-sm text-foreground"><FileText size={13} className="mt-0.5 shrink-0 text-muted-foreground" />{c.note}</p>}
           {(c.photos?.length || c.videoDownloadUrl || c.audioDownloadUrl) && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              {(c.photos || []).map((ph: any, i: number) => fileUrl(ph.downloadUrl) && (
+              {(c.photos || []).map((ph: CompletionPhoto, i: number) => fileUrl(ph.downloadUrl) && (
                 <a key={i} href={fileUrl(ph.downloadUrl)!} target="_blank" rel="noreferrer" className="block h-16 w-16 overflow-hidden rounded-lg border border-border">
                   <img src={fileUrl(ph.downloadUrl)!} alt="" className="h-full w-full object-cover" />
                 </a>

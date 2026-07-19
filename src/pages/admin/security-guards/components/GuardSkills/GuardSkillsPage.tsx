@@ -9,10 +9,11 @@ import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
 import { PageContainer, PageHeader, Section, EmptyState, SkeletonCards, Modal } from '@/components/kit';
 import { Button } from '@/components/ui/button';
+import type { GuardDetail } from '../../guardDetailTypes';
 
 export default function GuardSkillsPage() {
   const { id } = useParams();
-  const [guard, setGuard] = useState<any>(null);
+  const [guard, setGuard] = useState<GuardDetail | null>(null);
   const [loading, setLoading] = useState(false);
 
   const actionRef = useRef<HTMLDivElement | null>(null);
@@ -46,13 +47,13 @@ export default function GuardSkillsPage() {
     setLoading(true);
     securityGuardService
       .get(id)
-      .then((data: any) => {
+      .then((data: GuardDetail & { guard?: GuardDetail }) => {
         if (!mounted) return;
         const g = data.guard ?? data;
         const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
         setGuard({ ...g, fullName });
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         console.error('Error cargando vigilante:', err);
         toast.error(t('guards.skills.toasts.loadError', { defaultValue: 'Could not load guard' }));
       })
@@ -69,13 +70,13 @@ export default function GuardSkillsPage() {
     setLoading(true);
     securityGuardService
       .get(id)
-      .then((data: any) => {
+      .then((data: GuardDetail & { guard?: GuardDetail }) => {
         if (!mounted) return;
         const g = data.guard ?? data;
         const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
         setGuard({ ...g, fullName });
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         console.error('Error cargando vigilante:', err);
         toast.error(t('guards.skills.toasts.loadError', { defaultValue: 'Could not load guard' }));
       })
@@ -216,7 +217,7 @@ export default function GuardSkillsPage() {
                         items={mappings || []}
                         loading={false}
                         emptyMessage={t('guards.skills.empty.title', { defaultValue: 'No Result Found' }) as string}
-                        renderCard={(m: any) => (
+                        renderCard={(m: { id: string; name: string; description?: string }) => (
                           <div className="p-4 bg-card border rounded-xl">
                             <div className="text-sm font-semibold">{m.name}</div>
                             <div className="text-xs text-muted-foreground">{m.description}</div>

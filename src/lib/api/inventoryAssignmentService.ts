@@ -1,5 +1,5 @@
 import api from '@/lib/api';
-import { ItemCondition } from './inventoryItemService';
+import { ItemCondition, InventoryItem } from './inventoryItemService';
 
 const getTenantId = (): string => {
   const t = localStorage.getItem('tenantId');
@@ -10,12 +10,12 @@ const getTenantId = (): string => {
 export interface InventoryAssignment {
   id: string;
   inventoryItemId: string;
-  inventoryItem?: any;
+  inventoryItem?: InventoryItem;
   stationId?: string;
-  station?: any;
+  station?: { id: string; stationName?: string; name?: string };
   postSiteId?: string;
   assignedToUserId?: string;
-  assignedTo?: any;
+  assignedTo?: { id: string; fullName?: string; firstName?: string; lastName?: string; governmentId?: string };
   assignedAt: string;
   returnedAt?: string;
   conditionAtCheckout?: ItemCondition;
@@ -40,7 +40,7 @@ export interface InventoryAssignmentInput {
 
 const inventoryAssignmentService = {
   async list(params: {
-    filter?: Record<string, any>;
+    filter?: Record<string, unknown>;
     limit?: number;
     offset?: number;
   } = {}): Promise<{ rows: InventoryAssignment[]; count: number }> {

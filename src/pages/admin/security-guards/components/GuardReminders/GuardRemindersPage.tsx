@@ -11,12 +11,38 @@ import MultiCombobox from '@/components/app/multicombobox';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { PageContainer, PageHeader, Section, EmptyState } from '@/components/kit';
 import { Button } from '@/components/ui/button';
+import type { GuardDetail } from '../../guardDetailTypes';
 
+/** A selectable guard in the "Created For" multi-select. */
+interface GuardOption {
+  id: string;
+  fullName: string;
+  status: string;
+}
+
+/**
+ * A reminder row. NOTE: reminders are held only in local component state — there
+ * is no reminder API wired, so they are lost on reload (see FLAGGED in audit).
+ */
+interface Reminder {
+  id: string;
+  title: string;
+  description: string;
+  datetime: string;
+  createdFor: string[];
+  createdForNames: string[];
+  createdBy: string;
+  priority: string;
+  remind: string;
+  repeat: string;
+  status: string;
+  attachments: File[];
+}
 
 export default function GuardRemindersPage() {
   const { id } = useParams();
-  const [guard, setGuard] = useState<any>(null);
-  const [guardsList, setGuardsList] = useState<any[]>([]);
+  const [guard, setGuard] = useState<GuardDetail | null>(null);
+  const [guardsList, setGuardsList] = useState<GuardOption[]>([]);
   const guardsMapRef = useRef<Record<string,string>>({});
   const [loading, setLoading] = useState(false);
   const actionRef = useRef<HTMLDivElement>(null);
@@ -29,7 +55,7 @@ export default function GuardRemindersPage() {
   const remindOptionsRef = useRef<HTMLDivElement | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filterStatus, setFilterStatus] = useState('All');
-  const [remindersData, setRemindersData] = useState<any[]>([]);
+  const [remindersData, setRemindersData] = useState<Reminder[]>([]);
   const [selectedReminderIds, setSelectedReminderIds] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
 
@@ -51,13 +77,13 @@ export default function GuardRemindersPage() {
     setLoading(true);
     securityGuardService
       .get(id)
-      .then((data: any) => {
+      .then((data: GuardDetail & { guard?: GuardDetail }) => {
         if (!mounted) return;
         const g = data.guard ?? data;
         const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
         setGuard({ ...g, fullName });
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         console.error('Error cargando vigilante:', err);
         toast.error(t('guards.reminders.toasts.loadError', { defaultValue: 'Could not load guard' }));
       })
@@ -73,22 +99,22 @@ export default function GuardRemindersPage() {
     let mounted = true;
     securityGuardService
       .list()
-      .then((data: any) => {
+      .then((data: GuardDetail[] | { rows?: GuardDetail[] }) => {
         if (!mounted) return;
-        const items = Array.isArray(data) ? data : data?.rows ?? [];
-        const list = items.map((it: any) => {
-          const g = it.guard ?? it;
-          const id = g.id ?? g.guardId ?? it.id ?? '';
+        const items: GuardDetail[] = Array.isArray(data) ? data : data?.rows ?? [];
+        const list: GuardOption[] = items.map((it) => {
+          const g = (it.guard ?? it) as GuardDetail;
+          const gid = g.id ?? it.guardId ?? it.id ?? '';
           const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
           const status = (g.status ?? it.status ?? '').toString().toLowerCase();
-          return { id, fullName: fullName || '-', status };
-        }).filter((x: any) => x.id && x.status !== 'pending' && x.status !== 'pendiente');
+          return { id: gid, fullName: fullName || '-', status };
+        }).filter((x) => x.id && x.status !== 'pending' && x.status !== 'pendiente');
         setGuardsList(list);
         const map: Record<string,string> = {};
-        list.forEach((g: any) => map[g.id] = g.fullName);
+        list.forEach((g) => map[g.id] = g.fullName);
         guardsMapRef.current = map;
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         console.error('Error loading guards list:', err);
       });
     return () => { mounted = false; };
@@ -271,7 +297,7 @@ export default function GuardRemindersPage() {
                   items={remindersData || []}
                   loading={false}
                   emptyMessage={t('guards.reminders.empty.title', { defaultValue: 'No Result Found' }) as string}
-                  renderCard={(r: any) => (
+                  renderCard={(r: Reminder) => (
                     <div className="p-4 bg-card border rounded-xl">
                       <div className="text-sm font-semibold">{r.title}</div>
                       <div className="text-xs text-muted-foreground">{r.datetime} • {r.createdBy}</div>

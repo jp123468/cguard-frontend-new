@@ -11,9 +11,24 @@ import {
   UserRound, Phone, Mail, ChevronRight, Bell, Activity, FileCheck, ShieldCheck,
   LogIn, LogOut, UserCheck, UserX, CheckCircle2, Repeat,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
+
+// ── Shapes from the overview / operation / activity / contacts endpoints ──
+interface StationLite { id: string; guards?: Array<{ id: string }>; }
+// Unified-activity event (clientAccountActivity.ts).
+interface ActivityEvent {
+  id: string; type: string; at: string; title: string;
+  subtitle: string | null; actor: string | null; tone: string;
+}
+// A client contact row (contacts endpoint) — many optional label fields.
+interface ContactLite {
+  id?: string; name?: string; fullName?: string; description?: string; role?: string;
+  position?: string; mobile?: string; phone?: string; email?: string;
+}
 
 // Icon + accent per unified-activity event type.
-const ACT_META: Record<string, { icon: any; cls: string }> = {
+const ACT_META: Record<string, { icon: LucideIcon; cls: string }> = {
   clock_in:    { icon: LogIn,        cls: 'bg-emerald-500/10 text-emerald-600' },
   clock_out:   { icon: LogOut,       cls: 'bg-muted text-muted-foreground' },
   incident:    { icon: AlertTriangle,cls: 'bg-orange-500/10 text-orange-600' },
@@ -28,14 +43,15 @@ type Overview = {
   postSitesCount: number; stationsCount: number; projectsCount: number;
   assignedCount: number; onsiteCount: number; toursLast7Days: number;
   tasksLast7Days: number; incidentsLast7Days: number; hoursLoggedSeconds: number;
+  incidentsBySite?: Record<string, number>;
 };
-type Site = { id: string; name: string; address?: string; city?: string; active?: boolean; stations: any[] };
+type Site = { id: string; name: string; address?: string; city?: string; active?: boolean; stations: StationLite[] };
 
-const fmtTime = (d: any) => {
+const fmtTime = (d: string | number | Date) => {
   const dt = new Date(d);
   return Number.isNaN(dt.getTime()) ? '' : dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 };
-const fmtDateTime = (d: any) => {
+const fmtDateTime = (d: string | number | Date) => {
   const dt = new Date(d);
   return Number.isNaN(dt.getTime()) ? '' : dt.toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 };
@@ -51,8 +67,8 @@ export default function ClientOverview({ client }: { client: Client & { lat?: nu
     onsiteCount: 0, toursLast7Days: 0, tasksLast7Days: 0, incidentsLast7Days: 0, hoursLoggedSeconds: 0,
   });
   const [sites, setSites] = useState<Site[]>([]);
-  const [contacts, setContacts] = useState<any[]>([]);
-  const [activity, setActivity] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<ContactLite[]>([]);
+  const [activity, setActivity] = useState<ActivityEvent[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -89,10 +105,10 @@ export default function ClientOverview({ client }: { client: Client & { lat?: nu
   // from the overview endpoint's REAL 7-day aggregate keyed by postSiteId —
   // the old logic counted inside the last-8 feed matched by NAME, so a busy
   // sede systematically showed 0.
-  const incidentsBySite: Record<string, number> = (ov as any).incidentsBySite || {};
+  const incidentsBySite: Record<string, number> = ov.incidentsBySite || {};
   const siteRows = sites.map((s) => {
     const guards = new Set<string>();
-    (s.stations || []).forEach((st: any) => (st.guards || []).forEach((g: any) => guards.add(String(g.id))));
+    (s.stations || []).forEach((st) => (st.guards || []).forEach((g) => guards.add(String(g.id))));
     const incCount = incidentsBySite[String(s.id)] ?? 0;
     return {
       id: s.id, name: s.name, address: s.address || s.city || '',
@@ -102,7 +118,7 @@ export default function ClientOverview({ client }: { client: Client & { lat?: nu
   });
 
   // Real, derived alerts (no fabricated numbers).
-  const alerts: { icon: any; label: string; sub: string; tone: string }[] = [];
+  const alerts: { icon: ReactNode; label: string; sub: string; tone: string }[] = [];
   const uncovered = siteRows.filter((s) => s.estado === 'sin-operacion' && s.id !== '__loose__');
   if (uncovered.length) alerts.push({ icon: <Shield />, label: t('clients.overview.alerts.uncovered', 'Sedes sin cobertura'), sub: uncovered.map((s) => s.name).slice(0, 2).join(', ') + (uncovered.length > 2 ? '…' : ''), tone: 'crit' });
   if (ov.incidentsLast7Days > 0) alerts.push({ icon: <AlertTriangle />, label: t('clients.overview.alerts.openIncidents', 'Incidentes recientes'), sub: `${ov.incidentsLast7Days} ${t('clients.overview.alerts.last7', 'en los últimos 7 días')}`, tone: 'att' });
@@ -256,7 +272,7 @@ export default function ClientOverview({ client }: { client: Client & { lat?: nu
               <EmptyState icon={<Activity />} title={t('clients.overview.recent.none', 'Sin actividad reciente') as string} description={t('clients.overview.recent.noneHint', 'Aquí verás la actividad del personal en las sedes del cliente: turnos, incidentes, visitas, tareas y rondas.') as string} />
             ) : (
               <ul className="space-y-3">
-                {activity.map((n: any, i: number) => {
+                {activity.map((n, i: number) => {
                   const meta = ACT_META[n.type] || { icon: Activity, cls: 'bg-muted text-muted-foreground' };
                   const Icon = meta.icon;
                   return (

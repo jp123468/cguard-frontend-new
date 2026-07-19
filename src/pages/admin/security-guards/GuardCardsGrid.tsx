@@ -24,6 +24,9 @@ export type GuardCardAction = {
     destructive?: boolean;
 };
 
+/** A stored image descriptor (avatar/profile photo). */
+interface ImgFile { downloadUrl?: string; publicUrl?: string }
+
 /** Raw API securityGuard record carried on the normalized row for detail lookups. */
 interface GuardCardRaw {
     id?: string;
@@ -31,7 +34,7 @@ interface GuardCardRaw {
     guardId?: string;
     userId?: string;
     // Dynamic: may be a string URL, a single {downloadUrl,publicUrl} object, or an array of them.
-    profileImage?: any;
+    profileImage?: string | ImgFile | ImgFile[];
     photoUrl?: string;
     [key: string]: unknown;
 }
@@ -93,7 +96,12 @@ export default function GuardCardsGrid({
                 const userId = g.raw?.guard?.id || g.raw?.guardId || g.raw?.userId || "";
                 const station = stationByUserId[userId] || null;
                 const pi = g.raw?.profileImage;
-                const photo = Array.isArray(pi) ? (pi[0]?.downloadUrl || pi[0]?.publicUrl || null) : (pi?.downloadUrl || pi?.publicUrl || (typeof pi === "string" ? pi : null)) || g.raw?.photoUrl || null;
+                const photoFromPi = Array.isArray(pi)
+                    ? (pi[0]?.downloadUrl || pi[0]?.publicUrl || null)
+                    : typeof pi === "string"
+                        ? pi
+                        : (pi?.downloadUrl || pi?.publicUrl || null);
+                const photo = photoFromPi || g.raw?.photoUrl || null;
                 const acts = actions(g);
                 const tone = STATUS_TONE[g.status ?? ""] || "slate";
                 const realId = g.raw?.id || g.id;

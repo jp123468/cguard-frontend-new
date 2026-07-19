@@ -8,13 +8,18 @@ import { Button } from '@/components/ui/button';
 import type { Client } from '@/types/client';
 
 type Props = { client: Client };
+// Row from GET /client-account/:id/access-users (clientAccountAccessUsers.ts).
+interface AccessUser {
+  id: string; pivotId: string | null; userId: string | null; isTitular: boolean;
+  name: string; email: string | null; role: string; status?: string;
+}
 const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-all placeholder:text-muted-foreground hover:border-ring/40 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]';
 
 export default function ClientUserAccess({ client }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   useScrollToTopOnMount(containerRef);
 
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<AccessUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -43,7 +48,7 @@ export default function ClientUserAccess({ client }: Props) {
     finally { setSending(false); }
   };
 
-  const revoke = async (u: any) => {
+  const revoke = async (u: AccessUser) => {
     if (u.isTitular || !u.pivotId) { toast.error('El acceso del titular se gestiona editando el cliente.'); return; }
     if (!window.confirm(`¿Revocar el acceso de ${u.name}?`)) return;
     try { await clientService.revokeClientAccess(client.id, u.pivotId); toast.success('Acceso revocado'); await load(); }

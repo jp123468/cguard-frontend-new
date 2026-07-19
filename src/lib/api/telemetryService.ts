@@ -7,7 +7,7 @@ const getTenantId = (): string => {
 };
 
 const telemetryService = {
-  async log(entry: { level?: string; message: string; details?: any }) {
+  async log(entry: { level?: string; message: string; details?: unknown }) {
     const tenantId = getTenantId();
     try {
       const { data } = await api.post(`/tenant/${tenantId}/client-log`, { data: entry });

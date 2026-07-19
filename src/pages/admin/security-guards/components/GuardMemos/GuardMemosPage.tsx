@@ -8,6 +8,7 @@ import securityGuardService from '@/lib/api/securityGuardService';
 import api from '@/lib/api';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import type { GuardDetail } from '../../guardDetailTypes';
 
 const GOLD = '#C8860A';
 
@@ -22,7 +23,7 @@ type Memo = {
 };
 
 function authorName(m: Memo): string {
-  const cb: any = m.createdBy;
+  const cb = m.createdBy;
   if (!cb) return '—';
   if (typeof cb === 'string') return cb;
   return `${cb.firstName || ''} ${cb.lastName || ''}`.trim() || cb.email || '—';
@@ -38,7 +39,7 @@ function fmt(value?: string): string {
 export default function GuardMemosPage() {
   const { id } = useParams();
   const { t } = useTranslation();
-  const [guard, setGuard] = useState<any>(null);
+  const [guard, setGuard] = useState<GuardDetail | null>(null);
   const [memos, setMemos] = useState<Memo[]>([]);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
@@ -54,9 +55,9 @@ export default function GuardMemosPage() {
     let mounted = true;
     securityGuardService
       .get(id)
-      .then((data: any) => {
+      .then((data: (GuardDetail & { firstName?: string; lastName?: string }) | { guard: GuardDetail & { firstName?: string; lastName?: string } }) => {
         if (!mounted) return;
-        const g = data.guard ?? data;
+        const g = ('guard' in data && data.guard ? data.guard : data) as GuardDetail & { firstName?: string; lastName?: string };
         const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
         setGuard({ ...g, fullName });
       })
@@ -68,7 +69,7 @@ export default function GuardMemosPage() {
     if (!id) return;
     setLoading(true);
     try {
-      const { data: resp } = await api.get<any>(
+      const { data: resp } = await api.get<{ rows?: Memo[] } | Memo[]>(
         `/tenant/${tenantId}/memos?filter[guardName]=${id}&orderBy=dateTime_DESC&limit=200`,
       );
       const rows: Memo[] = Array.isArray(resp) ? resp : (resp?.rows ?? []);

@@ -111,7 +111,7 @@ export default function OpenShifts() {
   const fetchShifts = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, any> = { "filter[openOnly]": "true", limit: 500 };
+      const params: Record<string, string | number | string[]> = { "filter[openOnly]": "true", limit: 500 };
 
       if (appliedFilters.startDate) {
         const from = appliedFilters.startDate + (appliedFilters.startTime ? `T${appliedFilters.startTime}` : "T00:00:00");
@@ -119,7 +119,7 @@ export default function OpenShifts() {
       }
       if (appliedFilters.endDate) {
         const to = appliedFilters.endDate + (appliedFilters.endTime ? `T${appliedFilters.endTime}` : "T23:59:59");
-        const existing = params["filter[startTimeRange]"] ?? [];
+        const existing = (params["filter[startTimeRange]"] as string[] | undefined) ?? [];
         params["filter[startTimeRange]"] = [...existing, new Date(to).toISOString()];
       }
 

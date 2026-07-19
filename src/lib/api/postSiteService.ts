@@ -32,9 +32,61 @@ export interface PostSite {
   numberOfGuardsInStation?: string | number | null;
 }
 
+/**
+ * Raw row shape returned by the backend `business-info` endpoints, before it is
+ * mapped to the frontend `PostSite` shape. All fields optional because the
+ * backend omits absent ones and the frontend reads several name variants.
+ */
+export interface RawBusinessInfoRow {
+  id?: string;
+  companyName?: string;
+  name?: string;
+  clientAccountId?: string;
+  clientId?: string;
+  client?: { id: string; name: string };
+  clientAccount?: { id: string; name: string };
+  clientAccountName?: string;
+  address?: string;
+  secondAddress?: string;
+  addressLine2?: string;
+  postalCode?: string;
+  zipCode?: string;
+  city?: string;
+  country?: string;
+  description?: string;
+  contactPhone?: string;
+  phone?: string;
+  contactEmail?: string;
+  email?: string;
+  fax?: string;
+  categoryIds?: string[] | null;
+  active?: boolean;
+  status?: string;
+  latitud?: string | number;
+  latitude?: string | number;
+  longitud?: string | number;
+  longitude?: string | number;
+  stationSchedule?: string | null;
+  startingTimeInDay?: string | null;
+  finishTimeInDay?: string | null;
+  chargeRate?: number | null;
+  payRate?: number | null;
+  assignedGuards?: unknown[];
+  guardsCount?: number;
+  tenantId?: string;
+  tenant?: { id?: string; name?: string; tenantId?: string } | string;
+  businessName?: string;
+  serviceType?: string;
+  companyAddress?: string;
+  location?: { lat?: number | string; lng?: number | string };
+}
+
 export interface PostSiteFilters {
   name?: string;
   clientId?: string;
+  // filter stations by their owning post-site (station list reads filter.postSite)
+  postSite?: string;
+  postSiteId?: string;
   // support both category and categoryId names used across the UI
   categoryId?: string;
   category?: string;
@@ -157,10 +209,10 @@ const postSiteService = {
         // eslint-disable-next-line no-console
         console.debug('[postSiteService] list params ->', params.toString());
       }
-      const { data } = await api.get(`/tenant/${tenantId}/business-info?${params.toString()}`, { toast: { silentError: true } });
+      const { data } = await api.get<{ rows?: RawBusinessInfoRow[]; count: number }>(`/tenant/${tenantId}/business-info?${params.toString()}`, { toast: { silentError: true } });
 
       // Map backend `business-info` shape to frontend `PostSite` shape
-      const mappedRows: PostSite[] = (data.rows || []).map((r: any) => ({
+      const mappedRows = (data.rows || []).map((r: RawBusinessInfoRow) => ({
         id: r.id,
         name: r.companyName ?? r.name ?? "",
         companyName: r.companyName,
@@ -182,7 +234,7 @@ const postSiteService = {
         categoryId: Array.isArray(r.categoryIds) && r.categoryIds.length > 0 ? r.categoryIds[0] : undefined,
         category: undefined,
         categoryIds: Array.isArray(r.categoryIds) ? r.categoryIds : [],
-        status: typeof r.active === 'boolean' ? (r.active ? 'active' : 'inactive') : (r.status ?? 'inactive'),
+        status: typeof r.active === 'boolean' ? (r.active ? 'active' : 'inactive') : ((r.status as 'active' | 'inactive') ?? 'inactive'),
         // station-specific fields (backend uses business-info for post-sites)
         latitud: r.latitud ?? r.latitude ?? undefined,
         longitud: r.longitud ?? r.longitude ?? undefined,
@@ -192,8 +244,7 @@ const postSiteService = {
         assignedGuards: Array.isArray(r.assignedGuards) ? r.assignedGuards : undefined,
         guardsCount: typeof r.guardsCount === 'number' ? r.guardsCount : (Array.isArray(r.assignedGuards) ? r.assignedGuards.length : undefined),
       }));
-
-      return { rows: mappedRows, count: data.count };
+      return { rows: mappedRows as unknown as PostSite[], count: data.count };
     } catch (error) {
       console.error('Error fetching post sites:', error);
       throw error;
@@ -203,10 +254,10 @@ const postSiteService = {
   /**
    * Get a single post site by ID
    */
-  async get(id: string): Promise<any> {
+  async get(id: string): Promise<RawBusinessInfoRow> {
     try {
       const tenantId = getTenantId();
-      const { data } = await api.get(`/tenant/${tenantId}/business-info/${id}`, {
+      const { data } = await api.get<RawBusinessInfoRow>(`/tenant/${tenantId}/business-info/${id}`, {
         // Prevent global interceptor from showing duplicate toasts for not-found errors.
         toast: { silentError: true },
       });
@@ -222,31 +273,34 @@ const postSiteService = {
   async create(payload: PostSiteInput): Promise<PostSite> {
     try {
       const tenantId = getTenantId();
+      // The form schema uses `latitud`/`longitud`; older callers may still pass
+      // `latitude`/`longitude`, so widen for those legacy fallbacks.
+      const p = payload as PostSiteInput & { latitude?: string; longitude?: string };
       const body = {
-        companyName: (payload as any).name ?? undefined,
-        clientId: (payload as any).clientId ?? undefined,
-        address: (payload as any).address ?? undefined,
-        secondAddress: (payload as any).addressLine2 ?? undefined,
-        postalCode: (payload as any).postalCode ?? undefined,
-        city: (payload as any).city ?? undefined,
-        country: (payload as any).country ?? undefined,
-        description: (payload as any).description ?? undefined,
-        email: (payload as any).email ?? undefined,
-        contactPhone: (payload as any).phone ?? undefined,
-        fax: (payload as any).fax ?? undefined,
-        categoryIds: (payload as any).categoryId ? [(payload as any).categoryId] : [],
-        contactEmail: (payload as any).email ?? undefined,
+        companyName: p.name ?? undefined,
+        clientId: p.clientId ?? undefined,
+        address: p.address ?? undefined,
+        secondAddress: p.addressLine2 ?? undefined,
+        postalCode: p.postalCode ?? undefined,
+        city: p.city ?? undefined,
+        country: p.country ?? undefined,
+        description: p.description ?? undefined,
+        email: p.email ?? undefined,
+        contactPhone: p.phone ?? undefined,
+        fax: p.fax ?? undefined,
+        categoryIds: p.categoryId ? [p.categoryId] : [],
+        contactEmail: p.email ?? undefined,
         // Ensure new records default to active = true when status not provided
-        active: typeof (payload as any).status === 'string'
-          ? (payload as any).status === 'active'
+        active: typeof p.status === 'string'
+          ? p.status === 'active'
           : true,
-        latitud: (payload as any).latitud ?? (payload as any).latitude ?? undefined,
-        longitud: (payload as any).longitud ?? (payload as any).longitude ?? undefined,
+        latitud: p.latitud ?? p.latitude ?? undefined,
+        longitud: p.longitud ?? p.longitude ?? undefined,
         // allow creating with schedule and times if provided
-        stationSchedule: (payload as any).stationSchedule ?? undefined,
-        startingTimeInDay: (payload as any).startingTimeInDay ?? undefined,
-        finishTimeInDay: (payload as any).finishTimeInDay ?? undefined,
-      } as any;
+        stationSchedule: p.stationSchedule ?? undefined,
+        startingTimeInDay: p.startingTimeInDay ?? undefined,
+        finishTimeInDay: p.finishTimeInDay ?? undefined,
+      };
 
       // Debug log to inspect payload sent to backend (helps diagnose 400s for missing fields)
       if (typeof window !== 'undefined') {
@@ -269,37 +323,40 @@ const postSiteService = {
     try {
       const tenantId = getTenantId();
       // Fetch existing record so we can preserve backend-expected fields
-      const existingRes = await api.get(`/tenant/${tenantId}/business-info/${id}`);
-      const existing = existingRes.data || {};
+      const existingRes = await api.get<RawBusinessInfoRow>(`/tenant/${tenantId}/business-info/${id}`);
+      const existing: RawBusinessInfoRow = existingRes.data || {};
 
+      // `chargeRate`/`payRate` and `latitude`/`longitude` are legacy/extra
+      // fields not on the form schema; widen the access type for them.
+      const p = payload as Partial<PostSiteInput> & { latitude?: string; longitude?: string; chargeRate?: number; payRate?: number };
       const body = {
         // preserve or override
-        companyName: (payload as any).name ?? existing.companyName ?? existing.name,
+        companyName: p.name ?? existing.companyName ?? existing.name,
         // backend expects clientAccountId in some endpoints
-        clientAccountId: (payload as any).clientId ?? existing.clientAccountId ?? existing.clientId,
-        address: (payload as any).address ?? existing.address,
-        secondAddress: (payload as any).addressLine2 ?? existing.secondAddress ?? existing.addressLine2,
-        postalCode: (payload as any).postalCode ?? existing.postalCode ?? existing.zipCode,
-        city: (payload as any).city ?? existing.city,
-        country: (payload as any).country ?? existing.country,
-        description: (payload as any).description ?? existing.description,
-        contactPhone: (payload as any).phone ?? existing.contactPhone ?? existing.phone,
-        fax: (payload as any).fax ?? existing.fax,
-        categoryIds: (payload as any).categoryId ? [(payload as any).categoryId] : (existing.categoryIds || []),
-        contactEmail: (payload as any).email ?? existing.contactEmail ?? existing.email,
+        clientAccountId: p.clientId ?? existing.clientAccountId ?? existing.clientId,
+        address: p.address ?? existing.address,
+        secondAddress: p.addressLine2 ?? existing.secondAddress ?? existing.addressLine2,
+        postalCode: p.postalCode ?? existing.postalCode ?? existing.zipCode,
+        city: p.city ?? existing.city,
+        country: p.country ?? existing.country,
+        description: p.description ?? existing.description,
+        contactPhone: p.phone ?? existing.contactPhone ?? existing.phone,
+        fax: p.fax ?? existing.fax,
+        categoryIds: p.categoryId ? [p.categoryId] : (existing.categoryIds || []),
+        contactEmail: p.email ?? existing.contactEmail ?? existing.email,
         // For updates, only change active when status provided
-        active: typeof (payload as any).status === 'string'
-          ? (payload as any).status === 'active'
+        active: typeof p.status === 'string'
+          ? p.status === 'active'
           : existing.active,
-        latitud: (payload as any).latitud ?? (payload as any).latitude ?? existing.latitud ?? existing.latitude,
-        longitud: (payload as any).longitud ?? (payload as any).longitude ?? existing.longitud ?? existing.longitude,
+        latitud: p.latitud ?? p.latitude ?? existing.latitud ?? existing.latitude,
+        longitud: p.longitud ?? p.longitude ?? existing.longitud ?? existing.longitude,
         // preserve or update schedule/times if provided
-        stationSchedule: (payload as any).stationSchedule ?? existing.stationSchedule,
-        startingTimeInDay: (payload as any).startingTimeInDay ?? existing.startingTimeInDay,
-        finishTimeInDay: (payload as any).finishTimeInDay ?? existing.finishTimeInDay,
-        chargeRate: (payload as any).chargeRate !== undefined ? (payload as any).chargeRate : (existing.chargeRate ?? undefined),
-        payRate: (payload as any).payRate !== undefined ? (payload as any).payRate : (existing.payRate ?? undefined),
-      } as any;
+        stationSchedule: p.stationSchedule ?? existing.stationSchedule,
+        startingTimeInDay: p.startingTimeInDay ?? existing.startingTimeInDay,
+        finishTimeInDay: p.finishTimeInDay ?? existing.finishTimeInDay,
+        chargeRate: p.chargeRate !== undefined ? p.chargeRate : (existing.chargeRate ?? undefined),
+        payRate: p.payRate !== undefined ? p.payRate : (existing.payRate ?? undefined),
+      };
 
       const { data } = await api.patch(`/tenant/${tenantId}/business-info/${id}`, body);
       return data;
@@ -454,13 +511,13 @@ const postSiteService = {
     return data;
   },
 
-  async createPostSiteNote(postSiteId: string, payload: any) {
+  async createPostSiteNote(postSiteId: string, payload: Record<string, unknown>) {
     const tenantId = getTenantId();
     const { data } = await api.post<any>(`/tenant/${tenantId}/post-site/${postSiteId}/notes`, payload);
     return data;
   },
 
-  async updatePostSiteNote(postSiteId: string, noteId: string, payload: any) {
+  async updatePostSiteNote(postSiteId: string, noteId: string, payload: Record<string, unknown>) {
     const tenantId = getTenantId();
     const { data } = await api.put<any>(`/tenant/${tenantId}/post-site/${postSiteId}/notes/${noteId}`, payload);
     return data;

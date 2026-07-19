@@ -7,6 +7,20 @@ import type { Station } from '@/types';
 
 type Props = { station: Station; stationId: string; postSiteId: string };
 
+// A visitor-log row surfaced as a parking record. Fields are read via several
+// backend aliases (camel/snake case), so this stays permissive.
+interface ParkGuardRef { firstName?: string; first_name?: string; lastName?: string; last_name?: string; name?: string; fullName?: string }
+interface ParkingRow {
+  id?: string;
+  firstName?: string; first_name?: string;
+  lastName?: string; last_name?: string;
+  name?: string; visitorName?: string;
+  placeType?: string; place_type?: string;
+  visitDate?: string | null; entryTime?: string | null; createdAt?: string | null;
+  exitTime?: string | null; exit_time?: string | null;
+  guard?: ParkGuardRef | null; securityGuard?: ParkGuardRef | null; guardName?: string;
+}
+
 const PARKING_PLACE_TYPES = ['Parking', 'Parqueadero', 'Estacionamiento', 'Vehículo', 'Vehiculo'];
 
 function formatDate(val: string | null | undefined) {
@@ -17,7 +31,7 @@ function formatDate(val: string | null | undefined) {
 
 export default function StationParking({ stationId }: Props) {
   const { t } = useTranslation();
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<ParkingRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +44,7 @@ export default function StationParking({ stationId }: Props) {
       setError(null);
       try {
         // Try each parking placeType until one returns results, fallback to all stationId logs
-        let found: any[] = [];
+        let found: ParkingRow[] = [];
 
         for (const placeType of PARKING_PLACE_TYPES) {
           try {
@@ -114,7 +128,7 @@ export default function StationParking({ stationId }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {rows.map((r: any, i: number) => {
+              {rows.map((r: ParkingRow, i: number) => {
                 const firstName = r.firstName || r.first_name || '';
                 const lastName = r.lastName || r.last_name || '';
                 const visitorName = [firstName, lastName].filter(Boolean).join(' ') || r.name || r.visitorName || '-';

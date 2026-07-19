@@ -5,10 +5,43 @@ import { ApiService } from '@/services/api/apiService';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { Section, StatCard, EmptyState } from '@/components/kit';
 import { MapPin, Gauge, CalendarDays, Building2, Clock } from 'lucide-react';
+import type {
+  GuardDetail,
+  GuardAssignmentRow,
+  GuardPerformance,
+  PerformanceStats,
+  ScheduleSnapshot,
+} from '../../guardDetailTypes';
 
 type Props = {
-  guard: any;
+  guard: GuardDetail & { firstName?: string; lastName?: string };
 };
+
+/** A mapped memo row shown in the recent-activity feed. */
+interface SummaryActivity {
+  initial: string;
+  message: string;
+  timestamp: string;
+  badge: string | null;
+  subject: string;
+}
+
+/** A memo row as returned by the memos endpoint. */
+interface MemoRow {
+  content?: string;
+  subject?: string;
+  dateTime?: string;
+  createdAt?: string;
+  wasAccepted?: boolean;
+}
+
+/** A distinct station derived from the assignment rows. */
+interface StationSummary {
+  stationName: string | null;
+  postSiteName: string | null;
+  clientName: string | null;
+  window: string | null;
+}
 
 // Mirrors src/pages/admin/clientes/components/ClientCoverage/ScheduleCard.tsx
 const CELL: Record<string, { label: string; cls: string }> = {
@@ -36,7 +69,7 @@ const ymd = (d: Date) =>
 
 // Shift startTime/endTime may arrive as an "HH:MM[:SS]" clock string or a full
 // timestamp — show a clean "HH:MM - HH:MM" window when we can, otherwise skip it.
-const clock = (v: any): string | null => {
+const clock = (v: string | null | undefined): string | null => {
   if (!v) return null;
   const s = String(v);
   const m = s.match(/(\d{2}:\d{2})/);
@@ -44,7 +77,7 @@ const clock = (v: any): string | null => {
   const d = new Date(s);
   return isNaN(d.getTime()) ? null : dateFnsFormat(d, 'HH:mm');
 };
-const windowLabel = (a: any): string | null => {
+const windowLabel = (a: GuardAssignmentRow): string | null => {
   const from = clock(a.startTime);
   const to = clock(a.endTime);
   if (from && to) return `${from} - ${to}`;
@@ -54,16 +87,16 @@ const windowLabel = (a: any): string | null => {
 export default function GuardSummary({ guard }: Props) {
   const { t } = useTranslation();
 
-  const [activities, setActivities] = useState<any[]>([]);
+  const [activities, setActivities] = useState<SummaryActivity[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
 
-  const [assignments, setAssignments] = useState<any[] | null>(null);
+  const [assignments, setAssignments] = useState<GuardAssignmentRow[] | null>(null);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
 
-  const [perf, setPerf] = useState<any | null>(null);
+  const [perf, setPerf] = useState<GuardPerformance | null>(null);
   const [perfLoading, setPerfLoading] = useState(false);
 
-  const [schedule, setSchedule] = useState<any | null>(null);
+  const [schedule, setSchedule] = useState<ScheduleSnapshot | null>(null);
   const [scheduleLoading, setScheduleLoading] = useState(false);
 
   // ── Recent activity (memos feed) — REAL, kept as-is ──────────────────────
@@ -75,14 +108,14 @@ export default function GuardSummary({ guard }: Props) {
     ApiService.get(
       `/tenant/${tenantId}/memos?filter[guardName]=${guard.id}&limit=10&orderBy=dateTime_DESC`,
     )
-      .then((res: any) => {
+      .then((res: { rows?: MemoRow[] } | MemoRow[]) => {
         if (!mounted) return;
-        const rows: any[] = Array.isArray(res) ? res : res.rows ?? [];
+        const rows: MemoRow[] = Array.isArray(res) ? res : res.rows ?? [];
         const fullName =
           guard.fullName ??
           `${guard.firstName ?? ''} ${guard.lastName ?? ''}`.trim();
         const initial = fullName ? fullName.charAt(0).toUpperCase() : '?';
-        const mapped = rows.map((memo: any) => ({
+        const mapped: SummaryActivity[] = rows.map((memo: MemoRow) => ({
           initial,
           message: memo.content || memo.subject || '',
           timestamp: memo.dateTime
@@ -174,7 +207,7 @@ export default function GuardSummary({ guard }: Props) {
   // ── Derive distinct stations from the (shift-level) assignment rows ───────
   const stations = (() => {
     const rows = assignments ?? [];
-    const seen = new Map<string, any>();
+    const seen = new Map<string, StationSummary>();
     for (const a of rows) {
       const key = `${a.businessInfoId ?? ''}|${a.stationName ?? ''}|${a.postSiteName ?? ''}`;
       if (!seen.has(key)) {
@@ -189,9 +222,9 @@ export default function GuardSummary({ guard }: Props) {
     return Array.from(seen.values());
   })();
 
-  const days: any[] = schedule?.days || [];
-  const scheduleRows: any[] = schedule?.rows || [];
-  const stats = perf?.stats || {};
+  const days = schedule?.days || [];
+  const scheduleRows = schedule?.rows || [];
+  const stats: PerformanceStats = perf?.stats || {};
 
   return (
     <div className="space-y-6">
@@ -324,7 +357,7 @@ export default function GuardSummary({ guard }: Props) {
                           {r.window ? ` · ${r.window}` : ''}
                         </div>
                       </td>
-                      {(r.cells || []).map((c: any) => {
+                      {(r.cells || []).map((c) => {
                         const m = CELL[c.status] || CELL.none;
                         return (
                           <td key={c.date} className="border-b p-0.5 text-center">
@@ -354,7 +387,7 @@ export default function GuardSummary({ guard }: Props) {
           {activitiesLoading ? (
             <p className="text-sm text-muted-foreground">{t('common.loading') || 'Cargando...'}</p>
           ) : activities.length > 0 ? (
-            activities.map((activity: any, idx: number) => (
+            activities.map((activity: SummaryActivity, idx: number) => (
               <div key={idx} className="flex items-start gap-3 border-b pb-3 last:border-b-0">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-medium">
                   {activity.initial}

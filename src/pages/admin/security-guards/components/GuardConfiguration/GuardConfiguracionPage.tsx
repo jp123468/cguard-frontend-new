@@ -17,12 +17,72 @@ import {
 } from '@/components/ui/alert-dialog';
 import { PageContainer, PageHeader, Section, SkeletonCards, EmptyState } from '@/components/kit';
 import { Button } from '@/components/ui/button';
+import type { GuardDetail } from '../../guardDetailTypes';
+
+// Per-guard operational settings: a flat map of feature toggles/intervals
+// persisted on the guard record under `settings`.
+interface GuardSettings {
+  allowCallOffShiftBefore?: boolean;
+  allowClockInBeforeSchedule?: boolean;
+  allowCreateTaskMobile?: boolean;
+  allowEmailReport?: boolean;
+  allowExchangeShiftWithoutApproval?: boolean;
+  allowGuardSetAvailability?: boolean;
+  allowViewOtherReports?: boolean;
+  askReasonAfter?: string;
+  askReasonRemainingClockedIn?: boolean;
+  autoAssignConfirmOpenShiftFirstWhoAccepts?: boolean;
+  autoCheckInWhenClockedIn?: boolean;
+  autoCheckOutWhenClockedOut?: boolean;
+  autoClockInBasedOnSchedule?: boolean;
+  autoClockOutAfter?: string | number;
+  autoClockOutBasedOnSchedule?: boolean;
+  autoConfirmPublishedShifts?: boolean;
+  callOffBefore?: string;
+  disableChats?: boolean;
+  disableManualClockIn?: boolean;
+  enableAutoApproveAvailabilityHours?: boolean;
+  enableAutoApproveReports?: boolean;
+  enableAutoApproveTimeLogs?: boolean;
+  enableCheckOutBeforeClockOut?: boolean;
+  enableClockInInsideGeofence?: boolean;
+  enableClockInOutNotes?: boolean;
+  enableClockOutInsideGeofence?: boolean;
+  enableFallAlert?: boolean;
+  enableForceCloseCheckOut?: boolean;
+  enableGpsTracking?: boolean;
+  enableIdleAlert?: boolean;
+  enableUploadFromGallery?: boolean;
+  enableWeeklyLimitFlag?: boolean;
+  enforceFacialRecognition?: boolean;
+  forceAcknowledgeDocs?: boolean;
+  idleAlertAfter?: string;
+  licenseExpiryDays?: string | number;
+  locationAccuracy?: string;
+  locationUpdateInterval?: string;
+  sendLicenseExpiryNotification?: boolean;
+  sendShiftDelayNotification?: boolean;
+  sendShiftStartNotification?: boolean;
+  sendTaskDelayNotification?: boolean;
+  sendTaskStartNotification?: boolean;
+  sendVehiclePatrolDelayNotification?: boolean;
+  sendVehiclePatrolStartNotification?: boolean;
+  shiftDelayTime?: string;
+  shiftStartBefore?: string;
+  taskDelayAfter?: string;
+  taskStartBefore?: string;
+  vehiclePatrolDelayTime?: string;
+  vehiclePatrolStartBefore?: string;
+  weeklyLimit?: string | number;
+  [k: string]: string | number | boolean | undefined;
+}
+type ConfigGuard = GuardDetail & { settings?: GuardSettings };
 
 export default function GuardConfiguracionPage() {
   const { id } = useParams();
-  const [guard, setGuard] = useState<any>(null);
+  const [guard, setGuard] = useState<ConfigGuard | null>(null);
   const [loading, setLoading] = useState(false);
-  const [settings, setSettings] = useState<any>({});
+  const [settings, setSettings] = useState<GuardSettings>({});
   const [activeTab, setActiveTab] = useState<'general' | 'time' | 'scheduler' | 'notifications'>('general');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -33,14 +93,14 @@ export default function GuardConfiguracionPage() {
     setLoading(true);
     securityGuardService
       .get(id)
-      .then((data: any) => {
+      .then((data: ConfigGuard & { guard?: ConfigGuard }) => {
         if (!mounted) return;
         const g = data.guard ?? data;
         const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
         setGuard({ ...g, fullName });
         setSettings(g.settings ?? {});
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         console.error('Error cargando vigilante:', err);
         toast.error('No se pudo cargar vigilante');
       })

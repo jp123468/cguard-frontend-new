@@ -58,10 +58,11 @@ function hueFor(name: string): number {
 function nameOf(u: AdminUserRow): string {
     return u.fullName || [u.firstName, u.lastName].filter(Boolean).join(" ") || u.name || u.email || "—";
 }
-function photoOf(u: any): string | null {
+function photoOf(u: AdminUserRow): string | null {
     const a = u.avatars ?? u.avatar ?? u.profileImage;
     const f = Array.isArray(a) ? a[0] : a;
-    return (f?.downloadUrl || f?.publicUrl || (typeof f === "string" ? f : null)) || u.photoUrl || null;
+    const fromFile = typeof f === "string" ? f : (f?.downloadUrl || f?.publicUrl || null);
+    return fromFile || u.photoUrl || null;
 }
 function rolesOf(u: AdminUserRow): string {
     if (u._rolesDisplay) return u._rolesDisplay;

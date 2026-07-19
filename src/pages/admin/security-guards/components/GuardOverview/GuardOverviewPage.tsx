@@ -6,11 +6,18 @@ import { useEffect, useState } from 'react';
 import securityGuardService from '@/lib/api/securityGuardService';
 import guardRatingService from '@/lib/api/guardRatingService';
 import GuardRatingLevel from '@/pages/admin/security-guards/GuardRatingLevel';
-import { fileUrlFromFile } from '@/lib/fileUrl';
+import { fileUrlFromFile, type FileLike } from '@/lib/fileUrl';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import type { GuardDetail } from '../../guardDetailTypes';
 
 const GOLD = '#C8860A';
+
+// The loaded guard record, flattened with the derived photo URL. The linked app
+// `user` (under `guard`) may carry live duty/account fields.
+type OverviewGuard = GuardDetail & {
+  guard?: GuardDetail['guard'] & { isOnDuty?: boolean; status?: string; hasPassword?: boolean };
+};
 
 // ── Small presentational helpers ────────────────────────────────────────────
 const StatTile = ({
@@ -47,7 +54,7 @@ export default function GuardResumenPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [guard, setGuard] = useState<any>(null);
+  const [guard, setGuard] = useState<OverviewGuard | null>(null);
   const [loading, setLoading] = useState(false);
   const [rating, setRating] = useState<{ average: number; count: number } | null>(null);
   useEffect(() => {
@@ -63,15 +70,15 @@ export default function GuardResumenPage() {
     setLoading(true);
     securityGuardService
       .get(id)
-      .then((data: any) => {
+      .then((data: OverviewGuard & { profileImage?: unknown; photoUrl?: string | null }) => {
         if (!mounted) return;
-        const g = data.guard ?? data;
+        const g = (data.guard ?? data) as OverviewGuard & { profileImage?: unknown; photoUrl?: string | null };
         const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
         // The photo comes back on the TOP-LEVEL response as `profileImage` (a signed
         // file array), NOT on the nested `guard` user — flatten it to `photoUrl` so the
         // avatar here AND the <GuardSummary guard={guard}> child both render it.
-        const pi = data.profileImage ?? g.profileImage;
-        const photoFile = Array.isArray(pi) ? pi[0] : pi;
+        const pi = (data.profileImage ?? g.profileImage) as FileLike | FileLike[];
+        const photoFile = (Array.isArray(pi) ? pi[0] : pi) as FileLike;
         const photoUrl = data.photoUrl ?? g.photoUrl ?? fileUrlFromFile(photoFile) ?? null;
         setGuard({ ...g, fullName, photoUrl });
       })

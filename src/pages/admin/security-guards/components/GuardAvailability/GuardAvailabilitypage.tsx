@@ -7,11 +7,12 @@ import AppLayout from '@/layouts/app-layout';
 import TimeInput from '@/components/TimeInput';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import securityGuardService from '@/lib/api/securityGuardService';
+import type { GuardDetail } from '../../guardDetailTypes';
 
 type Av = { day: string; available: boolean; start: string; end: string };
 
 type Props = {
-  guard?: any;
+  guard?: GuardDetail;
 };
 
 // TimeInput extracted to shared component: src/components/TimeInput.tsx
@@ -30,7 +31,7 @@ type Props = {
         ];
         if (!guard) return base;
     return base.map((b) => {
-      const gDay = (guard.availability || []).find((x: any) => x.day === b.day);
+      const gDay = (guard.availability || []).find((x) => x.day === b.day);
         if (!gDay) return b;
         return {day: b.day, available: !!gDay.available, start: gDay.start ?? b.start, end: gDay.end ?? b.end };
     });
@@ -52,7 +53,7 @@ type Props = {
       return;
     }
     setAvailability(base.map((b) => {
-      const gDay = (guard.availability || []).find((x: any) => x.day === b.day);
+      const gDay = (guard.availability || []).find((x) => x.day === b.day);
       if (!gDay) return b;
       return {day: b.day, available: !!gDay.available, start: gDay.start ?? b.start, end: gDay.end ?? b.end };
     }));
@@ -128,7 +129,7 @@ type Props = {
                   items={availability || []}
                   loading={false}
                   emptyMessage={t('guards.availability.empty', { defaultValue: 'No availability' }) as string}
-                  renderCard={(a: any) => (
+                  renderCard={(a: Av) => (
                     <div className="p-4 bg-card border rounded-lg">
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-semibold">{t(`guards.availability.days.${a.day}`, { defaultValue: a.day })}</div>

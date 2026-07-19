@@ -62,6 +62,17 @@ const DEFAULTS: MobileAppSettings = {
   modules: { training: true, performance: true, visitors: true, timeOff: true, backup: true, map: true },
 };
 
+// Partial view of the tenant settings blob (GET/PUT /settings). Only the fields
+// this page reads or round-trips are named; the backend recomputes logoUrl from
+// logos[0], so logos/backgroundImages must be re-sent untouched on save.
+type SettingsRow = {
+  theme?: string;
+  logoUrl?: string;
+  logos?: Array<{ downloadUrl?: string }>;
+  backgroundImages?: unknown[];
+  mobileAppSettings?: Partial<MobileAppSettings>;
+};
+
 const tenantId = () => localStorage.getItem('tenantId') || '';
 
 export default function MobileHubPage() {
@@ -72,7 +83,7 @@ export default function MobileHubPage() {
   const [saving, setSaving] = useState(false);
   const [cfg, setCfg] = useState<MobileAppSettings>(DEFAULTS);
   /** Full settings row from GET — re-sent on save so logoUrl/logos survive. */
-  const [row, setRow] = useState<any>(null);
+  const [row, setRow] = useState<SettingsRow | null>(null);
 
   useEffect(() => {
     (async () => {

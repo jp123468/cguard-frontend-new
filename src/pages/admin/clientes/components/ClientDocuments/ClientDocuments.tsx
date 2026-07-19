@@ -10,10 +10,46 @@ import {
   Search, FileText, FileSpreadsheet, FileImage, FileArchive, File as FileIcon,
   Files, HardDrive, FolderOpen, CalendarPlus, Upload, Download, Trash2, RefreshCw, X, Clock,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-all placeholder:text-muted-foreground hover:border-ring/40 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]';
 
-const TYPE_META: Record<string, { icon: any; color: string }> = {
+// ── Shape of GET /client-account/:id/documents (clientAccountDocuments.ts) ──
+interface DocRow {
+  id: string;
+  code: string;
+  name: string;
+  category: string;
+  type: string;
+  cls: 'documents' | 'images' | 'videos' | 'others';
+  sizeInBytes: number;
+  sizeLabel: string;
+  uploadedBy: string;
+  createdAt: string;
+  downloadUrl: string | null;
+}
+interface DocCategory { name: string; count: number; }
+interface DocActivity { id: string; name: string; user: string; at: string; action: string; }
+interface DocBreakdownEntry { bytes: number; label: string; }
+interface DocBreakdown { documents: DocBreakdownEntry; images: DocBreakdownEntry; videos: DocBreakdownEntry; others: DocBreakdownEntry; }
+interface DocKpis {
+  total: number; uploadedThisMonth: number; categoriesCount: number;
+  storageUsedBytes: number; storageUsedLabel: string;
+  capBytes: number; capLabel: string; usedPct: number;
+}
+interface DocumentsData {
+  kpis: DocKpis;
+  breakdown: DocBreakdown;
+  categories: DocCategory[];
+  recentActivity: DocActivity[];
+  types: string[];
+  total: number; page: number; perPage: number;
+  documents: DocRow[];
+  updatedAt: string;
+}
+
+const TYPE_META: Record<string, { icon: LucideIcon; color: string }> = {
   PDF: { icon: FileText, color: 'text-red-600 bg-red-500/12' },
   Excel: { icon: FileSpreadsheet, color: 'text-emerald-600 bg-emerald-500/12' },
   Word: { icon: FileText, color: 'text-blue-600 bg-blue-500/12' },
@@ -59,7 +95,9 @@ function Donut({ segments, centerTop, centerBottom }: { segments: Array<{ value:
   );
 }
 
-function Kpi({ icon, value, label, sub, accent = 'primary', bar }: any) {
+function Kpi({ icon, value, label, sub, accent = 'primary', bar }: {
+  icon: ReactNode; value: ReactNode; label: string; sub?: ReactNode; accent?: string; bar?: number | null;
+}) {
   const ACC: Record<string, string> = { primary: 'bg-primary/12 text-primary', green: 'bg-emerald-500/12 text-emerald-600', orange: 'bg-orange-500/12 text-orange-600', blue: 'bg-blue-500/12 text-blue-600', slate: 'bg-muted text-muted-foreground' };
   return (
     <div className="cg-card p-4">
@@ -76,7 +114,7 @@ export default function ClientDocuments({ client }: { client: Client }) {
   useScrollToTopOnMount(containerRef);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<DocumentsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
   const [category, setCategory] = useState('');
@@ -97,18 +135,18 @@ export default function ClientDocuments({ client }: { client: Client }) {
   };
   useEffect(() => { const t = setTimeout(() => load(), 250); return () => clearTimeout(t); /* eslint-disable-next-line */ }, [q, category, type, page, client.id]);
 
-  const kpis = data?.kpis || {};
-  const breakdown = data?.breakdown || {};
-  const categories: any[] = data?.categories || [];
-  const activity: any[] = data?.recentActivity || [];
+  const kpis: Partial<DocKpis> = data?.kpis || {};
+  const breakdown: Partial<Record<string, DocBreakdownEntry>> = (data?.breakdown || {}) as Partial<Record<string, DocBreakdownEntry>>;
+  const categories: DocCategory[] = data?.categories || [];
+  const activity: DocActivity[] = data?.recentActivity || [];
   const types: string[] = data?.types || [];
-  const docs: any[] = data?.documents || [];
+  const docs: DocRow[] = data?.documents || [];
   const total = data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / perPage));
   const fmtUpdated = data?.updatedAt ? new Date(data.updatedAt).toLocaleString('es-EC', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
 
   const donutSegments = useMemo(() => BREAK_META.map((b) => ({ value: breakdown[b.key]?.bytes || 0, color: b.color })).filter((s) => s.value > 0), [breakdown]);
-  const resetPage = (fn: (v: any) => void) => (v: any) => { fn(v); setPage(1); };
+  const resetPage = (fn: (v: string) => void) => (v: string) => { fn(v); setPage(1); };
 
   const onPick = (files: FileList | null) => { if (files) setPending((prev) => [...prev, ...Array.from(files)]); };
 
@@ -120,7 +158,7 @@ export default function ClientDocuments({ client }: { client: Client }) {
       if (f.size > 100 * 1024 * 1024) { toast.error(`Archivo mayor a 100MB: ${f.name}`); continue; }
       try {
         setProgress((p) => ({ ...p, [f.name]: 0 }));
-        const uploaded: any = await securityGuardService.uploadFileToStorageWithProgress(f, 'legalDocuments', (pct) => setProgress((p) => ({ ...p, [f.name]: pct })));
+        const uploaded: { privateUrl?: string | null; publicUrl?: string | null } = await securityGuardService.uploadFileToStorageWithProgress(f, 'legalDocuments', (pct) => setProgress((p) => ({ ...p, [f.name]: pct })));
         await clientService.createClientDocument(client.id, {
           name: f.name, mimeType: f.type || 'application/octet-stream', sizeInBytes: f.size,
           storageId: 'legalDocuments', privateUrl: uploaded?.privateUrl || null, publicUrl: uploaded?.publicUrl || null, category: upCategory,
@@ -132,7 +170,7 @@ export default function ClientDocuments({ client }: { client: Client }) {
     if (ok) { toast.success(`${ok} documento(s) subido(s)`); setPage(1); await load(); }
   };
 
-  const doDelete = async (d: any) => {
+  const doDelete = async (d: DocRow) => {
     if (!window.confirm(`¿Eliminar "${d.name}"?`)) return;
     try { await clientService.deleteClientDocument(d.id); toast.success('Documento eliminado'); await load(true); }
     catch { toast.error('No se pudo eliminar'); }

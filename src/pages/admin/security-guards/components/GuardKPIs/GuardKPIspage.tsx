@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   Search,
   ChevronDown,
@@ -31,18 +32,44 @@ import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { PageContainer, PageHeader, Section, StatCard, Stagger, EmptyState } from '@/components/kit';
 import { Button } from '@/components/ui/button';
+import type { GuardDetail, Kpi, GuardAssignmentRow } from '../../guardDetailTypes';
 
 
 type Props = {
-  guard?: any;
+  guard?: GuardDetail;
 };
+
+/** Subset of a report row consumed when counting KPI actuals. */
+interface ReportRow {
+  createdById?: string;
+  createdBy?: { id?: string } | null;
+  stationId?: string;
+  station?: { id?: string; stationId?: string } | null;
+  postSiteId?: string;
+  businessInfoId?: string;
+  postSite?: { id?: string } | null;
+  businessInfo?: { id?: string } | null;
+}
+
+/** One row in the KPI target-vs-actual breakdown table. */
+interface KpiMetric {
+  key: string;
+  name: string;
+  target: number;
+  actual: number;
+}
 
 export default function GuardIndicators({ guard }: Props) {
   const { t } = useTranslation();
+  // The guard route (/guards/:id/indicadores) mounts this page WITHOUT a `guard`
+  // prop, so all guard-scoped data must fall back to the route id (the
+  // securityGuard id) — same pattern the sibling Licenses tab uses.
+  const { id: routeGuardId } = useParams();
+  const guardRecordId = guard?.id || routeGuardId;
   const [actionOpen, setActionOpen] = useState(false);
   const [actionSelection, setActionSelection] = useState<string>(t('actions.action', 'Acción'));
   const [searchQuery, setSearchQuery] = useState('');
-  const [kpiData, setKpiData] = useState<any[]>([]); // Vacío inicialmente, sin resultados
+  const [kpiData, setKpiData] = useState<Kpi[]>([]); // Vacío inicialmente, sin resultados
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -143,35 +170,35 @@ export default function GuardIndicators({ guard }: Props) {
     const isStale = () => reqId !== loadKpisReqId.current;
     try {
       const monthStr = selectedMonth ? `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, '0')}` : undefined;
-      const guardId = guard && (guard.guard?.id || guard.guardId || guard.id || guard.userId || (guard.guard && guard.guardId));
+      const guardId = (guard && (guard.guard?.id || guard.guardId || guard.id || guard.userId)) || guardRecordId;
       // Fetch KPIs explicitly for the guard
-      const params: any = { scope: 'guard', guard: guardId, month: monthStr };
+      const params: Record<string, string | undefined> = { scope: 'guard', guard: guardId, month: monthStr };
       if (searchQuery && searchQuery.trim().length > 0) {
         params.description = searchQuery.trim();
       }
-      const resGuard: any = await KpiService.list(params);
+      const resGuard = await KpiService.list(params) as { rows?: Kpi[] } | Kpi[];
       if (import.meta.env.DEV) console.debug('[GuardKPIs] kpi guard response:', resGuard);
-      let combinedRows: any[] = Array.isArray(resGuard?.rows) ? resGuard.rows : (Array.isArray(resGuard) ? resGuard : []);
+      let combinedRows: Kpi[] = Array.isArray(resGuard) ? resGuard : (Array.isArray(resGuard?.rows) ? resGuard.rows : []);
 
       // Also fetch assigned post-sites for this guard and include KPIs attached to those post-sites
       try {
         const tenantId = localStorage.getItem('tenantId');
         if (tenantId && guardId) {
-          const resp = await ApiService.get(`/tenant/${tenantId}/security-guard/${guardId}/assignments`);
+          const resp = await ApiService.get(`/tenant/${tenantId}/security-guard/${guardId}/assignments`) as { data?: { rows?: GuardAssignmentRow[] }; rows?: GuardAssignmentRow[] } | GuardAssignmentRow[];
           if (import.meta.env.DEV) console.debug('[GuardKPIs] assignments response:', resp);
-          const assignData = resp?.data ?? resp;
-          const rows = Array.isArray(assignData?.rows) ? assignData.rows : (Array.isArray(assignData) ? assignData : []);
-          const siteIds = Array.from(new Set(rows.map((r: any) => {
+          const assignData = Array.isArray(resp) ? resp : (resp?.data ?? resp);
+          const rows: GuardAssignmentRow[] = Array.isArray(assignData) ? assignData : (Array.isArray(assignData?.rows) ? assignData.rows : []);
+          const siteIds = Array.from(new Set(rows.map((r: GuardAssignmentRow) => {
             // support various shapes returned by assignments
             if (!r) return null;
             return r.businessInfoId || r.postSiteId || r.stationId || r.business_info_id || r.post_site_id || (r.businessInfo && (r.businessInfo.id || r.businessInfoId)) || (r.postSite && (r.postSite.id || r.postSiteId)) || null;
           }).filter(Boolean)));
           // Fetch all per-site KPIs in parallel instead of a serial await loop.
-          const perSite = await Promise.all(siteIds.map(async (siteId) => {
+          const perSite = await Promise.all(siteIds.map(async (siteId): Promise<Kpi[]> => {
             try {
-              const resSite: any = await KpiService.list({ scope: 'postSite', postSite: siteId, month: monthStr });
+              const resSite = await KpiService.list({ scope: 'postSite', postSite: siteId, month: monthStr }) as { rows?: Kpi[] } | Kpi[];
               if (import.meta.env.DEV) console.debug('[GuardKPIs] kpi postSite response for', siteId, resSite);
-              return Array.isArray(resSite?.rows) ? resSite.rows : (Array.isArray(resSite) ? resSite : []);
+              return Array.isArray(resSite) ? resSite : (Array.isArray(resSite?.rows) ? resSite.rows : []);
             } catch (e) {
               console.error('[GuardKPIs] error loading kpis for site', siteId, e);
               return [];
@@ -184,8 +211,8 @@ export default function GuardIndicators({ guard }: Props) {
       }
 
       // Deduplicate by id
-      const seen = new Set();
-      combinedRows = combinedRows.filter((r: any) => {
+      const seen = new Set<string>();
+      combinedRows = combinedRows.filter((r: Kpi) => {
         if (!r || !r.id) return false;
         if (seen.has(r.id)) return false;
         seen.add(r.id);
@@ -219,7 +246,7 @@ export default function GuardIndicators({ guard }: Props) {
     return d.toLocaleString(undefined, { month: 'long' });
   };
 
-  const formatDate = (value: any) => {
+  const formatDate = (value: string | number | Date | null | undefined) => {
     if (!value) return '';
     try {
       const d = new Date(value);
@@ -250,7 +277,7 @@ export default function GuardIndicators({ guard }: Props) {
     });
   };
 
-  const handleExportPdf = (kpi: any) => {
+  const handleExportPdf = (kpi: Kpi) => {
     try {
       // If KPI provides a direct URL to the PDF, open it
       if (kpi?.pdfUrl) {
@@ -301,7 +328,7 @@ export default function GuardIndicators({ guard }: Props) {
     }
   };
 
-  const handleExportExcel = (kpi: any) => {
+  const handleExportExcel = (kpi: Kpi) => {
     try {
       (async () => {
         try {
@@ -330,7 +357,7 @@ export default function GuardIndicators({ guard }: Props) {
   };
 
   const handleSubmitKPI = async () => {
-    const toNumber = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v));
+    const toNumber = (v: string | number | null | undefined) => (v === '' || v === null || v === undefined ? null : Number(v));
 
     const payload = {
       frequency: formData.frequency,
@@ -348,8 +375,8 @@ export default function GuardIndicators({ guard }: Props) {
       emailNotification: !!formData.emailNotification,
       emails: formData.emails,
       scope: 'guard',
-      guardId: guard?.id,
-      guard: guard?.id,
+      guardId: guardRecordId,
+      guard: guardRecordId,
     };
 
     try {
@@ -368,7 +395,7 @@ export default function GuardIndicators({ guard }: Props) {
     }
   };
 
-  async function computeActualsForKpis(kpis: any[], monthDate?: Date, isStale?: () => boolean) {
+  async function computeActualsForKpis(kpis: Kpi[], monthDate?: Date, isStale?: () => boolean) {
     try {
       if (!kpis || !kpis.length) return;
       const tenantId = localStorage.getItem('tenantId');
@@ -380,19 +407,21 @@ export default function GuardIndicators({ guard }: Props) {
       const end = new Date(Date.UTC(year, monthIndex + 1, 1, 0, 0, 0)).toISOString();
 
       const q = `?generatedDateRange[]=${encodeURIComponent(start)}&generatedDateRange[]=${encodeURIComponent(end)}&limit=10000`;
-      const resp: any = await ApiService.get(`/tenant/${tenantId}/report${q}`);
+      const resp = await ApiService.get(`/tenant/${tenantId}/report${q}`) as { rows?: ReportRow[] } | ReportRow[];
       if (import.meta.env.DEV) console.debug('[GuardKPIs] reports response:', resp);
-      const rows = Array.isArray(resp?.rows) ? resp.rows : (Array.isArray(resp) ? resp : []);
+      const rows: ReportRow[] = Array.isArray(resp) ? resp : (Array.isArray(resp?.rows) ? resp.rows : []);
 
       const countsByKpi: Record<string, number> = {};
       for (const kpi of kpis) {
         let cnt = 0;
-        if (kpi.scope === 'guard' && kpi.guard && kpi.guard.id) {
-          cnt = rows.filter((r: any) => r.createdById === kpi.guard.id || (r.createdBy && r.createdBy.id === kpi.guard.id)).length;
-        } else if (kpi.scope === 'postSite' && kpi.postSite && kpi.postSite.id) {
+        const guardRef = kpi.guard;
+        const postSiteRef = kpi.postSite;
+        if (kpi.scope === 'guard' && guardRef && guardRef.id) {
+          cnt = rows.filter((r) => r.createdById === guardRef.id || (r.createdBy && r.createdBy.id === guardRef.id)).length;
+        } else if (kpi.scope === 'postSite' && postSiteRef && postSiteRef.id) {
           // match report to postSite using multiple possible report fields
-          const siteId = String(kpi.postSite.id);
-          cnt = rows.filter((r: any) => {
+          const siteId = String(postSiteRef.id);
+          cnt = rows.filter((r) => {
             if (!r) return false;
             // direct stationId equals site id
             if (r.stationId && String(r.stationId) === siteId) return true;
@@ -412,7 +441,7 @@ export default function GuardIndicators({ guard }: Props) {
       }
 
       if (isStale && isStale()) return;
-      setKpiData((prev) => (prev || []).map((kk: any) => ({ ...kk, actual: countsByKpi[kk.id] ?? kk.actual ?? 0 })));
+      setKpiData((prev) => (prev || []).map((kk: Kpi) => ({ ...kk, actual: countsByKpi[kk.id] ?? kk.actual ?? 0 })));
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error('Error computing KPI actuals client-side', e);
@@ -420,15 +449,15 @@ export default function GuardIndicators({ guard }: Props) {
   }
 
   useEffect(() => {
-    if (!guard?.id) return;
+    if (!guardRecordId) return;
     let mounted = true;
     (async () => {
       try {
         const tenantId = localStorage.getItem('tenantId');
         if (!tenantId) return;
-        const resp = await api.get(`/tenant/${tenantId}/security-guard/${guard.id}/assignments`);
+        const resp = await api.get(`/tenant/${tenantId}/security-guard/${guardRecordId}/assignments`);
         const data = resp?.data ?? resp;
-        const rows = Array.isArray(data?.rows) ? data.rows : (Array.isArray(data) ? data : []);
+        const rows: GuardAssignmentRow[] = Array.isArray(data?.rows) ? data.rows : (Array.isArray(data) ? data : []);
         if (!mounted) return;
         setAssignedSitesCount(rows.length);
       } catch (e) {
@@ -436,7 +465,7 @@ export default function GuardIndicators({ guard }: Props) {
       }
     })();
     return () => { mounted = false; };
-  }, [guard?.id]);
+  }, [guardRecordId]);
 
   // Single source of truth for loading KPIs: reload (debounced) when the guard,
   // month or search query changes. Consolidated from a separate [guard?.id]
@@ -451,11 +480,11 @@ export default function GuardIndicators({ guard }: Props) {
       loadKpisReqId.current++;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedMonth, searchQuery, guard?.id]);
+  }, [selectedMonth, searchQuery, guardRecordId]);
 
   // Close menu when clicking outside (matches PostSiteKPIs behavior)
   useEffect(() => {
-    const onDocClick = (e: any) => {
+    const onDocClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target) return;
       if (target.closest('[data-kpi-menu]') || target.closest('[data-kpi-menu-button]')) return;
@@ -629,15 +658,15 @@ export default function GuardIndicators({ guard }: Props) {
                                           frequency: kpi.frequency || '',
                                           description: kpi.description || '',
                                           standardReports: !!kpi.standardReports,
-                                          standardReportsNumber: kpi.standardReportsNumber || '',
+                                          standardReportsNumber: String(kpi.standardReportsNumber || ''),
                                           incidentReports: !!kpi.incidentReports,
-                                          incidentReportsNumber: kpi.incidentReportsNumber || '',
+                                          incidentReportsNumber: String(kpi.incidentReportsNumber || ''),
                                           routeReports: !!kpi.routeReports,
-                                          routeReportsNumber: kpi.routeReportsNumber || '',
+                                          routeReportsNumber: String(kpi.routeReportsNumber || ''),
                                           taskReports: !!kpi.taskReports,
-                                          taskReportsNumber: kpi.taskReportsNumber || '',
+                                          taskReportsNumber: String(kpi.taskReportsNumber || ''),
                                           verificationReports: !!kpi.verificationReports,
-                                          verificationReportsNumber: kpi.verificationReportsNumber || '',
+                                          verificationReportsNumber: String(kpi.verificationReportsNumber || ''),
                                           emailNotification: !!kpi.emailNotification,
                                           emails: kpi.emails || [],
                                         }); setShowModal(true); setMenuOpenId(null);
@@ -681,7 +710,7 @@ export default function GuardIndicators({ guard }: Props) {
 
                                     <div>
                                       {(() => {
-                                        const metrics: any[] = [];
+                                        const metrics: KpiMetric[] = [];
                                         const actualVal = Number(kpi.actual || 0);
                                         if (kpi.standardReportsNumber !== undefined && kpi.standardReportsNumber !== null && Number(kpi.standardReportsNumber) > 0) {
                                           metrics.push({ key: 'standardReports', name: t('guards.KPI.metrics.standardReports', 'Standard Reports'), target: Number(kpi.standardReportsNumber), actual: actualVal });
@@ -733,10 +762,10 @@ export default function GuardIndicators({ guard }: Props) {
                                                 items={kpiData || []}
                                                 loading={false}
                                                 emptyMessage={t('guards.KPI.empty', { defaultValue: 'No KPI data' }) as string}
-                                                renderCard={(k: any) => (
+                                                renderCard={(k: Kpi) => (
                                                   <div className="p-4 bg-card border rounded-xl">
                                                     <div className="text-sm font-semibold">{k.type}</div>
-                                                    <div className="text-xs text-muted-foreground">{k.date} • {k.createdBy}</div>
+                                                    <div className="text-xs text-muted-foreground">{k.date} • {k.createdBy?.fullName ?? k.addedBy}</div>
                                                   </div>
                                                 )}
                                               />
@@ -826,7 +855,7 @@ export default function GuardIndicators({ guard }: Props) {
                               type="number"
                               min={0}
                               value={formData.standardReportsNumber}
-                              onChange={(e: any) => {
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                 const v = e.target.value;
                                 const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
                                 setFormData({ ...formData, standardReportsNumber: sanitized });
@@ -852,7 +881,7 @@ export default function GuardIndicators({ guard }: Props) {
                               type="number"
                               min={0}
                               value={formData.incidentReportsNumber}
-                              onChange={(e: any) => {
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                 const v = e.target.value;
                                 const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
                                 setFormData({ ...formData, incidentReportsNumber: sanitized });
@@ -878,7 +907,7 @@ export default function GuardIndicators({ guard }: Props) {
                               type="number"
                               min={0}
                               value={formData.routeReportsNumber}
-                              onChange={(e: any) => {
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                 const v = e.target.value;
                                 const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
                                 setFormData({ ...formData, routeReportsNumber: sanitized });
@@ -904,7 +933,7 @@ export default function GuardIndicators({ guard }: Props) {
                               type="number"
                               min={0}
                               value={formData.taskReportsNumber}
-                              onChange={(e: any) => {
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                 const v = e.target.value;
                                 const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
                                 setFormData({ ...formData, taskReportsNumber: sanitized });
@@ -930,7 +959,7 @@ export default function GuardIndicators({ guard }: Props) {
                               type="number"
                               min={0}
                               value={formData.verificationReportsNumber}
-                              onChange={(e: any) => {
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                 const v = e.target.value;
                                 const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
                                 setFormData({ ...formData, verificationReportsNumber: sanitized });

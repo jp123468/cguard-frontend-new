@@ -32,6 +32,15 @@ const DEFAULTS: PostRules = {
     geofenceReturnAlert: false,
 };
 
+// Partial view of the tenant settings blob (GET/PUT /settings). Only the fields
+// this page round-trips are named; the backend recomputes logoUrl from logos[0].
+type SettingsRow = {
+    theme?: string;
+    logos?: unknown[];
+    backgroundImages?: unknown[];
+    postRules?: Partial<PostRules>;
+};
+
 const tenantId = () => localStorage.getItem("tenantId") || "";
 
 function RuleRow({
@@ -83,7 +92,7 @@ export default function PostingGlobalPage() {
     const canEdit = hasPermission("settingsEdit");
 
     const [rules, setRules] = useState<PostRules>(DEFAULTS);
-    const [row, setRow] = useState<any>(null);
+    const [row, setRow] = useState<SettingsRow | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 

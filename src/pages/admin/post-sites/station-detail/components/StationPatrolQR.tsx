@@ -27,6 +27,17 @@ interface Checkpoint {
   longitude: number | null;
 }
 
+// Raw site-tour + tag rows from the API (read via several aliases).
+interface RawTourRow { id?: string; _id?: string; name?: string; tourName?: string; siteTourName?: string }
+interface RawTagRow {
+  id?: string; _id?: string;
+  name?: string; tagName?: string; tagIdentifier?: string;
+  tagType?: string; type?: string;
+  location?: string; locationDescription?: string;
+  latitude?: number | string | null; latitud?: number | string | null;
+  longitude?: number | string | null; longitud?: number | string | null;
+}
+
 /** Free, no-dependency QR image for a given payload. */
 function qrUrl(identifier: string, size = 600): string {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=12&data=${encodeURIComponent(identifier)}`;
@@ -58,7 +69,7 @@ export default function StationPatrolQR({ station, stationId }: Props) {
       const toursRes: any = await ApiService.get(
         `/tenant/${tenantId}/site-tour?stationId=${encodeURIComponent(stationId)}&limit=999&_=${ts}`,
       );
-      const tourRows: any[] = Array.isArray(toursRes) ? toursRes : (toursRes?.rows ?? []);
+      const tourRows: RawTourRow[] = Array.isArray(toursRes) ? toursRes : (toursRes?.rows ?? []);
 
       const collected: Checkpoint[] = [];
       for (const tr of tourRows) {
@@ -70,7 +81,7 @@ export default function StationPatrolQR({ station, stationId }: Props) {
             `/tenant/${tenantId}/site-tour/${encodeURIComponent(tid)}/tags?_=${ts}`,
           );
           const rows = Array.isArray(tagsRes) ? tagsRes : (tagsRes?.rows ?? []);
-          rows.forEach((tag: any) => {
+          rows.forEach((tag: RawTagRow) => {
             collected.push({
               id: String(tag.id || tag._id),
               siteTourId: tid,

@@ -206,7 +206,7 @@ export default function ClientesPage() {
         if (mine === loadClientsSeqRef.current) { setClients([]); setTotalCount(0); }
         return;
       }
-      const pagination: any = { limit, offset: (page - 1) * limit };
+      const pagination: { limit: number; offset: number; orderBy?: string } = { limit, offset: (page - 1) * limit };
       if (sortKey && sortDir) pagination.orderBy = `${sortKey}:${sortDir}`;
 
       const data = await clientService.getClients(
@@ -547,7 +547,7 @@ export default function ClientesPage() {
         key: "more",
         header: t('clients.columns.more', 'Más'),
         className: "hidden",
-        render: (_v: any, row: Client) => (
+        render: (_v: unknown, row: Client) => (
           <div className="flex justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -572,7 +572,7 @@ export default function ClientesPage() {
       {
         key: "active",
         header: t('clients.columns.status'),
-        render: (_value: any, row: Client) => {
+        render: (_value: unknown, row: Client) => {
           // El backend puede enviar booleano o entero (0/1)
           const isActive = row.active === true;
           return (
@@ -585,7 +585,7 @@ export default function ClientesPage() {
       {
         key: "onboardingStatus",
         header: t('clients.columns.appAccess', 'App'),
-        render: (_value: any, row: Client) => {
+        render: (_value: unknown, row: Client) => {
           const status = row.onboardingStatus || 'not_invited';
           const map: Record<string, { label: string; tone: 'slate' | 'orange' | 'green' | 'red' }> = {
             not_invited: { label: t('clients.onboarding.not_invited', 'Sin acceso'), tone: 'slate' },

@@ -81,15 +81,46 @@ interface ScheduleSlot {
   isCovered: boolean;
 }
 
+// A calendar event derived from a raw shift row (see `events` useMemo).
+type GuardColor = { bg: string; accent: string; text: string };
+interface ShiftEvent {
+  id: string;
+  guardName: string;
+  guardId: string;
+  start: Date;
+  end: Date;
+  status: 'active' | 'upcoming' | 'completed';
+  raw: ShiftRow;
+}
+// Aggregated coverage for a single calendar date.
+interface DayCoverage { slots: ScheduleSlot[]; allCovered: boolean; uncoveredCount: number }
+// A scheduler position row from `/station/:id/positions`.
+interface PositionRow { type?: string; startTime?: string; endTime?: string }
+// A raw shift row from `/shift` — nested guard may live under several keys and
+// times under several aliases, so this stays intentionally permissive.
+interface ShiftGuardRef { id?: string; fullName?: string; name?: string; firstName?: string; lastName?: string; email?: string }
+interface ShiftRow {
+  id?: string;
+  guard?: ShiftGuardRef | null;
+  securityGuard?: ShiftGuardRef | null;
+  user?: ShiftGuardRef | null;
+  guardId?: string;
+  guardName?: string;
+  startTime?: string; endTime?: string;
+  punchInTime?: string; punchOutTime?: string;
+  start?: string; end?: string;
+  guardAssignmentId?: string;
+}
+
 export default function StationShifts({ station, stationId, postSiteId }: Props) {
   const { t } = useTranslation();
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<ShiftRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedShift, setSelectedShift] = useState<any>(null);
+  const [selectedShift, setSelectedShift] = useState<ShiftEvent | null>(null);
 
   // Assignment is handled entirely by <ShiftAssignModal/> (self-contained).
   const [showForm, setShowForm] = useState(false);
@@ -116,7 +147,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
 
   // Load positions from scheduler API — positions are the source of truth for
   // the coverage sketch, so they must re-fetch whenever the horario changes.
-  const [positions, setPositions] = useState<any[]>([]);
+  const [positions, setPositions] = useState<PositionRow[]>([]);
   const loadPositions = useCallback(() => {
     if (!stationId || !tenantId) return;
     ApiService.get(`/tenant/${tenantId}/station/${stationId}/positions`)
@@ -149,7 +180,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   // fall back to positions when no explicit schedule exists.
   const jornadas: Jornada[] = useMemo(() => {
     const ALL_DAYS = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
-    const fijos = positions.filter((p: any) => (p.type || 'fijo') !== 'sacafranco');
+    const fijos = positions.filter((p: PositionRow) => (p.type || 'fijo') !== 'sacafranco');
 
     // UNIVERSAL SOURCE OF TRUTH = the station's fijo POSITIONS, grouped by their
     // block (startTime|endTime). Each DISTINCT block is one required jornada
@@ -218,7 +249,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
 
   // Guard color assignment
   const guardColorMap = useMemo(() => {
-    const map: Record<string, typeof GUARD_COLORS[0]> = {};
+    const map: Record<string, GuardColor> = {};
     let idx = 0;
     rows.forEach((r: any) => {
       const g = r.guard || r.securityGuard || r.user || {};
@@ -232,7 +263,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   }, [rows]);
 
   // Parse shifts into events
-  const events = useMemo(() => {
+  const events = useMemo<ShiftEvent[]>(() => {
     return rows.map((r: any) => {
       const g = r.guard || r.securityGuard || r.user || {};
       const guardName = g.fullName || g.name || `${g.firstName || ''} ${g.lastName || ''}`.trim() || r.guardName || 'Sin asignar';
@@ -402,7 +433,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   // Only shifts that START on the selected day — a night shift (19:00→07:00) spans
   // two days and eventsByDate lists it on both, which double-listed the night guard.
   const selectedDayEvents = selectedDate
-    ? (eventsByDate[selectedDate] || []).filter((ev: any) => dateKey(ev.start) === selectedDate)
+    ? (eventsByDate[selectedDate] || []).filter((ev: ShiftEvent) => dateKey(ev.start) === selectedDate)
     : [];
   const selectedDayCoverage = selectedDate ? coverageByDate[selectedDate] : null;
 
@@ -430,7 +461,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   // Remove a guard from this station: end their ACTIVE rotation assignment (the
   // backend cascades and deletes future shifts). Falls back to deleting the single
   // shift for legacy shift-only rows that have no assignment.
-  const removeGuard = async (ev: any) => {
+  const removeGuard = async (ev: ShiftEvent) => {
     if (!(await confirmDialog({ title: 'Quitar vigilante', message: `¿Quitar a ${ev.guardName} de este puesto? Se eliminarán sus turnos en este sitio.`, confirmText: 'Quitar', tone: 'danger' }))) return;
     try {
       let assignmentId: string | null = ev.raw?.guardAssignmentId || null;
@@ -756,9 +787,9 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
 
 function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedDate, onSelectDate, onAssign, station, jornadas }: {
   days: Date[];
-  eventsByDate: Record<string, any[]>;
-  coverageByDate: Record<string, any>;
-  guardColorMap: Record<string, any>;
+  eventsByDate: Record<string, ShiftEvent[]>;
+  coverageByDate: Record<string, DayCoverage>;
+  guardColorMap: Record<string, GuardColor>;
   selectedDate: string | null;
   onSelectDate: (d: string) => void;
   onAssign: (d: string) => void;
@@ -771,7 +802,7 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
   // Guards covering a slot, matched by the day/night class of the shift's start
   // (a 19:00→07:00 night shift can't be matched by hour overlap — only by class).
   const coveringGuards = (key: string, isNight: boolean) =>
-    (eventsByDate[key] || []).filter((ev: any) => {
+    (eventsByDate[key] || []).filter((ev: ShiftEvent) => {
       // Attribute a shift to the day it STARTS (a 19:00→07:00 night shift spans two
       // days; without this it would also show on the morning of the NEXT day —
       // making it look like two night guards). Mirrors the coverage count.
@@ -876,7 +907,7 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
 
                       {guards.length > 0 && (
                         <div className="mt-1 space-y-0.5">
-                          {guards.slice(0, 3).map((ev: any, gi: number) => {
+                          {guards.slice(0, 3).map((ev: ShiftEvent, gi: number) => {
                             const color = guardColorMap[ev.guardId] || GUARD_COLORS[0];
                             return (
                               <div key={ev.id || gi} className="flex items-center gap-1 rounded px-1 py-0.5" style={{ backgroundColor: color.bg }}>
@@ -919,9 +950,9 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
 // ── Day view: a 24-hour vertical timeline of the day's coverage ───────────────
 function DayView({ date, coverage, dayEvents, guardColorMap, onAssign }: {
   date: Date;
-  coverage: any;
-  dayEvents: any[]; // events OVERLAPPING this day (incl. a night shift from the day before)
-  guardColorMap: Record<string, any>;
+  coverage: DayCoverage | undefined;
+  dayEvents: ShiftEvent[]; // events OVERLAPPING this day (incl. a night shift from the day before)
+  guardColorMap: Record<string, GuardColor>;
   onAssign: (d: string) => void;
 }) {
   const ROW = 30;          // px per hour
@@ -932,7 +963,7 @@ function DayView({ date, coverage, dayEvents, guardColorMap, onAssign }: {
   const fmtT = (d: Date) => d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: getTenantTimezone() });
 
   // An event's [startH,endH] on THIS day's 0–24 axis (clamped across midnight).
-  const eventSeg = (ev: any) => {
+  const eventSeg = (ev: ShiftEvent) => {
     const startBefore = dateKey(ev.start) < dayK;
     const endAfter = dateKey(ev.end) > dayK;
     const startH = startBefore ? 0 : minutesInTenantTz(ev.start) / 60;
@@ -1023,7 +1054,7 @@ function DayView({ date, coverage, dayEvents, guardColorMap, onAssign }: {
               })}
 
               {/* Covering guard blocks (actual shifts, clamped to the day) */}
-              {dayEvents.map((ev: any, i: number) => {
+              {dayEvents.map((ev: ShiftEvent, i: number) => {
                 const { startH, endH, startBefore, endAfter } = eventSeg(ev);
                 const top = (startH / 24) * H;
                 const height = Math.max(((endH - startH) / 24) * H, 24);
@@ -1059,9 +1090,9 @@ function DayView({ date, coverage, dayEvents, guardColorMap, onAssign }: {
 
 function MonthView({ days, eventsByDate, coverageByDate, guardColorMap, selectedDate, onSelectDate, currentMonth }: {
   days: (Date | null)[];
-  eventsByDate: Record<string, any[]>;
-  coverageByDate: Record<string, any>;
-  guardColorMap: Record<string, any>;
+  eventsByDate: Record<string, ShiftEvent[]>;
+  coverageByDate: Record<string, DayCoverage>;
+  guardColorMap: Record<string, GuardColor>;
   selectedDate: string | null;
   onSelectDate: (d: string) => void;
   currentMonth: number;

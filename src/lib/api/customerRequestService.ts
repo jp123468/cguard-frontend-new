@@ -15,7 +15,7 @@ const getTenantId = (): string => {
   return t;
 };
 
-const buildQuery = (params?: Record<string, any>): string => {
+const buildQuery = (params?: Record<string, unknown>): string => {
   if (!params) return "";
   const p = new URLSearchParams();
   for (const k of Object.keys(params)) {
@@ -48,7 +48,7 @@ export interface CustomerRequestRecord {
 }
 
 const customerRequestService = {
-  async list(params?: Record<string, any>): Promise<{ rows: CustomerRequestRecord[]; count: number }> {
+  async list(params?: Record<string, unknown>): Promise<{ rows: CustomerRequestRecord[]; count: number }> {
     const tenantId = getTenantId();
     const qs = buildQuery(params);
     const resp = await api.get(`/tenant/${tenantId}/request${qs}`);

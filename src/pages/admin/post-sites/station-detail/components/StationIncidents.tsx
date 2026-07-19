@@ -7,9 +7,30 @@ import type { Station } from '@/types';
 
 type Props = { station: Station; stationId: string; postSiteId: string };
 
+// An incident row from the backend /incident endpoint. Fields are read
+// defensively (several backend aliases), so this stays permissive.
+interface IncidentGuardRef { fullName?: string; name?: string; firstName?: string; lastName?: string }
+interface IncidentRow {
+  id?: string;
+  description?: string;
+  subject?: string;
+  title?: string;
+  incidentDescription?: string;
+  status?: string;
+  incidentStatus?: string;
+  createdAt?: string;
+  incidentDate?: string;
+  date?: string;
+  stationId?: string;
+  guard?: IncidentGuardRef | null;
+  securityGuard?: IncidentGuardRef | null;
+  responsibleGuard?: IncidentGuardRef | null;
+  guardName?: string;
+}
+
 export default function StationIncidents({ stationId, postSiteId }: Props) {
   const { t } = useTranslation();
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<IncidentRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,7 +137,7 @@ export default function StationIncidents({ stationId, postSiteId }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {rows.map((r: any, i: number) => {
+              {rows.map((r: IncidentRow, i: number) => {
                 const description =
                   r.description || r.subject || r.title || r.incidentDescription || '-';
                 const status = r.status || r.incidentStatus || '-';

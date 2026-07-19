@@ -5,7 +5,7 @@ export const tenantUserClientAccountsApi = {
     const { data } = await api.get('/api/tenant-user-client-accounts');
     return data;
   },
-  async create(payload: any) {
+  async create(payload: Record<string, unknown>) {
     const { data } = await api.post('/api/tenant-user-client-accounts', payload);
     return data;
   },
@@ -20,7 +20,7 @@ export const tenantUserPostSiteApi = {
     const { data } = await api.get('/api/tenant-user-postsite');
     return data;
   },
-  async create(payload: any) {
+  async create(payload: Record<string, unknown>) {
     const { data } = await api.post('/api/tenant-user-postsite', payload);
     return data;
   },

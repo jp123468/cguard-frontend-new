@@ -42,6 +42,15 @@ interface PayrollTotals {
   noShows: number;
 }
 
+// Shape returned by attendanceService.payrollSummary (unwrapped API payload).
+interface PayrollSummaryResponse {
+  rows?: SummaryRow[];
+  totals?: PayrollTotals;
+  ratesEnabled?: boolean;
+  salaryBasis?: string;
+  currency?: string;
+}
+
 export default function NominaPayrollSummary() {
   const [from, setFrom] = useState(isoDay(new Date(Date.now() - 14 * 864e5)));
   const [to, setTo] = useState(isoDay(new Date()));
@@ -60,12 +69,12 @@ export default function NominaPayrollSummary() {
     setLoading(true);
     attendanceService
       .payrollSummary({ from: `${from}T00:00:00`, to: `${to}T23:59:59` })
-      .then((d) => {
+      .then((d: PayrollSummaryResponse) => {
         const rws: SummaryRow[] = (d.rows || []).map((r: SummaryRow) => ({ ...r, id: r.id ?? r.guardId }));
         setRows(rws);
         setTotals(d.totals || null);
         setRatesEnabled(!!d.ratesEnabled);
-        setSalaryBasis((d as any).salaryBasis === "monthly" ? "monthly" : "hourly");
+        setSalaryBasis(d.salaryBasis === "monthly" ? "monthly" : "hourly");
         setCurrency(d.currency || "USD");
         const re: Record<string, number> = {};
         rws.forEach((r) => { re[r.guardId] = r.hourlyRate || 0; });

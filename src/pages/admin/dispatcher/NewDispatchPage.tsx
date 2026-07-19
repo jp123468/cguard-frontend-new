@@ -200,7 +200,7 @@ export default function NewDispatchPage() {
       try {
         const res = await IncidentTypesService.list("", 1, 100);
         if (res && Array.isArray(res.rows)) {
-          setTiposIncidente(res.rows.map((t: any) => ({ id: t.id, name: t.name })));
+          setTiposIncidente(res.rows.map((t: { id: string; name: string }) => ({ id: t.id, name: t.name })));
         }
       } catch (e) {
         console.error("Error cargando tipos de incidente:", e);
@@ -811,11 +811,11 @@ export default function NewDispatchPage() {
           const siteName = ps?.companyName || ps?.name || ps?.businessName || '';
           setPrefillSiteName(siteName || String(siteId));
           setSitios([{
-            id: ps.id, name: siteName || ps.id,
+            id: ps.id ?? "", name: siteName || ps.id || "",
             businessName: ""
           }]);
 
-          const cid = ps?.clientId || ps?.client || null;
+          const cid = ps?.clientId || (typeof ps?.client === "object" ? ps?.client?.id : ps?.client) || null;
           if (cid) {
             form.setValue('clientId', cid);
             // Ensure siteId is set on the form when opened from a post-site context

@@ -7,7 +7,7 @@ const getTenantId = (): string => {
 };
 
 const inventoryService = {
-  async createHistory(payload: any) {
+  async createHistory(payload: Record<string, unknown>) {
     const tenantId = getTenantId();
     const { data } = await api.post(`/tenant/${tenantId}/inventory-history`, { data: payload });
     return data;

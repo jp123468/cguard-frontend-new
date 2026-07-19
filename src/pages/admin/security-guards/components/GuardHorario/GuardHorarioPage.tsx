@@ -5,6 +5,7 @@ import GuardsLayout from '@/layouts/GuardsLayout';
 import { Section, EmptyState } from '@/components/kit';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import type { ScheduleSnapshot } from '../../guardDetailTypes';
 
 const CELL: Record<string, { label: string; cls: string }> = {
   day: { label: 'D', cls: 'bg-sky-500/15 text-sky-700 dark:text-sky-300' },
@@ -23,7 +24,7 @@ const ymd = (d: Date) =>
  */
 export default function GuardHorarioPage() {
   const { id = '' } = useParams();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ScheduleSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [start, setStart] = useState<string | undefined>(undefined);
 
@@ -37,8 +38,8 @@ export default function GuardHorarioPage() {
   };
   useEffect(() => { setLoading(true); load(); /* eslint-disable-next-line */ }, [id, start]);
 
-  const days: any[] = data?.days || [];
-  const rows: any[] = data?.rows || [];
+  const days = data?.days || [];
+  const rows = data?.rows || [];
 
   const shiftWindow = (deltaDays: number) => {
     const cur = data?.startDate ? new Date(`${data.startDate}T00:00:00`) : new Date();
@@ -102,7 +103,7 @@ export default function GuardHorarioPage() {
                               {r.rotationStyleName ? <span className="text-muted-foreground/70"> · {r.rotationStyleName}</span> : null}
                             </div>
                           </td>
-                          {(r.cells || []).map((c: any) => {
+                          {(r.cells || []).map((c) => {
                             const m = CELL[c.status] || CELL.none;
                             return <td key={c.date} className="border-b p-0.5 text-center"><span className={`grid h-7 w-full min-w-[26px] place-items-center rounded text-[11px] font-bold ${m.cls}`}>{m.label}</span></td>;
                           })}

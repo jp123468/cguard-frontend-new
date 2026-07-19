@@ -12,6 +12,27 @@ type Props = {
   site?: PostSite;
 };
 
+// Raw note row from the post-site notes endpoint.
+interface NoteApiRow {
+  id?: string;
+  _id?: string;
+  title?: string;
+  description?: string;
+  noteDate?: string;
+  createdAt?: string;
+  createdBy?: { fullName?: string; name?: string } | null;
+  createdById?: string;
+}
+// Normalized note row for the table.
+interface NoteRow {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  addedBy?: string;
+  raw?: NoteApiRow;
+}
+
 export default function PostSiteNotes({ site }: Props) {
   const { t } = useTranslation();
   
@@ -19,7 +40,7 @@ export default function PostSiteNotes({ site }: Props) {
   const [actionOpen, setActionOpen] = useState(false);
   const [actionSelection, setActionSelection] = useState<string>('Action');
   const [searchQuery, setSearchQuery] = useState('');
-  const [notesData, setNotesData] = useState<any[]>([]);
+  const [notesData, setNotesData] = useState<NoteRow[]>([]);
   const [showModal, setShowModal] = useState(false);
 
   const [formData, setFormData] = useState<{
@@ -38,7 +59,7 @@ export default function PostSiteNotes({ site }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [viewOnly, setViewOnly] = useState(false);
-  const [detailsNote, setDetailsNote] = useState<any | null>(null);
+  const [detailsNote, setDetailsNote] = useState<NoteApiRow | null>(null);
   const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[]>([]);
 
   const isFormValid = formData.title.trim() !== '' && formData.description.trim() !== '' && Boolean(formData.date);
@@ -89,7 +110,7 @@ export default function PostSiteNotes({ site }: Props) {
         const resp = await postSiteService.getPostSiteNotes(String(site.id), { limit: 9999, offset: 0 });
         if (!mounted) return;
         const rows = Array.isArray(resp?.rows) ? resp.rows : (Array.isArray(resp) ? resp : []);
-        setNotesData(rows.map((r: any) => ({ id: String(r.id || r._id), title: r.title || '', description: r.description || '', date: r.noteDate || (r.createdAt ? r.createdAt.split('T')[0] : ''), addedBy: (r.createdBy && r.createdBy.fullName) || r.createdById || '', raw: r })));
+        setNotesData(rows.map((r: NoteApiRow) => ({ id: String(r.id || r._id), title: r.title || '', description: r.description || '', date: r.noteDate || (r.createdAt ? r.createdAt.split('T')[0] : ''), addedBy: (r.createdBy && r.createdBy.fullName) || r.createdById || '', raw: r })));
       } catch (err) {
         console.warn('[PostSiteNotes] load error', err);
         toast.error(t('notes.loadError', 'Could not load notes'));
@@ -285,7 +306,7 @@ export default function PostSiteNotes({ site }: Props) {
           </div>
 
           <div className="md:hidden">
-            <MobileCardList items={notesData} renderCard={(note: any) => (
+            <MobileCardList items={notesData} renderCard={(note: NoteRow) => (
               <div>
                 <div className="text-sm font-semibold">{note.title}</div>
                 <div className="text-xs text-muted-foreground">{note.date}</div>
@@ -420,9 +441,9 @@ export default function PostSiteNotes({ site }: Props) {
             <div className="text-sm text-foreground mb-2"><strong>{t('clients.notes.form.Title', 'Title')}: </strong>{detailsNote.title}</div>
             <div className="text-sm text-foreground mb-2"><strong>{t('clients.notes.form.Date', 'Date')}: </strong>{detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0]}</div>
             <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.form.Description', 'Description')}: </strong><div className="mt-1 whitespace-pre-wrap">{detailsNote.description}</div></div>
-            <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.addedBy', 'Added by')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdBy || detailsNote.createdById || '-'}</div>
+            <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.addedBy', 'Added by')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdById || '-'}</div>
             <div className="flex justify-end gap-3">
-              <button onClick={() => { setFormData({ title: detailsNote.title, description: detailsNote.description, date: detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0], attachments: [], id: detailsNote.id || detailsNote._id }); setViewOnly(false); setShowModal(true); setDetailsNote(null); }} className="px-4 py-2 bg-primary text-white rounded-md">{t('actions.edit', 'Edit')}</button>
+              <button onClick={() => { setFormData({ title: detailsNote.title ?? "", description: detailsNote.description ?? "", date: detailsNote.noteDate || detailsNote.createdAt?.split("T")?.[0] || "", attachments: [], id: detailsNote.id || detailsNote._id }); setViewOnly(false); setShowModal(true); setDetailsNote(null); }} className="px-4 py-2 bg-primary text-white rounded-md">{t('actions.edit', 'Edit')}</button>
             </div>
           </div>
         </div>

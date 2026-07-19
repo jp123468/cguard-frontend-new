@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { Client } from '@/types/client';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
@@ -10,9 +11,55 @@ import {
   Users, UserCheck, Bell, Lock, CalendarCheck, Plus, Pencil, Trash2, Clock,
   History, StickyNote, Gauge, Timer, ClipboardCheck, Wifi,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
+// ── Shape of GET /client-account/:id/contract (clientAccountContract.ts) ──
+interface ContractTerms {
+  id: string; name: string; code: string | null; active: boolean;
+  contractNumber: string | null; contractType: string | null; currency: string | null;
+  paymentTerms: string | null; contractDate: string | null; contractEndDate: string | null;
+  autoRenew: boolean | null; autoRenewDaysBefore: number | null; penaltyClause: string | null;
+  earlyCancellationNotice: string | null; jurisdiction: string | null;
+  contractedHoursPerMonth: number | null; contractNotes: string | null;
+  slaUptimeTarget: number | null; slaResponseMinutes: number | null;
+  slaRoundsTarget: number | null; slaReportsTarget: number | null;
+}
+interface ContractServiceRow {
+  id: string; serviceKey: string; name: string; unit?: string | null; description?: string | null;
+  contractedQty: number | null; slaTarget?: number | null; active: boolean;
+  used: number | null; compliance: number | null; sortOrder?: number;
+}
+interface ContractRenewalRow {
+  id: string; periodLabel?: string | null; fromDate?: string | null; toDate?: string | null;
+  durationMonths?: number | null; status?: string | null;
+}
+interface ContractDerived {
+  sedesCount: number; stationsCount: number; guardsCount: number; hoursUsed: number;
+  hoursContracted: number | null; daysRemaining: number | null; durationMonths: number | null;
+  incidentsThisMonth: number; roundsCompliance: number | null; tenantTimezone: string | null;
+}
+interface ContractData {
+  contract: ContractTerms;
+  services: ContractServiceRow[];
+  renewals: ContractRenewalRow[];
+  usage: Record<string, number | null>;
+  derived: ContractDerived;
+}
+// Subset of a client-document row we render in the "Documentos del contrato" panel.
+interface DocRow { id: string; name?: string; filename?: string; downloadUrl?: string | null; url?: string | null; createdAt?: string; }
+
+// Edit-modal buffer: text/number inputs held as strings; autoRenew is the only boolean.
+interface ContractForm {
+  contractNumber?: string; contractType?: string; currency?: string; paymentTerms?: string;
+  contractDate?: string; contractEndDate?: string; autoRenew?: boolean; autoRenewDaysBefore?: string | number;
+  contractedHoursPerMonth?: string | number; jurisdiction?: string; penaltyClause?: string;
+  earlyCancellationNotice?: string; slaUptimeTarget?: string | number; slaResponseMinutes?: string | number;
+  slaRoundsTarget?: string | number; slaReportsTarget?: string | number; contractNotes?: string;
+  [k: string]: string | number | boolean | undefined;
+}
 
 // ----- service catalog metadata (drives live-usage on the backend) ----------
-const SERVICE_PRESETS: Record<string, { name: string; unit: string; icon: any }> = {
+const SERVICE_PRESETS: Record<string, { name: string; unit: string; icon: LucideIcon }> = {
   fixed_guard: { name: 'Vigilancia fija 24/7', unit: 'Estación', icon: Shield },
   mobile_patrol: { name: 'Patrullaje móvil', unit: 'Rondas', icon: Car },
   camera_monitoring: { name: 'Monitoreo de cámaras', unit: 'Cámaras', icon: Monitor },
@@ -25,12 +72,12 @@ const SERVICE_PRESETS: Record<string, { name: string; unit: string; icon: any }>
 };
 const SERVICE_KEYS = Object.keys(SERVICE_PRESETS);
 
-const fmtDate = (d: any) => {
+const fmtDate = (d: string | number | Date | null | undefined) => {
   if (!d) return '—';
   const dt = new Date(typeof d === 'string' && d.length <= 10 ? `${d}T00:00:00` : d);
   return Number.isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
-const orDash = (v: any) => (v === null || v === undefined || v === '' ? '—' : v);
+const orDash = (v: unknown) => (v === null || v === undefined || v === '' ? '—' : (v as ReactNode));
 
 const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-all placeholder:text-muted-foreground hover:border-ring/40 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]';
 
@@ -47,25 +94,31 @@ export default function ClientContract({ client }: { client: Client }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   useScrollToTopOnMount(containerRef);
 
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ContractData | null>(null);
   const [loading, setLoading] = useState(true);
   // Real contract documents (Documentos tab, categoría "Contratos") — the old
   // panel was a hardcoded EmptyState that said "Sin documentos" forever.
-  const [contractDocs, setContractDocs] = useState<any[]>([]);
+  const [contractDocs, setContractDocs] = useState<DocRow[]>([]);
   useEffect(() => {
     let alive = true;
     if (!client?.id) return;
+    // getClientDocuments returns { documents: DocRow[], ... } — the array is
+    // under `documents` (NOT rows/docs), so read that field.
     clientService.getClientDocuments(client.id, { category: 'Contratos', perPage: 20 })
-      .then((r: any) => { if (alive) setContractDocs(Array.isArray(r) ? r : (r?.rows ?? r?.docs ?? [])); })
+      .then((r) => { if (alive) setContractDocs(Array.isArray(r) ? r : (r?.documents ?? [])); })
       .catch(() => { /* keep empty */ });
     return () => { alive = false; };
   }, [client?.id]);
 
   const [editOpen, setEditOpen] = useState(false);
-  const [form, setForm] = useState<any>({});
+  // Controlled-form buffers: numeric inputs are held as strings while editing;
+  // autoRenew is the only boolean (bound via `checked`, not `value`).
+  const [form, setForm] = useState<ContractForm>({});
   const [saving, setSaving] = useState(false);
 
   const [svcOpen, setSvcOpen] = useState(false);
+  // Service/renewal edit buffers spread a row then hold string-typed input values;
+  // deliberately loose while editing.
   const [svcForm, setSvcForm] = useState<any>(null);
 
   const [renOpen, setRenOpen] = useState(false);
@@ -79,10 +132,10 @@ export default function ClientContract({ client }: { client: Client }) {
   };
   useEffect(() => { setLoading(true); load(); /* eslint-disable-next-line */ }, [client.id]);
 
-  const c = data?.contract || {};
-  const derived = data?.derived || {};
-  const services: any[] = data?.services || [];
-  const renewals: any[] = data?.renewals || [];
+  const c: Partial<ContractTerms> = data?.contract || {};
+  const derived: Partial<ContractDerived> = data?.derived || {};
+  const services: ContractServiceRow[] = data?.services || [];
+  const renewals: ContractRenewalRow[] = data?.renewals || [];
 
   const diff = useMemo(() => {
     if (derived.hoursContracted == null) return null;
@@ -115,7 +168,7 @@ export default function ClientContract({ client }: { client: Client }) {
   };
 
   // ---- service modal --------------------------------------------------------
-  const openSvc = (s?: any) => {
+  const openSvc = (s?: ContractServiceRow) => {
     setSvcForm(s
       ? { ...s }
       : { serviceKey: 'fixed_guard', name: SERVICE_PRESETS.fixed_guard.name, unit: SERVICE_PRESETS.fixed_guard.unit, description: '', contractedQty: '', slaTarget: '', active: true });
@@ -131,14 +184,14 @@ export default function ClientContract({ client }: { client: Client }) {
       await load();
     } catch { toast.error('No se pudo guardar el servicio'); } finally { setSaving(false); }
   };
-  const delSvc = async (s: any) => {
+  const delSvc = async (s: ContractServiceRow) => {
     if (!window.confirm(`¿Eliminar el servicio "${s.name}"?`)) return;
     try { await clientService.deleteContractService(client.id, s.id); await load(); }
     catch { toast.error('No se pudo eliminar'); }
   };
 
   // ---- renewal modal --------------------------------------------------------
-  const openRen = (r?: any) => {
+  const openRen = (r?: ContractRenewalRow) => {
     setRenForm(r ? { ...r } : { periodLabel: '', fromDate: '', toDate: '', durationMonths: '', status: 'active' });
     setRenOpen(true);
   };
@@ -151,7 +204,7 @@ export default function ClientContract({ client }: { client: Client }) {
       await load();
     } catch { toast.error('No se pudo guardar'); } finally { setSaving(false); }
   };
-  const delRen = async (r: any) => {
+  const delRen = async (r: ContractRenewalRow) => {
     if (!window.confirm('¿Eliminar este periodo del historial?')) return;
     try { await clientService.deleteContractRenewal(client.id, r.id); await load(); }
     catch { toast.error('No se pudo eliminar'); }
@@ -226,7 +279,7 @@ export default function ClientContract({ client }: { client: Client }) {
             />
           ) : (
             <div className="divide-y">
-              {contractDocs.map((d: any) => (
+              {contractDocs.map((d) => (
                 <a
                   key={d.id}
                   href={d.downloadUrl || d.url || '#'}
@@ -301,7 +354,7 @@ export default function ClientContract({ client }: { client: Client }) {
                         {comp == null ? <span className="text-muted-foreground">—</span> : (
                           <div className="flex items-center gap-2">
                             <span className="w-9 text-xs tabular-nums">{comp}%</span>
-                            <Bar pct={comp} tone={tone as any} />
+                            <Bar pct={comp} tone={tone} />
                           </div>
                         )}
                       </td>
@@ -483,7 +536,7 @@ function Lbl({ label, children, full }: { label: string; children: React.ReactNo
   );
 }
 
-function SlaCell({ icon, label, value, suffix, actual }: { icon: React.ReactNode; label: string; value: any; suffix?: string; actual?: number | null }) {
+function SlaCell({ icon, label, value, suffix, actual }: { icon: ReactNode; label: string; value: ReactNode; suffix?: string; actual?: number | null }) {
   return (
     <div>
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">{icon}{label}</div>
