@@ -50,8 +50,11 @@ export default function PostSiteLayout({ title, children, site }: Props) {
   const hue = [28, 205, 150, 265, 340, 95, 180, 12][h % 8];
 
   const isActive = String(site?.status || (site?.active ? 'active' : '')).toLowerCase() === 'active' || site?.active === true;
-  const clientName = site?.client?.name || site?.clientAccount?.name || site?.clientAccount?.companyName || null;
+  const clientName = site?.client?.commercialName || site?.client?.name
+    || site?.clientAccount?.commercialName || site?.clientAccount?.name || site?.clientAccount?.companyName || null;
   const clientId = site?.client?.id || site?.clientAccount?.id || site?.clientAccountId || null;
+  const activeTab = TAB_DEFS.find((it) => it.seg === currentSeg) || TAB_DEFS[0];
+  const showTabCrumb = activeTab.seg !== 'overview';
   const address = [site?.address, site?.city].filter(Boolean).join(', ');
   const categoryName = site?.category?.name || null;
   const fmtCoords = Number.isFinite(Number(site?.latitud)) && Number.isFinite(Number(site?.longitud)) && Number(site?.latitud) !== 0
@@ -60,19 +63,25 @@ export default function PostSiteLayout({ title, children, site }: Props) {
   return (
     <AppLayout>
       <div className="mx-auto w-full max-w-[1440px] space-y-4 px-4 py-4">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          {clientId ? (
+        {/* Breadcrumb: Clientes › {Cliente} › {Sede} › {Pestaña activa} */}
+        <div className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+          <Link to="/clients" className="shrink-0 hover:text-primary">{t('clients.nav.title', 'Clientes')}</Link>
+          <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+          {clientId && clientName && (
             <>
-              <Link to="/clients" className="hover:text-primary">{t('clients.nav.title', 'Clientes')}</Link>
-              <ChevronRight className="h-3.5 w-3.5" />
-              <Link to={`/clients/${clientId}/post-sites`} className="truncate hover:text-primary">{clientName || t('postSites.pageTitle', 'Sedes')}</Link>
+              <Link to={`/clients/${clientId}/overview`} className="max-w-[160px] truncate hover:text-primary sm:max-w-[220px]" title={clientName}>{clientName}</Link>
+              <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+            </>
+          )}
+          {showTabCrumb ? (
+            <>
+              <Link to={`${base}/overview`} className="max-w-[160px] truncate hover:text-primary sm:max-w-[220px]" title={displayName}>{displayName}</Link>
+              <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+              <span className="shrink-0 font-medium text-foreground">{activeTab.label}</span>
             </>
           ) : (
-            <Link to="/post-sites" className="hover:text-primary">{t('postSites.pageTitle', 'Sedes')}</Link>
+            <span className="max-w-[200px] truncate font-medium text-foreground sm:max-w-[280px]" title={displayName}>{displayName}</span>
           )}
-          <ChevronRight className="h-3.5 w-3.5" />
-          <span className="truncate font-medium text-foreground">{displayName}</span>
         </div>
 
         {/* Header card */}

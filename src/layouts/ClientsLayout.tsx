@@ -65,7 +65,14 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
 
   const hiddenIds = ['profile', 'notes', 'files', 'userAccess', 'emailReports'];
   const resolvePathWithId = (path: string) => (id && path.includes(':id') ? path.replace(':id', id) : path);
-  const items: any[] = (cfg?.sections || []).flatMap((s: any) => s.items || []).filter((it: any) => !hiddenIds.includes(it.id));
+  const allItems: any[] = (cfg?.sections || []).flatMap((s: any) => s.items || []);
+  const items: any[] = allItems.filter((it: any) => !hiddenIds.includes(it.id));
+
+  // Active-tab crumb — resolved against the UNFILTERED list so hidden tabs
+  // (perfil/notas/archivos/…) still name the section in the breadcrumb.
+  const activeItem = allItems.find((it: any) => resolvePathWithId(it.path) === location.pathname);
+  const showTabCrumb = (activeItem?.id ?? 'overview') !== 'overview';
+  const activeTabLabel = activeItem ? t(activeItem.label) : t('clients.nav.overview', 'Resumen');
 
   const displayName = client?.commercialName || client?.companyName
     ? (client?.commercialName || client?.companyName)
@@ -99,11 +106,19 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
 
   return (
     <div className="mx-auto w-full max-w-[1440px] space-y-4 px-4 py-4">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <Link to="/clients" className="hover:text-primary">{t('clients.nav.title', 'Clientes')}</Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="truncate font-medium text-foreground">{displayName}</span>
+      {/* Breadcrumb: Clientes › {Cliente} › {Pestaña activa} */}
+      <div className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+        <Link to="/clients" className="shrink-0 hover:text-primary">{t('clients.nav.title', 'Clientes')}</Link>
+        <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+        {showTabCrumb ? (
+          <>
+            <Link to={`${base}/overview`} className="max-w-[180px] truncate hover:text-primary sm:max-w-[240px]" title={displayName}>{displayName}</Link>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+            <span className="shrink-0 font-medium text-foreground">{activeTabLabel}</span>
+          </>
+        ) : (
+          <span className="max-w-[220px] truncate font-medium text-foreground sm:max-w-[320px]" title={displayName}>{displayName}</span>
+        )}
       </div>
 
       {/* Header card */}

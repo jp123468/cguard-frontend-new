@@ -9,7 +9,7 @@ import React, { ReactNode, useEffect, useRef } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import {
-  ChevronLeft, LayoutDashboard, DoorOpen, Users, CalendarClock,
+  ChevronRight, LayoutDashboard, DoorOpen, Users, CalendarClock,
   ClipboardList, Route, QrCode, History, Package, Car, AlertTriangle,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +41,16 @@ export default function StationLayout({ title, children, station }: Props) {
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + '/');
 
+  // Breadcrumb chain — Clientes › {Cliente} › {Sede} › {Estación} › {Pestaña}.
+  const client = station?.stationOrigin;
+  const site = station?.postSite;
+  const clientId = client?.id;
+  const clientName = client?.commercialName || client?.name || null;
+  const siteName = site?.businessName || site?.companyName || site?.name || t('postSites.postsite', 'Sede');
+  const stationName = station?.stationName || station?.name || t('station.details.station', 'Estación');
+  const activeItem = items.find((it) => isActive(it.path)) || items[0];
+  const showTabCrumb = activeItem.id !== 'overview';
+
   // Keep the active card visible when landing deep in the list.
   useEffect(() => {
     try {
@@ -52,16 +62,31 @@ export default function StationLayout({ title, children, station }: Props) {
   return (
     <AppLayout>
       <div className="flex h-[calc(100vh-64px)] flex-col overflow-hidden">
-        {/* Barra de navegación: regreso + cards de sección (scroll horizontal) */}
+        {/* Barra de navegación: breadcrumb + cards de sección (scroll horizontal) */}
         <div className="shrink-0 px-4 pt-3">
+          {/* Breadcrumb: Clientes › Cliente › Sede › Estación › Pestaña */}
+          <div className="mb-2 flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+            <Link to="/clients" className="shrink-0 hover:text-primary">{t('clients.nav.title', 'Clientes')}</Link>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+            {clientId && clientName && (
+              <>
+                <Link to={`/clients/${clientId}/overview`} className="max-w-[130px] truncate hover:text-primary sm:max-w-[190px]" title={clientName}>{clientName}</Link>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+              </>
+            )}
+            <Link to={`/post-sites/${postSiteId}/overview`} className="max-w-[130px] truncate hover:text-primary sm:max-w-[190px]" title={siteName}>{siteName}</Link>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+            {showTabCrumb ? (
+              <>
+                <Link to={`${base}/overview`} className="max-w-[130px] truncate hover:text-primary sm:max-w-[190px]" title={stationName}>{stationName}</Link>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                <span className="shrink-0 font-medium text-foreground">{activeItem.label}</span>
+              </>
+            ) : (
+              <span className="max-w-[160px] truncate font-medium text-foreground sm:max-w-[220px]" title={stationName}>{stationName}</span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
-            <Link
-              to={`/post-sites/${postSiteId}/stations`}
-              className="flex shrink-0 items-center gap-1 rounded-xl border bg-card px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-              title={t('station.details.backToStations', 'Volver a Puestos')}
-            >
-              <ChevronLeft size={16} />
-            </Link>
             <div
               ref={navRef}
               className="flex flex-1 items-center gap-2 overflow-x-auto pb-1 pt-1 [-ms-overflow-style:none] [scrollbar-width:thin]"

@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
     Shield, Smartphone, Clock, MapPin, Pencil, Check, X,
-    Building2, Briefcase, Users, Route as RouteIcon,
+    Users, Route as RouteIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,10 +60,6 @@ export default function StationHero({
             })),
         [station],
     );
-    const client = station?.stationOrigin;
-    const site = station?.postSite;
-    const clientName = client?.commercialName || client?.name || null;
-
     // Quién está de turno AHORA: últimas marcaciones de esta estación sin salida.
     useEffect(() => {
         if (!stationId) return;
@@ -116,31 +112,7 @@ export default function StationHero({
     return (
         <FadeIn>
             <div className="mb-4 rounded-2xl border bg-gradient-to-r from-primary/10 via-card to-card p-4 md:p-5">
-                {/* Contexto: cliente → sitio → (este puesto) */}
-                {(clientName || site) && (
-                    <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                        {clientName && client?.id && (
-                            <Link
-                                to={`/clients/${client.id}/overview`}
-                                className="flex items-center gap-1 rounded-full border bg-card px-2.5 py-1 hover:border-primary/50 hover:text-primary"
-                            >
-                                <Briefcase className="h-3 w-3" />
-                                {clientName}
-                            </Link>
-                        )}
-                        {clientName && site && <span>›</span>}
-                        {site && (
-                            <Link
-                                to={`/post-sites/${site.id}/overview`}
-                                className="flex items-center gap-1 rounded-full border bg-card px-2.5 py-1 hover:border-primary/50 hover:text-primary"
-                            >
-                                <Building2 className="h-3 w-3" />
-                                {site.businessName || site.companyName || "Sitio"}
-                            </Link>
-                        )}
-                    </div>
-                )}
-
+                {/* El contexto cliente → sede vive ahora en el breadcrumb del layout. */}
                 <div className="flex flex-wrap items-start gap-4">
                     <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
                         {station?.isMobile ? <Smartphone className="h-8 w-8" /> : <Shield className="h-8 w-8" />}
