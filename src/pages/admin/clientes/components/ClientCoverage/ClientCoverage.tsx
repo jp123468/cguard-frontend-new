@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
 import GoogleMapEmbed from '@/components/GoogleMap/GoogleMapEmbed';
+import ScheduleCard from './ScheduleCard';
 import { Section, EmptyState, StatusBadge } from '@/components/kit';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -395,6 +396,9 @@ export default function ClientCoverage({ client }: { client: any }) {
           </Section>
         </div>
       </div>
+
+      {/* Horarios (schedule grid + guard CRUD) — below Estaciones del sitio */}
+      {sedeId && <ScheduleCard clientId={client.id} sedeId={sedeId} />}
 
       {/* Footer */}
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-muted/30 px-4 py-2.5 text-xs text-muted-foreground">

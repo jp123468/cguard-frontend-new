@@ -713,6 +713,34 @@ export const clientService = {
         return data?.data ?? data;
     },
 
+    // ----- Horario (schedule grid + assignment CRUD) ----------------------
+    async getClientSchedule(clientId: string, opts: { postSiteId?: string; startDate?: string; endDate?: string } = {}) {
+        const tenantId = getTenantId();
+        const params = new URLSearchParams();
+        if (opts.postSiteId) params.set('postSiteId', opts.postSiteId);
+        if (opts.startDate) params.set('startDate', opts.startDate);
+        if (opts.endDate) params.set('endDate', opts.endDate);
+        const qs = params.toString() ? `?${params.toString()}` : '';
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/schedule${qs}`, { toast: { silentError: true } } as any);
+        return data?.data ?? data;
+    },
+    async guardAutocomplete(query = '', limit = 200) {
+        const tenantId = getTenantId();
+        const { data } = await api.get<any>(`/tenant/${tenantId}/security-guard/autocomplete?query=${encodeURIComponent(query)}&limit=${limit}`, { toast: { silentError: true } } as any);
+        const arr = (data?.data ?? data) || [];
+        return Array.isArray(arr) ? arr.map((g: any) => ({ id: String(g.id ?? g.value), label: g.label ?? g.fullName ?? g.name ?? '' })) : [];
+    },
+    async assignGuardToPosition(payload: { guardId: string; stationId: string; positionId: string; startDate?: string; isRelief?: boolean }) {
+        const tenantId = getTenantId();
+        const { data } = await api.post<any>(`/tenant/${tenantId}/guard-assignment`, { data: payload });
+        return data?.data ?? data;
+    },
+    async removeGuardAssignment(assignmentId: string) {
+        const tenantId = getTenantId();
+        const { data } = await api.delete<any>(`/tenant/${tenantId}/guard-assignment/${assignmentId}`);
+        return data?.data ?? data;
+    },
+
     // ----- Puestos y cobertura --------------------------------------------
     async getClientCoverage(clientId: string, opts: { postSiteId?: string; horizonMin?: number } = {}) {
         const tenantId = getTenantId();
