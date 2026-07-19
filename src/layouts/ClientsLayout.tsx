@@ -170,12 +170,11 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
         </div>
       </div>
 
-      {/* KPI row — hidden on the coverage tab, which renders its own live KPIs */}
-      {!location.pathname.endsWith('/coverage') && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
-          {kpis.map((k, i) => <KpiCard key={i} {...k} navigate={navigate} />)}
-        </div>
-      )}
+      {/* KPI row — shared across EVERY tab (coverage included) so the header
+          cards never jump around when switching subpáginas. */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
+        {kpis.map((k, i) => <KpiCard key={i} {...k} navigate={navigate} />)}
+      </div>
 
       {/* Tabs */}
       <div className="overflow-x-auto">

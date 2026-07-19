@@ -7,7 +7,7 @@ import { Section, EmptyState, StatusBadge } from '@/components/kit';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
-  Search, MapPin, Users, Shield, ShieldAlert, Clock, AlertTriangle,
+  Search, MapPin, Shield, ShieldAlert, Clock,
   CheckCircle2, Crosshair, RefreshCw, Route as RouteIcon, ChevronRight,
   LayoutGrid, Locate, Satellite, Map as MapIcon, ExternalLink,
 } from 'lucide-react';
@@ -26,23 +26,6 @@ function Bar({ pct, status }: { pct: number; status: string }) {
   return (
     <div className="h-1.5 w-full min-w-[54px] rounded-full bg-muted">
       <div className={`h-1.5 rounded-full ${color}`} style={{ width: `${Math.max(2, Math.min(100, pct))}%` }} />
-    </div>
-  );
-}
-
-function Kpi({ icon, value, label, sub, accent = 'primary', onClick }: any) {
-  const ACC: Record<string, string> = {
-    primary: 'bg-primary/12 text-primary', green: 'bg-emerald-500/12 text-emerald-600',
-    orange: 'bg-orange-500/12 text-orange-600', red: 'bg-red-500/12 text-red-600',
-    blue: 'bg-blue-500/12 text-blue-600', slate: 'bg-muted text-muted-foreground',
-  };
-  return (
-    <div className="cg-card p-4">
-      <div className={`mb-2 grid h-9 w-9 place-items-center rounded-xl ${ACC[accent]} [&_svg]:size-4`}>{icon}</div>
-      <div className="font-display text-2xl font-bold leading-tight">{value}</div>
-      <div className="text-xs text-muted-foreground truncate">{label}</div>
-      {sub && <div className="mt-1 text-xs">{sub}</div>}
-      {onClick && <button onClick={onClick} className="mt-1 text-xs font-medium text-primary hover:underline">Ver detalle</button>}
     </div>
   );
 }
@@ -88,11 +71,9 @@ export default function ClientCoverage({ client }: { client: any }) {
 
   const sedes: any[] = data?.sedes || [];
   const puestos: any[] = data?.puestos || [];
-  const kpis = data?.kpis || {};
   const turnoSummary: any[] = data?.turnoSummary || [];
   const sinCobertura: any[] = data?.sinCobertura || [];
   const proximos: any[] = data?.proximos || [];
-  const objetivoPct = data?.objetivoPct ?? 95;
 
   const selected = puestos.find((p) => p.id === selectedId) || null;
 
@@ -163,21 +144,8 @@ export default function ClientCoverage({ client }: { client: any }) {
         </div>
       </div>
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
-        <Kpi icon={<LayoutGrid />} value={kpis.puestosTotales ?? 0} label="Estaciones totales" accent="primary" />
-        <Kpi icon={<CheckCircle2 />} value={kpis.puestosCubiertos ?? 0} label="Estaciones cubiertas" accent="green"
-          sub={<span className="rounded-full bg-emerald-500/12 px-1.5 py-0.5 text-emerald-600">{kpis.puestosTotales ? Math.round((kpis.puestosCubiertos / kpis.puestosTotales) * 100) : 0}%</span>} />
-        <Kpi icon={<Shield />} value={`${kpis.coberturaPct ?? 0}%`} label="Cobertura actual" accent={(kpis.coberturaPct ?? 0) >= objetivoPct ? 'green' : 'orange'}
-          sub={<span className="text-muted-foreground">Objetivo: {objetivoPct}%</span>} />
-        <Kpi icon={<Users />} value={`${kpis.guardiasEnPuestos ?? 0}`} label="Guardias en estaciones" accent="blue"
-          sub={<span className="text-muted-foreground">de {kpis.guardiasRequeridas ?? 0} requeridos</span>} />
-        <Kpi icon={<ShieldAlert />} value={kpis.puestosSinCobertura ?? 0} label="Estaciones sin cobertura" accent={(kpis.puestosSinCobertura ?? 0) > 0 ? 'red' : 'slate'} />
-        <Kpi icon={<Clock />} value={kpis.proximosAIniciar ?? 0} label="Próximos a iniciar" accent="blue" sub={<span className="text-muted-foreground">próximas 2 horas</span>} />
-        <Kpi icon={<AlertTriangle />} value={kpis.puestosConNovedad ?? 0} label="Estaciones con novedad" accent={(kpis.puestosConNovedad ?? 0) > 0 ? 'orange' : 'slate'} />
-        <Kpi icon={<CheckCircle2 />} value={`${kpis.cumplimientoHoy ?? 0}%`} label="Cumplimiento hoy" accent="green" />
-      </div>
-
+      {/* The shared client-header KPI cards (ClientsLayout) stay visible on
+          this tab — no duplicate per-tab KPI row here. */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_1fr]">
         {/* LEFT — filters + table */}
         <div className="space-y-4">
