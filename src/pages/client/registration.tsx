@@ -59,6 +59,11 @@ export default function ClientRegistration() {
         navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}&inviteType=guard`);
         return;
       }
+      // Supervisor invites belong on the supervisor app screen, not the client view.
+      if (inviteType === 'supervisor') {
+        navigate(`/supervisor/registration?token=${encodeURIComponent(inviteToken)}&inviteType=supervisor`, { replace: true });
+        return;
+      }
       // Internal administrative staff (admins, supervisors, …) belong in the CRM
       // panel, NOT the customer registration view — redirect older links there.
       if (inviteType === 'staff' || inviteType === 'admin') {

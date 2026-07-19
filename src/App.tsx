@@ -74,6 +74,7 @@ const SupervisorCoveragePage = lazy(() => import("./pages/admin/supervisors/Supe
 const SupervisorSchedulePage = lazy(() => import("./pages/admin/supervisors/SupervisorSchedulePage"));
 const GuardRegistration = lazy(() => import("./pages/guard/registration"));
 const ClientRegistration = lazy(() => import("./pages/client/registration"));
+const SupervisorRegistration = lazy(() => import("./pages/supervisor/registration"));
 const AdminOfficeUsersPage = lazy(() => import("./pages/admin/administrative-office-users/AdminOfficeUsersPage"));
 const NewAdminUserPage = lazy(() => import("./pages/admin/administrative-office-users/NewAdminUserPage"));
 const EditAdminUserPage = lazy(() => import("./pages/admin/administrative-office-users/EditAdminUserPage"));
@@ -207,6 +208,13 @@ function LoginRouteResolver() {
       return;
     }
 
+    // Supervisor invite: their home is the SUPERVISOR app, not this CRM. Send
+    // them to the supervisor registration/waiting screen (NOT guard, NOT CRM).
+    if (inviteType === 'supervisor') {
+      navigate(`/supervisor/registration?token=${encodeURIComponent(inviteToken)}&inviteType=supervisor`, { replace: true });
+      return;
+    }
+
     // Administrative / internal staff invites: they work in THIS CRM, so send
     // them to the panel onboarding (NOT the customer registration view).
     if (inviteType === 'staff' || inviteType === 'admin') {
@@ -281,6 +289,14 @@ export default function App() {
                 element={
                   <PublicOnlyRoute>
                     <ClientRegistration />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/supervisor/registration"
+                element={
+                  <PublicOnlyRoute>
+                    <SupervisorRegistration />
                   </PublicOnlyRoute>
                 }
               />

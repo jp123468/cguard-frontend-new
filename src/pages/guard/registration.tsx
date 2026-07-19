@@ -98,6 +98,11 @@ export default function GuardRegistration() {
         navigate(`/client/registration?token=${encodeURIComponent(inviteToken)}&inviteType=client`);
         return;
       }
+      // Supervisor invites belong on the supervisor app screen, never guard flow.
+      if (inviteType === 'supervisor' && inviteToken) {
+        navigate(`/supervisor/registration?token=${encodeURIComponent(inviteToken)}&inviteType=supervisor`);
+        return;
+      }
       setIsLoading(true);
       try {
         const endpointBase = `/security-guard/public`;
