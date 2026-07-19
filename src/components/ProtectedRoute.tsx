@@ -4,6 +4,8 @@ import NoWorkspaceAccess from "./NoWorkspaceAccess"
 import VerifyEmailGate from "./VerifyEmailGate"
 import SubscriptionLockedScreen from "./SubscriptionLockedScreen"
 import { getBillingState } from "@/lib/entitlements"
+import { canAccessCrm } from "@/lib/access"
+import AppAccessPending from "@/pages/auth/AppAccessPending"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -137,6 +139,14 @@ export default function ProtectedRoute({
         return <SubscriptionLockedScreen variant="canceled" />
       }
     }
+  }
+
+  // Acceso por canal: el CRM es solo para el personal administrativo. Los
+  // vigilantes y supervisores (cuyo acceso es por su app) ven una pantalla que
+  // los guía a la app, no el panel. El backend también lo bloquea (403/401);
+  // esto es defensa en profundidad + una salida amable en vez de un error.
+  if (!canAccessCrm(user)) {
+    return <AppAccessPending />
   }
 
   // Si todo está bien, mostrar el contenido protegido
