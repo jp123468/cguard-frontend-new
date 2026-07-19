@@ -9,6 +9,7 @@ export const STATUS_META: Record<string, { label: string; cls: string }> = {
   missed_clockout: { label: "Sin salida", cls: "bg-red-500/15 text-red-600 dark:text-red-400" },
   no_call_no_show: { label: "Inasistencia", cls: "bg-red-600/20 text-red-700 dark:text-red-400" },
   overtime: { label: "Tiempo extra", cls: "bg-sky-500/15 text-sky-600 dark:text-sky-400" },
+  no_schedule: { label: "Sin horario", cls: "bg-slate-400/15 text-slate-500 dark:text-slate-400" },
   pending_review: { label: "En revisión", cls: "bg-violet-500/15 text-violet-600 dark:text-violet-400" },
   approved: { label: "Aprobado", cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
   rejected: { label: "Rechazado", cls: "bg-red-500/15 text-red-600 dark:text-red-400" },
