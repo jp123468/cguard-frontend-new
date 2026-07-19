@@ -34,7 +34,6 @@ const SettingsHome = lazy(() => import("./pages/admin/Configuration/SettingsHome
 const IntegrationsList = lazy(() => import("./pages/admin/Configuration/integrations/IntegrationsList"));
 const ProfileFieldsPage = lazy(() => import("./pages/admin/Configuration/profile-fields/ProfileFieldsPage"));
 const IntegrationDetail = lazy(() => import("./pages/admin/Configuration/integrations/IntegrationDetail"));
-const PayrollSettingsPage = lazy(() => import("./pages/admin/Configuration/payroll/PayrollSettingsPage"));
 const PasswordChangePage = lazy(() => import("./pages/admin/Configuration/change-password/ChangePasswordPage"));
 const PostingGlobalPage = lazy(() => import("./pages/admin/Configuration/posting-global/PostingGlobalPage"));
 const DeveloperRequestsPage = lazy(() => import("./pages/admin/Configuration/application-records/DeveloperRequestsPage"));
@@ -56,12 +55,10 @@ const PostSiteDetailsPage = lazy(() => import("./pages/admin/post-sites/PostSite
 const AddStationPage = lazy(() => import("./pages/admin/post-sites/AddStationPage"));
 const StationDetailPage = lazy(() => import("./pages/admin/post-sites/station-detail/StationDetailPage"));
 const GlobalInventoryPage = lazy(() => import("./pages/admin/inventory/GlobalInventoryPage"));
-const ProjectsPage = lazy(() => import("./pages/admin/projects/ProjectsPage"));
 const TrainingCoursesPage = lazy(() => import("./pages/admin/training/TrainingCoursesPage"));
 const TrainingCourseDetailPage = lazy(() => import("./pages/admin/training/TrainingCourseDetailPage"));
 const TrainingEnrollmentsPage = lazy(() => import("./pages/admin/training/TrainingEnrollmentsPage"));
 const TrainingCatalogPage = lazy(() => import("./pages/admin/training/TrainingCatalogPage"));
-const NewOrEditProjectPage = lazy(() => import("./pages/admin/projects/NewOrEditProjectPage"));
 const SecurityGuardsPage = lazy(() => import("./pages/admin/security-guards/SecurityGuardsPage"));
 const NewSecurityGuardPage = lazy(() => import("./pages/admin/security-guards/NewSecurityGuardPage"));
 const SupervisorsPage = lazy(() => import("./pages/admin/supervisors/SupervisorsPage"));
@@ -488,30 +485,6 @@ export default function App() {
                 />
               ))}
               <Route
-                path="/projects"
-                element={
-                  <ProtectedRoute>
-                    <ProjectsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/projects/new"
-                element={
-                  <ProtectedRoute>
-                    <NewOrEditProjectPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/projects/:id/edit"
-                element={
-                  <ProtectedRoute>
-                    <NewOrEditProjectPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/training/courses"
                 element={
                   <ProtectedRoute>
@@ -620,14 +593,6 @@ export default function App() {
                 }
               />
               <Route
-                path="/post-sites/:id/post-orders"
-                element={
-                  <ProtectedRoute>
-                    <PostSiteDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/post-sites/:id/notes"
                 element={
                   <ProtectedRoute>
@@ -637,14 +602,6 @@ export default function App() {
               />
               <Route
                 path="/post-sites/:id/incidents"
-                element={
-                  <ProtectedRoute>
-                    <PostSiteDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/post-sites/:id/files"
                 element={
                   <ProtectedRoute>
                     <PostSiteDetailsPage />
@@ -676,71 +633,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/post-sites/:id/tasks"
-                element={
-                  <ProtectedRoute>
-                    <PostSiteDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/post-sites/:id/site-tours"
-                element={
-                  <ProtectedRoute>
-                    <PostSiteDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/post-sites/:id/site-tour-tags"
-                element={
-                  <ProtectedRoute>
-                    <PostSiteDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/post-sites/:id/tag-scans"
-                element={
-                  <ProtectedRoute>
-                    <PostSiteDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/post-sites/:id/geo-fence"
-                element={
-                  <ProtectedRoute>
-                    <PostSiteDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/post-sites/:id/assign-reports"
-                element={
-                  <ProtectedRoute>
-                    <PostSiteDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/post-sites/:id/checklists"
-                element={
-                  <ProtectedRoute>
-                    <PostSiteDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/post-sites/:id/email-reports"
-                element={
-                  <ProtectedRoute>
-                    <PostSiteDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/post-sites/:id/settings"
                 element={
                   <ProtectedRoute>
                     <PostSiteDetailsPage />

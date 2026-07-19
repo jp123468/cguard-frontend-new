@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import AppLayout from '@/layouts/app-layout';
-import MobileCardList from '@/components/responsive/MobileCardList';
 import ClientsLayout from '@/layouts/ClientsLayout';
 import { clientService } from '@/lib/api/clientService';
 import ClientOverview from './components/ClientOverview/ClientOverview';
@@ -17,7 +16,6 @@ import ClientStaff from './components/ClientStaff/ClientStaff';
 import ClientIncidents from './components/ClientIncidents/ClientIncidents';
 import ClientDocuments from './components/ClientDocuments/ClientDocuments';
 import ClientReports from './components/ClientReports/ClientReports';
-import ClientTabPlaceholder from './components/ClientTabPlaceholder';
 import { toast } from 'sonner';
 import { SkeletonCards, EmptyState, FadeIn } from '@/components/kit';
 import { Building2 } from 'lucide-react';

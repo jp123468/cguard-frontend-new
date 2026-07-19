@@ -14,7 +14,6 @@ import StationSiteTours from './components/StationSiteTours';
 import StationRondaHistory from './components/StationRondaHistory';
 import StationInventory from './components/StationInventory';
 import StationIncidents from './components/StationIncidents';
-import StationSiteTourTags from './components/StationSiteTourTags';
 import StationPatrolQR from './components/StationPatrolQR';
 import StationParking from './components/StationParking';
 import StationOrders from './components/StationOrders';

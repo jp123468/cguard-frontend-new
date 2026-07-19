@@ -3,12 +3,12 @@ import { useParams } from "react-router-dom";
 import PostSiteWizard from "./PostSiteWizard";
 
 type Category = { id: string; name: string };
+type Client = { id: string; name: string; lastName?: string };
 import { clientService } from "@/lib/api/clientService";
 import { MapPin, Pencil } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { useTranslation } from "react-i18next";
-import type { Client } from "./PostSiteForm";
 import { PageContainer, PageHeader, SkeletonCards } from "@/components/kit";
 
 export default function NewOrEditPostSitePage() {

@@ -10,22 +10,12 @@ import Overview from './components/PostsiteOverview/Overview';
 import Profile from './components/PostsiteProfile/Profile';
 import Contacts from './components/PostsiteContacts/Contacts';
 import KPIs from './components/PostSiteKPIs/PostSiteKPIs';
-import PostOrders from './components/PostsitePostOrders/PostOrders';
 import Notes from './components/PostsiteNotes/Notes';
-import Files from './components/PostsiteFiles/Files';
 import AssignGuards from './components/PostsiteAssignGuards/AssignGuards';
 import Stations from './components/PostsiteStations/Stations';
 import Incidents from './components/PostsiteIncidents/Incidents';
-import Tasks from './components/PostsiteTasks/Tasks';
 import SiteTours from './components/PostsiteSiteTours/SiteTours';
 import Inventory from './components/PostsiteInventory/Inventory';
-import SiteTourTags from './components/PostsiteSiteTourTags/SiteTourTags';
-import TagScans from './components/PostsiteTagScans/TagScans';
-import GeoFence from './components/PostsiteGeoFence/GeoFence';
-import AssignReports from './components/PostsiteAssignReports/AssignReports';
-import Checklists from './components/PostsiteChecklists/Checklists';
-import EmailReports from './components/PostsiteEmailReports/EmailReports';
-import PostsiteSetting from './components/PostsiteSetting/PostsiteSettings';
 import { useTranslation } from "react-i18next";
 
 export default function PostSiteDetailsPage() {
@@ -81,38 +71,18 @@ export default function PostSiteDetailsPage() {
         return <Contacts site={site} />;
       case 'kpis':
         return <KPIs site={site} />;
-      case 'post-orders':
-        return <PostOrders site={site} />;
       case 'notes':
         return <Notes site={site} />;
-      case 'files':
-        return <Files site={site} />;
       case 'assign-guards':
         return <AssignGuards site={site} />;
       case 'stations':
         return <Stations site={site} />;
       case 'incidents':
         return <Incidents site={site} />;
-      case 'tasks':
-        return <Tasks site={site} />;
       case 'site-tours':
         return <SiteTours site={site} />;
       case 'inventory':
         return <Inventory site={site} />;
-      case 'site-tour-tags':
-        return <SiteTourTags site={site} />;
-      case 'tag-scans':
-        return <TagScans postSiteId={id} site={site} />;
-      case 'geo-fence':
-        return <GeoFence site={site} />;
-      case 'assign-reports':
-        return <AssignReports site={site} />;
-      case 'checklists':
-        return <Checklists site={site} />;
-      case 'email-reports':
-        return <EmailReports site={site} />;
-      case 'settings':
-        return <PostsiteSetting site={site} />;
       default:
         return <Overview site={site} />;
     }
