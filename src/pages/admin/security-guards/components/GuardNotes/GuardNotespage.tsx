@@ -116,7 +116,7 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                 };
 
                 if (!resolvedId) {
-                    toast.error('Id missing');
+                    toast.error(t('guards.notes.missingId', { defaultValue: 'No se encontró el identificador' }));
                     return;
                 }
 
@@ -207,9 +207,9 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
         if (!resolvedId) return;
         try {
             const resp: any = await notesApi.list(resolvedId);
-            // resp may be { rows, count } or an array
-            const items = resp?.rows ?? resp ?? [];
-            setNotesData(items);
+            // resp may be { rows, count }, a { data } wrapper, or a bare array.
+            const items = resp?.rows ?? resp?.data ?? resp ?? [];
+            setNotesData(Array.isArray(items) ? items : []);
         } catch (err) {
             console.error('Failed to load notes', err);
             try { toast.error(t('guards.notes.loadError', { defaultValue: 'Error al cargar notas' })); } catch (e) {}
@@ -503,7 +503,7 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                                                                         <div className="flex items-center gap-3 truncate">
                                                                             <span className="truncate text-sm font-medium text-foreground" style={{maxWidth: 200}} title={f.name}>{shortName(f.name, 28)}</span>
                                                                         </div>
-                                                                        <button onClick={(e) => { e.stopPropagation(); removeAttachment(i); }} className="rounded p-1 text-muted-foreground transition-colors hover:text-red-500" aria-label={`Remove ${f.name}`}>
+                                                                        <button onClick={(e) => { e.stopPropagation(); removeAttachment(i); }} className="rounded p-1 text-muted-foreground transition-colors hover:text-red-500" aria-label={`Quitar ${f.name}`}>
                                                                             <X size={14} />
                                                                         </button>
                                                                     </div>

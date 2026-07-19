@@ -102,7 +102,7 @@ export default function GuardHorarioPage() {
                               {r.rotationStyleName ? <span className="text-muted-foreground/70"> · {r.rotationStyleName}</span> : null}
                             </div>
                           </td>
-                          {r.cells.map((c: any) => {
+                          {(r.cells || []).map((c: any) => {
                             const m = CELL[c.status] || CELL.none;
                             return <td key={c.date} className="border-b p-0.5 text-center"><span className={`grid h-7 w-full min-w-[26px] place-items-center rounded text-[11px] font-bold ${m.cls}`}>{m.label}</span></td>;
                           })}

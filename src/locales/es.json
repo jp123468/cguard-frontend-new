@@ -1097,7 +1097,7 @@
       }
     },
     "assignSites": {
-      "assignButton": "Asignar Estacionesde seguridad",
+      "assignButton": "Asignar estación",
       "loadError": "No se pudo cargar el vigilante",
       "loading": "Cargando...",
       "noPostSites": "No se encontraron puestos de seguridad",
@@ -1122,7 +1122,7 @@
       "modal": {
         "assign": "Asignar",
         "cancel": "Cancelar",
-        "title": "Asignar Estacionesde seguridad"
+        "title": "Asignar estación"
       },
       "table": {
         "client": "Cliente",
@@ -3241,7 +3241,7 @@
         }
       },
       "assignSites": {
-        "assignButton": "Asignar Estacionesde seguridad",
+        "assignButton": "Asignar estación",
         "loadError": "No se pudo cargar el vigilante",
         "loading": "Cargando...",
         "noPostSites": "No se encontraron puestos de seguridad",
@@ -3261,7 +3261,7 @@
         "modal": {
           "assign": "Asignar",
           "cancel": "Cancelar",
-          "title": "Asignar Estacionesde seguridad"
+          "title": "Asignar estación"
         },
         "table": {
           "client": "Cliente",

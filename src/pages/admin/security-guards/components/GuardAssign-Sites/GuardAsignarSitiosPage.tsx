@@ -48,6 +48,20 @@ const shiftWindow = (start: any, end: any): string | null => {
   return a || b || null;
 };
 
+// Date-only formatting for the grouped station card's shift date range.
+const fmtDateOnly = (v: any): string | null => {
+  if (!v) return null;
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return String(v);
+  return d.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+const dateRange = (start: any, end: any): string | null => {
+  const a = fmtDateOnly(start);
+  const b = fmtDateOnly(end);
+  if (a && b) return a === b ? a : `${a} – ${b}`;
+  return a || b || null;
+};
+
 type Assignment = {
   id: string; // REAL shift id — used for unassign (DELETE /shift?ids=<id>)
   client: string | null;
@@ -58,13 +72,25 @@ type Assignment = {
   businessInfoId?: string | null;
 };
 
+// A station-level assignment: all shifts for one (station · post · client) rolled
+// up so we render ONE card per station instead of one row per generated shift.
+type StationGroup = {
+  key: string;
+  client: string | null;
+  postSite: string | null;
+  station: string | null;
+  earliest: any; // earliest shift startTime
+  latest: any;   // latest shift endTime
+  shiftIds: string[]; // every real shift id in the group (used for unassign)
+};
+
 export default function GuardAsignarSitiosPage() {
   const { id } = useParams();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [mappings, setMappings] = useState<Assignment[]>([]);
   const [query, setQuery] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
 
   // ── Load the guard's real assignments (single source of truth) ──────────────
   const loadAssignments = useCallback(async () => {
@@ -126,7 +152,8 @@ export default function GuardAsignarSitiosPage() {
 
   // ── Assign modal state ──────────────────────────────────────────────────────
   const actionRef = useRef<HTMLDivElement | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // Delete context: the exact shift ids to remove + a human label + count.
+  const [deleteCtx, setDeleteCtx] = useState<{ ids: string[]; label: string; count: number } | null>(null);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [clients, setClients] = useState<Array<{ id: string; name: string }>>([]);
   const [postSites, setPostSites] = useState<Array<{ id: string; name: string }>>([]);
@@ -140,20 +167,50 @@ export default function GuardAsignarSitiosPage() {
   const [selectedPostSite, setSelectedPostSite] = useState('');
   const [assigning, setAssigning] = useState(false);
 
-  // ── Search-filtered list ────────────────────────────────────────────────────
+  // ── Roll shift rows up into ONE group per station ───────────────────────────
+  const groups: StationGroup[] = (() => {
+    const map = new Map<string, StationGroup>();
+    for (const m of mappings) {
+      const key = `${m.businessInfoId ?? ''}|${m.station ?? ''}|${m.postSite ?? ''}`;
+      let g = map.get(key);
+      if (!g) {
+        g = {
+          key,
+          client: m.client,
+          postSite: m.postSite,
+          station: m.station,
+          earliest: m.startTime,
+          latest: m.endTime,
+          shiftIds: [],
+        };
+        map.set(key, g);
+      }
+      if (m.id) g.shiftIds.push(m.id);
+      // Backfill labels from any row in the group that has them.
+      g.client = g.client ?? m.client;
+      g.postSite = g.postSite ?? m.postSite;
+      g.station = g.station ?? m.station;
+      // Track the earliest start / latest end across the group's shifts.
+      if (m.startTime && (!g.earliest || new Date(m.startTime) < new Date(g.earliest))) g.earliest = m.startTime;
+      if (m.endTime && (!g.latest || new Date(m.endTime) > new Date(g.latest))) g.latest = m.endTime;
+    }
+    return Array.from(map.values());
+  })();
+
+  // ── Search-filtered grouped list ────────────────────────────────────────────
   const q = query.trim().toLowerCase();
   const filtered = q
-    ? mappings.filter((m) =>
-        [m.postSite, m.client, m.station, shiftWindow(m.startTime, m.endTime)]
+    ? groups.filter((g) =>
+        [g.postSite, g.client, g.station, dateRange(g.earliest, g.latest)]
           .filter(Boolean)
           .some((v) => String(v).toLowerCase().includes(q)),
       )
-    : mappings;
+    : groups;
 
-  const allSelected = filtered.length > 0 && filtered.every((m) => selectedIds.includes(m.id));
+  const allSelected = filtered.length > 0 && filtered.every((g) => selectedKeys.includes(g.key));
   const toggleSelectAll = (checked: boolean) => {
-    if (checked) setSelectedIds(filtered.map((m) => m.id));
-    else setSelectedIds([]);
+    if (checked) setSelectedKeys(filtered.map((g) => g.key));
+    else setSelectedKeys([]);
   };
 
   // ── Assign (keeps the working assign-guard adapter flow) ────────────────────
@@ -231,22 +288,22 @@ export default function GuardAsignarSitiosPage() {
     })();
   };
 
-  // ── Unassign (delete the real shift row) ────────────────────────────────────
+  // ── Unassign — removes EVERY shift in the station group ─────────────────────
   const confirmDelete = async () => {
     const tenantId = localStorage.getItem('tenantId');
-    // Only allow delete when a REAL shift id exists.
-    const idsToDelete = selectedIds.filter((v) => v && v.trim());
+    // Only allow delete when REAL shift ids exist.
+    const idsToDelete = (deleteCtx?.ids ?? []).filter((v) => v && v.trim());
     if (!tenantId || idsToDelete.length === 0) {
       toast.error(t('guards.assignSites.errors.noneToDelete', { defaultValue: 'No hay asignaciones válidas para eliminar' }));
-      setShowDeleteConfirm(false);
+      setDeleteCtx(null);
       return;
     }
     try {
-      const queryStr = `ids=${idsToDelete.map(encodeURIComponent).join(',')}`;
+      const queryStr = idsToDelete.map((v) => `ids=${encodeURIComponent(v)}`).join('&');
       await api.delete(`/tenant/${tenantId}/shift?${queryStr}`);
       toast.success(t('guards.assignSites.actions.deleted', { defaultValue: 'Asignación eliminada' }));
-      setSelectedIds([]);
-      setShowDeleteConfirm(false);
+      setSelectedKeys([]);
+      setDeleteCtx(null);
       try {
         window.dispatchEvent(new CustomEvent('assignments:changed', { detail: { action: 'delete', ids: idsToDelete } }));
       } catch {
@@ -255,8 +312,24 @@ export default function GuardAsignarSitiosPage() {
       await loadAssignments();
     } catch (err) {
       toast.error(t('guards.assignSites.actions.deleteFailed', { defaultValue: 'No se pudo eliminar la asignación' }));
-      setShowDeleteConfirm(false);
+      setDeleteCtx(null);
     }
+  };
+
+  // Build a delete context for a set of station groups (used by both the
+  // per-station trash button and the bulk "Quitar" action).
+  const requestDelete = (grps: StationGroup[]) => {
+    const valid = grps.filter((g) => g.shiftIds.length > 0);
+    if (valid.length === 0) {
+      toast.error(t('guards.assignSites.errors.noneToDelete', { defaultValue: 'No hay asignaciones válidas para eliminar' }));
+      return;
+    }
+    const ids = valid.flatMap((g) => g.shiftIds);
+    const label =
+      valid.length === 1
+        ? (valid[0].station || valid[0].postSite || t('guards.assignSites.thisPost', { defaultValue: 'este puesto' }))
+        : t('guards.assignSites.nStations', { defaultValue: '{{count}} estaciones', count: valid.length });
+    setDeleteCtx({ ids, label: String(label), count: ids.length });
   };
 
   // Load clients when opening assign modal
@@ -365,19 +438,19 @@ export default function GuardAsignarSitiosPage() {
                 <div className="relative" ref={actionRef}>
                   <button
                     onClick={() => {
-                      if (!selectedIds || selectedIds.length === 0) {
-                        toast.error(t('guards.assignSites.actions.selectPair', { defaultValue: 'Selecciona al menos una asignación para eliminar' }));
+                      if (!selectedKeys || selectedKeys.length === 0) {
+                        toast.error(t('guards.assignSites.actions.selectPair', { defaultValue: 'Selecciona al menos una estación para eliminar' }));
                         return;
                       }
-                      setShowDeleteConfirm(true);
+                      requestDelete(groups.filter((g) => selectedKeys.includes(g.key)));
                     }}
-                    disabled={selectedIds.length === 0}
+                    disabled={selectedKeys.length === 0}
                     className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border text-sm font-medium text-red-600 hover:bg-red-500/10 transition disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Trash2 size={15} />
                     {t('guards.assignSites.actions.delete', { defaultValue: 'Quitar' })}
-                    {selectedIds.length > 0 && (
-                      <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-red-500/15 text-[11px]">{selectedIds.length}</span>
+                    {selectedKeys.length > 0 && (
+                      <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-red-500/15 text-[11px]">{selectedKeys.length}</span>
                     )}
                   </button>
                 </div>
@@ -430,23 +503,24 @@ export default function GuardAsignarSitiosPage() {
                   />
                   {t('guards.assignSites.selectAll', { defaultValue: 'Seleccionar todo' })}
                 </label>
-                {filtered.map((m) => {
-                  const checked = selectedIds.includes(m.id);
-                  const postSiteLabel = labelOf(m.postSite);
-                  const clientLabel = labelOf(m.client);
-                  const stationLabel = labelOf(m.station);
-                  const windowLabel = shiftWindow(m.startTime, m.endTime);
+                {filtered.map((g) => {
+                  const checked = selectedKeys.includes(g.key);
+                  const postSiteLabel = labelOf(g.postSite);
+                  const clientLabel = labelOf(g.client);
+                  const stationLabel = labelOf(g.station);
+                  const rangeLabel = dateRange(g.earliest, g.latest);
+                  const count = g.shiftIds.length;
                   return (
                     <div
-                      key={m.id}
+                      key={g.key}
                       className={`group flex items-center gap-3 rounded-xl border p-3.5 transition hover:shadow-sm ${checked ? 'border-primary/60 bg-primary/5' : 'hover:bg-muted/30'}`}
                     >
                       <input
                         type="checkbox"
                         checked={checked}
                         onChange={(e) => {
-                          if (e.target.checked) setSelectedIds((prev) => [...prev, m.id]);
-                          else setSelectedIds((prev) => prev.filter((x) => x !== m.id));
+                          if (e.target.checked) setSelectedKeys((prev) => [...prev, g.key]);
+                          else setSelectedKeys((prev) => prev.filter((x) => x !== g.key));
                         }}
                         className="h-4 w-4 rounded accent-primary shrink-0"
                       />
@@ -454,7 +528,7 @@ export default function GuardAsignarSitiosPage() {
                         <Building2 className="w-4.5 h-4.5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">{postSiteLabel || '—'}</div>
+                        <div className="font-medium text-sm truncate">{postSiteLabel || stationLabel || '—'}</div>
                         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                           <span className="inline-flex items-center gap-1 truncate">
                             <Briefcase className="w-3 h-3 shrink-0" />
@@ -466,20 +540,20 @@ export default function GuardAsignarSitiosPage() {
                               {stationLabel}
                             </StatusBadge>
                           )}
-                          {windowLabel && (
+                          {rangeLabel && (
                             <StatusBadge tone="primary" dot={false}>
                               <Clock className="w-3 h-3 shrink-0" />
-                              {windowLabel}
+                              {rangeLabel}
                             </StatusBadge>
                           )}
+                          <StatusBadge tone="slate" dot={false}>
+                            {t('guards.assignSites.shiftCount', { defaultValue: '{{count}} turnos', count })}
+                          </StatusBadge>
                         </div>
                       </div>
                       <button
-                        onClick={() => {
-                          setSelectedIds([m.id]);
-                          setShowDeleteConfirm(true);
-                        }}
-                        title={t('guards.assignSites.actions.delete', { defaultValue: 'Quitar' })}
+                        onClick={() => requestDelete([g])}
+                        title={t('guards.assignSites.actions.removeFromPost', { defaultValue: 'Quitar del puesto' })}
                         className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-red-600 hover:bg-red-500/10 transition"
                       >
                         <Trash2 size={16} />
@@ -570,8 +644,8 @@ export default function GuardAsignarSitiosPage() {
         )}
 
         {/* Delete confirmation modal */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
+        {deleteCtx && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setDeleteCtx(null)}>
             <div className="fixed inset-0 bg-black/40 backdrop-blur-[1px]" />
             <div className="relative w-full max-w-sm bg-card shadow-2xl rounded-2xl border" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center gap-3 p-5 border-b">
@@ -579,10 +653,16 @@ export default function GuardAsignarSitiosPage() {
                 <h3 className="text-base font-semibold tracking-tight">{t('guards.assignSites.actions.confirmDeleteTitle', { defaultValue: 'Confirmar eliminación' })}</h3>
               </div>
               <div className="p-5">
-                <p className="text-sm text-muted-foreground">{t('guards.assignSites.actions.confirmDeleteMessage', { defaultValue: '¿Seguro? Se quitarán las asignaciones seleccionadas del vigilante.' })}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('guards.assignSites.actions.confirmDeleteStation', {
+                    defaultValue: '¿Quitar a este vigilante de {{station}}? Se eliminarán {{count}} turnos.',
+                    station: deleteCtx.label,
+                    count: deleteCtx.count,
+                  })}
+                </p>
               </div>
               <div className="flex items-center justify-end gap-2 p-4 border-t">
-                <button onClick={() => setShowDeleteConfirm(false)} className="text-sm px-4 py-2 rounded-lg border hover:bg-muted transition">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancelar' })}</button>
+                <button onClick={() => setDeleteCtx(null)} className="text-sm px-4 py-2 rounded-lg border hover:bg-muted transition">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancelar' })}</button>
                 <button onClick={confirmDelete} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 bg-red-600 text-white rounded-lg shadow-sm hover:bg-red-700 transition"><Trash2 size={15} />{t('guards.assignSites.actions.deleteConfirm', { defaultValue: 'Quitar' })}</button>
               </div>
             </div>

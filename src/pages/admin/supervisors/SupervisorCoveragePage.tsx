@@ -91,9 +91,9 @@ export default function SupervisorCoveragePage() {
                       <div className="cg-eyebrow mb-2 flex items-center gap-1.5">
                         <Building2 className="h-3.5 w-3.5" /> Estaciones cubiertas
                       </div>
-                      {p.stations.length ? (
+                      {p.stations?.length ? (
                         <div className="flex flex-wrap gap-2">
-                          {p.stations.map((s) => (
+                          {(p.stations || []).map((s) => (
                             <span
                               key={s.id}
                               className="inline-flex items-center gap-1.5 rounded-full border bg-muted/40 px-3 py-1 text-xs font-medium text-foreground"
