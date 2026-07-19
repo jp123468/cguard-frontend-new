@@ -406,7 +406,7 @@ export default function Incidents({ site }: { site?: any }) {
         try {
           const clientIdLocal = site?.clientId || (site?.client && site.client.id) || null;
           if (clientIdLocal) {
-            const clientResp: any = await ApiService.get(`/tenant/${tenantId}/client/${clientIdLocal}`);
+            const clientResp: any = await ApiService.get(`/tenant/${tenantId}/client-account/${clientIdLocal}`);
             const clientObj = clientResp && (clientResp.data || clientResp) ? (clientResp.data || clientResp) : clientResp;
             const admins = (clientObj && Array.isArray(clientObj.portalUsers) ? clientObj.portalUsers : (clientObj && Array.isArray(clientObj.users) ? clientObj.users : []));
             if (mounted) setClientAdmins(admins || []);
@@ -825,13 +825,13 @@ export default function Incidents({ site }: { site?: any }) {
                 </tr>
               </thead>
               <tbody>
-                        {incidents.length === 0 ? (
+                        {visibleRows.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-12">
                       <EmptyState
                         icon={<Filter />}
-                        title={t('incidents.emptyTitle') || 'No incidents found for this post site.'}
-                        description={t('incidents.emptyMessage') || 'Try adjusting filters or create a new incident.'}
+                        title={t('incidents.emptyTitle', 'Sin incidentes para esta sede.')}
+                        description={t('incidents.emptyMessage', 'Ajusta los filtros o crea un incidente nuevo.')}
                       />
                     </td>
                   </tr>

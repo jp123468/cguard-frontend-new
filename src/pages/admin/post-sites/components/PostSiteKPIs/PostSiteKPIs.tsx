@@ -473,9 +473,9 @@ export default function PostSiteKPIs({ site }: Props) {
                           }}
                         />
                       </td>
-                      <td className="px-4 py-3 text-sm text-foreground">{kpi.type}</td>
+                      <td className="px-4 py-3 text-sm text-foreground">{typeof kpi.type === 'object' ? (kpi.type?.name || '-') : (kpi.type || '-')}</td>
                       <td className="px-4 py-3 text-sm text-foreground">{formatDate(kpi.dateTime)}</td>
-                      <td className="px-4 py-3 text-sm text-foreground">{kpi.addedBy}</td>
+                      <td className="px-4 py-3 text-sm text-foreground">{typeof kpi.addedBy === 'object' ? (kpi.addedBy?.fullName || kpi.addedBy?.name || '-') : (kpi.addedBy || '-')}</td>
                         <td className="px-4 py-3 text-right relative" onClick={(e) => e.stopPropagation()}>
                         <div className="inline-flex items-center">
                           <button

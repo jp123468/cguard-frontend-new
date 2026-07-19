@@ -487,11 +487,11 @@ export default function PostSiteContacts({ site }: { site?: any }) {
               <button
                   onClick={() => {
                   const removedCount = confirmDeleteIds.length;
-                  setContacts(prev => prev.filter(c => !confirmDeleteIds.includes(c.id)));
-                  setSelectedIds(prev => prev.filter(id => !confirmDeleteIds.includes(id)));
+                  // Persist the deletion via the API (deleteContact handles the
+                  // server call + local state removal). Was local-only before.
+                  confirmDeleteIds.forEach((cid) => deleteContact(cid));
                   setConfirmDeleteIds([]);
-                  // use existing i18n key for deletion; append count when >1
-                  const base = t('clients.contacts.contactDeleted', 'Contact deleted successfully');
+                  const base = t('clients.contacts.contactDeleted', 'Contacto eliminado');
                   toast.success(removedCount > 1 ? `${base} (${removedCount})` : base);
                  }}
                  className="px-4 py-2 bg-red-600 text-white rounded-md"

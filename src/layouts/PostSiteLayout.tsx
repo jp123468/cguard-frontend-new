@@ -3,33 +3,29 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
 import {
-  ChevronRight, Pencil, Plus, AlertTriangle, MapPin, Calendar,
-  LayoutGrid, Building2, Users, ClipboardList, CheckSquare, Route as RouteIcon, Package,
-  ListChecks, FileBarChart, Contact, File as FileIcon, StickyNote, IdCard, Settings, MapPinned,
+  ChevronRight, Pencil, Plus, AlertTriangle, MapPin, MapPinned,
+  LayoutGrid, Building2, Users, Route as RouteIcon, Package,
+  FileBarChart, Contact, StickyNote, IdCard,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 type Props = { title?: string; children: ReactNode; site?: any };
 
 // Sección horizontal (mismo patrón que el detalle de cliente). Cada sede es una
-// vista sobre sus estaciones; el detalle por-estación vive dentro de cada estación.
+// vista/agregado sobre sus estaciones; el detalle y la gestión por-estación
+// (consignas, geocerca, checklists, config) vive dentro de cada estación.
+// Solo se exponen secciones REALES conectadas a la base de datos.
 const TAB_DEFS: Array<{ id: string; seg: string; label: string; icon: any }> = [
   { id: 'overview', seg: 'overview', label: 'Estadísticas', icon: LayoutGrid },
   { id: 'stations', seg: 'stations', label: 'Estaciones', icon: Building2 },
   { id: 'assign-guards', seg: 'assign-guards', label: 'Vigilantes', icon: Users },
-  { id: 'post-orders', seg: 'post-orders', label: 'Consignas', icon: ClipboardList },
-  { id: 'tasks', seg: 'tasks', label: 'Tareas', icon: CheckSquare },
   { id: 'site-tours', seg: 'site-tours', label: 'Rondas', icon: RouteIcon },
   { id: 'incidents', seg: 'incidents', label: 'Incidentes', icon: AlertTriangle },
   { id: 'inventory', seg: 'inventory', label: 'Inventario', icon: Package },
-  { id: 'geo-fence', seg: 'geo-fence', label: 'Geocerca', icon: MapPinned },
-  { id: 'checklists', seg: 'checklists', label: 'Checklists', icon: ListChecks },
-  { id: 'assign-reports', seg: 'assign-reports', label: 'Reportes', icon: FileBarChart },
+  { id: 'kpis', seg: 'kpis', label: 'Indicadores', icon: FileBarChart },
   { id: 'contacts', seg: 'contacts', label: 'Contactos', icon: Contact },
-  { id: 'files', seg: 'files', label: 'Documentos', icon: FileIcon },
   { id: 'notes', seg: 'notes', label: 'Notas', icon: StickyNote },
   { id: 'profile', seg: 'profile', label: 'Perfil', icon: IdCard },
-  { id: 'settings', seg: 'settings', label: 'Configuración', icon: Settings },
 ];
 
 export default function PostSiteLayout({ title, children, site }: Props) {
@@ -104,7 +100,7 @@ export default function PostSiteLayout({ title, children, site }: Props) {
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
                   {address && <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {address}</span>}
-                  {fmtCoords && <span className="inline-flex items-center gap-1.5 tabular-nums"><Calendar className="h-3.5 w-3.5" /> {fmtCoords}</span>}
+                  {fmtCoords && <span className="inline-flex items-center gap-1.5 tabular-nums"><MapPinned className="h-3.5 w-3.5" /> {fmtCoords}</span>}
                 </div>
               </div>
             </div>

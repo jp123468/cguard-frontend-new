@@ -61,8 +61,8 @@ export default function PostSiteDetailsPage() {
         if (!mounted) return;
         console.error(e);
         setSite(null);
-        setError(e?.message || `${t('postsite.Details.unexpected', 'Unexpected error occurred')}`);
-        toast.error(`${t('postsite.Details.unexpected', 'Unexpected error occurred')}`);
+        setError(e?.message || `${t('postsite.Details.unexpected', 'Ocurrió un error inesperado')}`);
+        toast.error(`${t('postsite.Details.unexpected', 'Ocurrió un error inesperado')}`);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -130,7 +130,7 @@ export default function PostSiteDetailsPage() {
         ) : error ? (
           <EmptyState
             icon={<AlertTriangle />}
-            title={t('postSites.Details.errorTitle', 'No se pudo cargar el sitio')}
+            title={t('postSites.Details.errorTitle', 'No se pudo cargar la sede')}
             description={error}
           />
         ) : site ? (
@@ -138,7 +138,7 @@ export default function PostSiteDetailsPage() {
         ) : (
           <EmptyState
             icon={<MapPinOff />}
-            title={t('postSites.Details.notfoundpostsite', 'No post sites found')}
+            title={t('postSites.Details.notfoundpostsite', 'No se encontró la sede')}
           />
         )}
       </div>

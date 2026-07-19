@@ -371,12 +371,12 @@ export default function PostSiteProfile({ site }: { site?: any }) {
                     )}
                 </div>
 
-                {!activeStatus || !activeStatus.stations || activeStatus.stations.length === 0 ? (
+                {!Array.isArray(activeStatus?.stations) || activeStatus.stations.length === 0 ? (
                     activeStatusLoading ? (
                         <div className="px-6 py-10 text-center text-muted-foreground text-sm">Cargando estaciones...</div>
                     ) : (
                         <div className="p-6">
-                            <EmptyState icon={<Shield />} title="No hay estaciones registradas para este sitio." />
+                            <EmptyState icon={<Shield />} title="No hay estaciones registradas para esta sede." />
                         </div>
                     )
                 ) : (

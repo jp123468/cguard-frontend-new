@@ -858,7 +858,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                                   // populate fields from tour
                                   setTourName(tour.name || '');
                                   setTourDesc(tour.description || '');
-                                  setScheduledDays(tour.scheduledDays || '');
+                                  setScheduledDays(Array.isArray(tour.scheduledDays) ? tour.scheduledDays : (typeof tour.scheduledDays === 'string' && tour.scheduledDays ? tour.scheduledDays.split(',').map((s: string) => s.trim()).filter(Boolean) : []));
                                   setContinuous(Boolean(tour.continuous));
                                   setTimeMode(tour.timeMode || 'specific');
                                   setSelectTime(tour.selectTime || '');
@@ -987,7 +987,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
 
                   <div>
                     <div className="text-sm text-muted-foreground">{t('siteTour.field.scheduledDays', 'Scheduled Days')}</div>
-                    <div className="mt-1 text-sm">{detailTour.scheduledDays || detailTour.scheduled_days || detailTour.schedule || '-'}</div>
+                    <div className="mt-1 text-sm">{(() => { const d = detailTour.scheduledDays || detailTour.scheduled_days || detailTour.schedule; return Array.isArray(d) ? (d.join(', ') || '-') : (d || '-'); })()}</div>
                   </div>
 
                   <div>

@@ -196,47 +196,7 @@ export default function PostSiteOverview({ site }: { site?: any }) {
 
   return (
     <div ref={containerRef} className="space-y-6 animate-fade-up">
-      {/* ── Site identity header ─────────────────────────────────────────── */}
-      <Section className="overflow-hidden">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex items-start gap-4 min-w-0">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl cg-gradient-brand text-primary-foreground shadow-md">
-                <Building2 className="h-7 w-7" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-xl font-semibold text-foreground truncate">{siteName}</h2>
-                  <Badge variant={isActive ? 'default' : 'secondary'}>
-                    {isActive ? t('common.active', 'Activo') : t('common.inactive', 'Inactivo')}
-                  </Badge>
-                  {serviceType ? <ServiceTypeBadge value={serviceType} /> : null}
-                </div>
-                <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
-                  {address ? (
-                    <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 shrink-0" />{address}</span>
-                  ) : null}
-                  {clientName ? (
-                    <span className="inline-flex items-center gap-1.5"><Briefcase className="h-4 w-4 shrink-0" />{clientName}</span>
-                  ) : null}
-                  {phone ? (
-                    <a href={`tel:${phone}`} className="inline-flex items-center gap-1.5 hover:text-foreground"><Phone className="h-4 w-4 shrink-0" />{phone}</a>
-                  ) : null}
-                  {email ? (
-                    <a href={`mailto:${email}`} className="inline-flex items-center gap-1.5 hover:text-foreground"><Mail className="h-4 w-4 shrink-0" />{email}</a>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-            {site?.id ? (
-              <Link to={`/post-sites/${site.id}/edit`} className="shrink-0">
-                <Button variant="outline" size="sm" className="gap-1.5">
-                  <Pencil className="h-4 w-4" />
-                  {t('common.edit', 'Editar')}
-                </Button>
-              </Link>
-            ) : null}
-          </div>
-      </Section>
+      {/* Identity header lives in PostSiteLayout now (avoids duplication). */}
 
       {/* ── Stats ────────────────────────────────────────────────────────── */}
       <div>
