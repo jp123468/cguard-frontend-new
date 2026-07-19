@@ -291,8 +291,10 @@ export default function Incidents({ site }: { site?: SiteProp }) {
   const stationOptions = useMemo(() => {
     const list = visualStations || [];
     if (!filterClientId) return list;
+    // Filter stations to those that actually have an incident for the selected
+    // client. (The old `s.clientId` guard was dead — visualStations' fallback
+    // rows only carry {id, name}, never clientId.)
     const filtered = list.filter((s) => {
-      if (s.clientId && String(s.clientId) !== String(filterClientId)) return false;
       return (incidents || []).some((it: any) => (String(it.stationId || it.station?.id) === String(s.id)) && (String(it.clientId || it.client?.id || it.clientAccountId) === String(filterClientId)));
     });
     return (filtered && filtered.length) ? filtered : list;

@@ -143,7 +143,7 @@ export default function ClientForm({
         },
     });
 
-    const personType = form.watch('personType' as any) || 'PN';
+    const personType = form.watch('personType') || 'PN';
 
     // Additional people who ALSO get access to the client app. PJ: persona
     // encargada (CEO + ops). PN: family/others (hijo, madre…). The PRIMARY access
@@ -156,8 +156,8 @@ export default function ClientForm({
         setAccessPeople((p) => p.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
     const removeAccessPerson = (i: number) => setAccessPeople((p) => p.filter((_, idx) => idx !== i));
     // Watch latitude/longitude so we can force remount of the map when they change
-    const watchedLat = form.watch('latitude' as any);
-    const watchedLng = form.watch('longitude' as any);
+    const watchedLat = form.watch('latitude');
+    const watchedLng = form.watch('longitude');
     const addressMapKey = `${watchedLat || ''}_${watchedLng || ''}_${mode}_${id || ''}`;
     // Función para cargar Sectores del módulo clientAccount
     const loadCategories = async () => {
@@ -196,20 +196,20 @@ export default function ClientForm({
                     const initial: FormValues = {
                         name: data.name ?? "",
                         lastName: data.lastName && data.lastName !== 'undefined' ? data.lastName : "",
-                        personType: (data as any)?.personType ?? 'PN',
-                        documentNumber: (data as any)?.documentNumber ?? '',
-                        commercialName: (data as any)?.commercialName ?? '',
-                        contractDate: (data as any)?.contractDate ? String((data as any).contractDate).slice(0, 10) : '',
-                        contractEndDate: (data as any)?.contractEndDate ? String((data as any).contractEndDate).slice(0, 10) : '',
-                        riskLevel: (data as any)?.riskLevel ?? '',
-                        purchaseOrder: (data as any)?.purchaseOrder ?? '',
-                        code: (data as any)?.code ?? '',
-                        accountExecutiveId: (data as any)?.accountExecutiveId ?? '',
-                        legalRepFirstName: (data as any)?.legalRepFirstName ?? '',
-                        legalRepLastName: (data as any)?.legalRepLastName ?? '',
-                        legalRepEmail: (data as any)?.legalRepEmail ?? '',
-                        legalRepPhone: (data as any)?.legalRepPhone ?? '',
-                        legalRepDocument: (data as any)?.legalRepDocument ?? '',
+                        personType: data?.personType ?? 'PN',
+                        documentNumber: data?.documentNumber ?? '',
+                        commercialName: data?.commercialName ?? '',
+                        contractDate: data?.contractDate ? String(data.contractDate).slice(0, 10) : '',
+                        contractEndDate: data?.contractEndDate ? String(data.contractEndDate).slice(0, 10) : '',
+                        riskLevel: data?.riskLevel ?? '',
+                        purchaseOrder: data?.purchaseOrder ?? '',
+                        code: data?.code ?? '',
+                        accountExecutiveId: data?.accountExecutiveId ?? '',
+                        legalRepFirstName: data?.legalRepFirstName ?? '',
+                        legalRepLastName: data?.legalRepLastName ?? '',
+                        legalRepEmail: data?.legalRepEmail ?? '',
+                        legalRepPhone: data?.legalRepPhone ?? '',
+                        legalRepDocument: data?.legalRepDocument ?? '',
                         email: data.email ?? "",
                         phoneNumber: data.phoneNumber ?? "",
                         address: data.address ?? "",
@@ -219,10 +219,10 @@ export default function ClientForm({
                         country: data.country ?? "",
                         faxNumber: data.faxNumber ?? "",
                         website: data.website ?? "",
-                        latitude: (data as any)?.latitude !== undefined && (data as any)?.latitude !== null ? String((data as any).latitude) : "",
-                        longitude: (data as any)?.longitude !== undefined && (data as any)?.longitude !== null ? String((data as any).longitude) : "",
+                        latitude: data?.latitude !== undefined && data?.latitude !== null ? String(data.latitude) : "",
+                        longitude: data?.longitude !== undefined && data?.longitude !== null ? String(data.longitude) : "",
                         active: data.active ?? true,
-                        categoryIds: (data as any).categoryIds ?? [],
+                        categoryIds: data.categoryIds ?? [],
                     } as FormValues;
 
                     // Load existing file objects for logo and place picture
@@ -286,42 +286,42 @@ export default function ClientForm({
             email: values.email,
             phoneNumber: values.phoneNumber,
             address: values.address,
-            categoryIds: Array.isArray((values as any).categoryIds) ? (values as any).categoryIds : null,
+            categoryIds: Array.isArray(values.categoryIds) ? values.categoryIds : null,
         };
 
         // Agregar campos opcionales al basePayload para comparación
         if (values.lastName !== undefined) basePayload.lastName = values.lastName;
-        if ((values as any).personType !== undefined) basePayload.personType = (values as any).personType;
-        if ((values as any).documentNumber !== undefined) basePayload.documentNumber = (values as any).documentNumber;
-        if ((values as any).commercialName !== undefined) basePayload.commercialName = (values as any).commercialName || null;
-        if ((values as any).contractDate !== undefined) basePayload.contractDate = (values as any).contractDate || null;
-        if ((values as any).contractEndDate !== undefined) basePayload.contractEndDate = (values as any).contractEndDate || null;
-        if ((values as any).riskLevel !== undefined) basePayload.riskLevel = (values as any).riskLevel || null;
-        if ((values as any).purchaseOrder !== undefined) basePayload.purchaseOrder = String((values as any).purchaseOrder || '').trim() || null;
-        if ((values as any).code !== undefined) basePayload.code = (values as any).code || null;
+        if (values.personType !== undefined) basePayload.personType = values.personType;
+        if (values.documentNumber !== undefined) basePayload.documentNumber = values.documentNumber;
+        if (values.commercialName !== undefined) basePayload.commercialName = values.commercialName || null;
+        if (values.contractDate !== undefined) basePayload.contractDate = values.contractDate || null;
+        if (values.contractEndDate !== undefined) basePayload.contractEndDate = values.contractEndDate || null;
+        if (values.riskLevel !== undefined) basePayload.riskLevel = values.riskLevel || null;
+        if (values.purchaseOrder !== undefined) basePayload.purchaseOrder = String(values.purchaseOrder || '').trim() || null;
+        if (values.code !== undefined) basePayload.code = values.code || null;
         // The legal rep's name IS the top Nombre/Apellido — mirror them so the
         // legalRep* columns stay consistent (no duplicate inputs).
-        basePayload.legalRepFirstName = (values as any).name || null;
-        basePayload.legalRepLastName = (values as any).lastName || null;
-        if ((values as any).legalRepEmail !== undefined) basePayload.legalRepEmail = (values as any).legalRepEmail || null;
-        if ((values as any).legalRepPhone !== undefined) basePayload.legalRepPhone = (values as any).legalRepPhone || null;
+        basePayload.legalRepFirstName = values.name || null;
+        basePayload.legalRepLastName = values.lastName || null;
+        if (values.legalRepEmail !== undefined) basePayload.legalRepEmail = values.legalRepEmail || null;
+        if (values.legalRepPhone !== undefined) basePayload.legalRepPhone = values.legalRepPhone || null;
         // Persona natural: the rep's cédula IS the client documentNumber; persona
         // jurídica has a separate rep cédula field.
-        basePayload.legalRepDocument = ((values as any).personType === 'PJ'
-          ? (values as any).legalRepDocument
-          : (values as any).documentNumber) || null;
+        basePayload.legalRepDocument = (values.personType === 'PJ'
+          ? values.legalRepDocument
+          : values.documentNumber) || null;
         if (values.addressLine2 !== undefined) basePayload.addressLine2 = values.addressLine2;
         if (values.postalCode !== undefined) basePayload.postalCode = values.postalCode;
         if (values.city !== undefined) basePayload.city = values.city;
         if (values.country !== undefined) basePayload.country = values.country;
         if (values.faxNumber !== undefined) basePayload.faxNumber = values.faxNumber;
         if (values.website !== undefined && String(values.website).trim() !== "") basePayload.website = values.website;
-        if ((values as any).latitude !== undefined) {
-            const rawLat = (values as any).latitude;
+        if (values.latitude !== undefined) {
+            const rawLat = values.latitude;
             basePayload.latitude = rawLat === '' || rawLat === null ? null : Number.parseFloat(String(rawLat));
         }
-        if ((values as any).longitude !== undefined) {
-            const rawLng = (values as any).longitude;
+        if (values.longitude !== undefined) {
+            const rawLng = values.longitude;
             basePayload.longitude = rawLng === '' || rawLng === null ? null : Number.parseFloat(String(rawLng));
         }
         if (values.active !== undefined) basePayload.active = values.active;
@@ -504,11 +504,11 @@ export default function ClientForm({
                                                     onBlur={() => {
                                                         const digits = (field.value || '').toString().replace(/\D/g, '');
                                                         if (personType === 'PN') {
-                                                            if (digits.length !== 10 || !validateCedulaOrRuc(digits)) form.setError('documentNumber' as any, { type: 'manual', message: t('clients.validation.cedula_invalid') });
-                                                            else form.clearErrors('documentNumber' as any);
+                                                            if (digits.length !== 10 || !validateCedulaOrRuc(digits)) form.setError('documentNumber', { type: 'manual', message: t('clients.validation.cedula_invalid') });
+                                                            else form.clearErrors('documentNumber');
                                                         } else {
-                                                            if (digits.length !== 13 || !validateCedulaOrRuc(digits)) form.setError('documentNumber' as any, { type: 'manual', message: t('clients.validation.ruc_invalid') });
-                                                            else form.clearErrors('documentNumber' as any);
+                                                            if (digits.length !== 13 || !validateCedulaOrRuc(digits)) form.setError('documentNumber', { type: 'manual', message: t('clients.validation.ruc_invalid') });
+                                                            else form.clearErrors('documentNumber');
                                                         }
                                                     }}
                                                 />
@@ -1011,9 +1011,9 @@ export default function ClientForm({
                                         form.setValue('city', cityStr, setOpts);
                                         form.setValue('postalCode', postal, setOpts);
                                         form.setValue('country', country, setOpts);
-                                        if (latRaw != null) form.setValue('latitude' as any, String(latRaw), setOpts);
-                                        if (lngRaw != null) form.setValue('longitude' as any, String(lngRaw), setOpts);
-                                        try { form.trigger(['latitude' as any, 'longitude' as any, 'address', 'city', 'postalCode']); } catch (e) {}
+                                        if (latRaw != null) form.setValue('latitude', String(latRaw), setOpts);
+                                        if (lngRaw != null) form.setValue('longitude', String(lngRaw), setOpts);
+                                        try { form.trigger(['latitude', 'longitude', 'address', 'city', 'postalCode']); } catch (e) {}
                                         toastOnce.success(t('clients.form.addressAutoFilled', 'Dirección completada automáticamente'));
                                     }}
                                     defaultValue={form.getValues('address') || ''}

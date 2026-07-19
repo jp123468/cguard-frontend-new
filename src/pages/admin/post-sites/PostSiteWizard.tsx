@@ -513,7 +513,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
     (async () => {
       try {
         const data = await clientService.getClient(clientId);
-        setClientData(data);
+        setClientData(data as ClientDetail);
       } catch { setClientData(null); }
     })();
   }, [clientId]);

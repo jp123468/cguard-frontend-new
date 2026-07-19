@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Clock } from 'lucide-react';
@@ -19,6 +20,20 @@ type Props = {
 
           export default function GuardAvailability({guard}: Props) {
         const { t } = useTranslation();
+  // The /guards/:id/availability route renders this WITHOUT a `guard` prop, so
+  // fetch the guard by route id to load its saved availability and get the id
+  // needed to persist changes (the backend stores `availability` as JSON).
+  const { id: routeId } = useParams();
+  const [fetchedGuard, setFetchedGuard] = useState<GuardDetail | null>(null);
+  useEffect(() => {
+    if (guard || !routeId) return;
+    let alive = true;
+    securityGuardService.get(routeId)
+      .then((g) => { if (alive) setFetchedGuard((g?.guard ?? g) as GuardDetail); })
+      .catch(() => { /* keep defaults */ });
+    return () => { alive = false; };
+  }, [guard, routeId]);
+  const effGuard = guard ?? fetchedGuard ?? undefined;
   const [availability, setAvailability] = useState<Av[]>(() => {
     const base = [
         {day: 'Monday', available: true, start: '00:00', end: '23:59' },
@@ -48,16 +63,16 @@ type Props = {
       {day: 'Saturday', available: true, start: '00:00', end: '23:59' },
       {day: 'Sunday', available: true, start: '00:00', end: '23:59' },
     ];
-    if (!guard) {
+    if (!effGuard) {
       setAvailability(base);
       return;
     }
     setAvailability(base.map((b) => {
-      const gDay = (guard.availability || []).find((x) => x.day === b.day);
+      const gDay = (effGuard.availability || []).find((x) => x.day === b.day);
       if (!gDay) return b;
       return {day: b.day, available: !!gDay.available, start: gDay.start ?? b.start, end: gDay.end ?? b.end };
     }));
-  }, [guard]);
+  }, [effGuard]);
 
   const updateAvailability = (index: number, v: Av) => {
           setAvailability((prev) => {
@@ -70,11 +85,12 @@ type Props = {
     const handleSaveAvailability = () => {
         (async () => {
           try {
-            if (!guard || !guard.id) {
-              toast.error(t('guards.availability.toasts.saveError', 'No guard id')); 
+            const saveId = effGuard?.id || routeId;
+            if (!saveId) {
+              toast.error(t('guards.availability.toasts.saveError', 'No guard id'));
               return;
             }
-            await securityGuardService.update(guard.id, { availability });
+            await securityGuardService.update(saveId, { availability });
             toast.success(t('guards.availability.toasts.saved'));
           } catch (e) {
             console.error('Failed saving availability', e);
