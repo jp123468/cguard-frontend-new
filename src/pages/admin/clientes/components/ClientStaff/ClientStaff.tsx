@@ -6,8 +6,14 @@ import { Section, EmptyState, StatusBadge } from '@/components/kit';
 import { Button } from '@/components/ui/button';
 import {
   Search, Users, UserCheck, UserX, Coffee, Clock, ShieldCheck, Timer,
-  Eye, MessageSquare, MoreVertical, RefreshCw, Route as RouteIcon,
+  Eye, MoreVertical, RefreshCw, Route as RouteIcon, Pencil, UserMinus,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { ApiService } from '@/services/api/apiService';
+import { confirmDialog } from '@/components/ui/confirmDialog';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-all placeholder:text-muted-foreground hover:border-ring/40 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]';
 
@@ -105,6 +111,32 @@ export default function ClientStaff({ client }: { client: any }) {
 
   const resetPage = (fn: (v: any) => void) => (v: any) => { fn(v); setPage(1); };
 
+  const openWorker = (p: any) => {
+    if (p.role === 'guardia') navigate(`/guards/${p.id}/overview`);
+    else navigate(`/supervisors/${p.guardId}`);
+  };
+
+  // Quitar de la estación: elimina la asignación activa (guardAssignment) —
+  // el vigilante vuelve al grupo sin asignación y sus turnos futuros se borran.
+  const removeFromStation = async (p: any) => {
+    if (!p.assignmentId) { toast.error('Este trabajador no tiene una asignación activa que quitar.'); return; }
+    const ok = await confirmDialog({
+      title: 'Quitar de la estación',
+      message: `¿Quitar a ${p.name} de "${p.puesto || 'su estación'}"? Volverá al grupo de vigilantes sin asignación y se eliminarán sus turnos futuros generados.`,
+      confirmText: 'Quitar',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    try {
+      const tenantId = localStorage.getItem('tenantId') || '';
+      await ApiService.delete(`/tenant/${tenantId}/guard-assignment/${p.assignmentId}`);
+      toast.success(`${p.name} quedó sin asignación`);
+      load(true);
+    } catch (e: any) {
+      toast.error(e?.data?.message || e?.message || 'No se pudo quitar la asignación');
+    }
+  };
+
   if (loading && !data) return <div className="p-8 text-sm text-muted-foreground">Cargando personal asignado…</div>;
 
   return (
@@ -194,9 +226,33 @@ export default function ClientStaff({ client }: { client: any }) {
                         </td>
                         <td className="px-2 py-2.5">
                           <div className="flex justify-end gap-1 text-muted-foreground">
-                            <button title="Ver" onClick={() => { if (p.role === 'guardia') navigate(`/guards/${p.id}/overview`); }} className="rounded-md p-1.5 hover:bg-muted hover:text-foreground"><Eye className="h-3.5 w-3.5" /></button>
-                            <button title="Mensaje" className="rounded-md p-1.5 hover:bg-muted hover:text-foreground"><MessageSquare className="h-3.5 w-3.5" /></button>
-                            <button className="rounded-md p-1.5 hover:bg-muted hover:text-foreground"><MoreVertical className="h-3.5 w-3.5" /></button>
+                            <button title="Ver detalle" onClick={() => openWorker(p)} className="rounded-md p-1.5 hover:bg-muted hover:text-foreground"><Eye className="h-3.5 w-3.5" /></button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button title="Acciones" className="rounded-md p-1.5 hover:bg-muted hover:text-foreground"><MoreVertical className="h-3.5 w-3.5" /></button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => openWorker(p)}>
+                                  <Eye className="mr-2 h-3.5 w-3.5" /> Ver detalle
+                                </DropdownMenuItem>
+                                {p.role === 'guardia' && (
+                                  <DropdownMenuItem onClick={() => navigate(`/security-guards/edit/${p.id}`)}>
+                                    <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
+                                  </DropdownMenuItem>
+                                )}
+                                {p.role === 'guardia' && p.assignmentId && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-red-500 focus:text-red-500"
+                                      onClick={() => void removeFromStation(p)}
+                                    >
+                                      <UserMinus className="mr-2 h-3.5 w-3.5" /> Quitar de la estación
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </td>
                       </tr>

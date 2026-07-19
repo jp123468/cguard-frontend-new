@@ -256,7 +256,20 @@ export default function ClientCoverage({ client }: { client: any }) {
                           </td>
                           <td className="px-2 py-2.5">
                             <div className="tabular-nums">{p.onPost} / {p.required || 0}</div>
-                            <div className="max-w-[130px] truncate text-xs text-muted-foreground">{p.guards?.length ? p.guards.join(', ') : (p.status === 'sin_turno' ? '—' : 'Sin asignar')}</div>
+                            {/* "Sin asignar" was misleading: coverage is LIVE (marcaciones).
+                                If there ARE assigned guards who just haven't punched in,
+                                say exactly that. */}
+                            <div className="max-w-[160px] truncate text-xs">
+                              {p.guards?.length ? (
+                                <span className="text-muted-foreground">{p.guards.join(', ')}</span>
+                              ) : p.assigned?.length ? (
+                                <span className="text-orange-500" title={`Asignados: ${p.assigned.join(', ')} — aún sin marcar entrada`}>
+                                  {p.assigned.join(', ')} · sin marcar
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground">{p.status === 'sin_turno' ? '—' : 'Sin asignar'}</span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-2 py-2.5">
                             {p.coveragePct == null ? <span className="text-muted-foreground">—</span> : (
