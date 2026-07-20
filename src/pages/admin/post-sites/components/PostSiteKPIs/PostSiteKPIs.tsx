@@ -583,21 +583,19 @@ export default function PostSiteKPIs({ site }: Props) {
                             <div>
                               {(() => {
                                 const metrics: any[] = [];
-                                const actualVal = Number(kpi.actual || 0);
-                                if (kpi.standardReportsNumber !== undefined && kpi.standardReportsNumber !== null && Number(kpi.standardReportsNumber) > 0) {
-                                  metrics.push({ key: 'standardReports', name: t('postSites.KPI.metrics.standardReports', 'Standard Reports'), target: Number(kpi.standardReportsNumber), actual: actualVal });
+                                // Real per-metric actuals from the backend (incidents/routes for the KPI
+                                // month, scoped to this post-site's stations). Tasks aren't linked to a
+                                // post-site (actual null → hidden); Standard/Checklist have no source.
+                                const actuals = (kpi as { actuals?: { incident: number | null; task: number | null; route: number | null } }).actuals || { incident: null, task: null, route: null };
+                                const hasTarget = (v: unknown) => v !== undefined && v !== null && Number(v) > 0;
+                                if (hasTarget(kpi.incidentReportsNumber) && actuals.incident !== null) {
+                                  metrics.push({ key: 'incidentReports', name: t('postSites.KPI.metrics.incidentReports', 'Incident Reports'), target: Number(kpi.incidentReportsNumber), actual: Number(actuals.incident) });
                                 }
-                                if (kpi.taskReportsNumber !== undefined && kpi.taskReportsNumber !== null && Number(kpi.taskReportsNumber) > 0) {
-                                  metrics.push({ key: 'taskReports', name: t('postSites.KPI.metrics.taskReports', 'Task Reports'), target: Number(kpi.taskReportsNumber), actual: actualVal });
+                                if (hasTarget(kpi.taskReportsNumber) && actuals.task !== null) {
+                                  metrics.push({ key: 'taskReports', name: t('postSites.KPI.metrics.taskReports', 'Task Reports'), target: Number(kpi.taskReportsNumber), actual: Number(actuals.task) });
                                 }
-                                if (kpi.incidentReportsNumber !== undefined && kpi.incidentReportsNumber !== null && Number(kpi.incidentReportsNumber) > 0) {
-                                  metrics.push({ key: 'incidentReports', name: t('postSites.KPI.metrics.incidentReports', 'Incident Reports'), target: Number(kpi.incidentReportsNumber), actual: actualVal });
-                                }
-                                if (kpi.routeReportsNumber !== undefined && kpi.routeReportsNumber !== null && Number(kpi.routeReportsNumber) > 0) {
-                                  metrics.push({ key: 'routeReports', name: t('postSites.KPI.metrics.routeReports', 'Route Reports'), target: Number(kpi.routeReportsNumber), actual: actualVal });
-                                }
-                                if (kpi.verificationReportsNumber !== undefined && kpi.verificationReportsNumber !== null && Number(kpi.verificationReportsNumber) > 0) {
-                                  metrics.push({ key: 'verificationReports', name: t('postSites.KPI.metrics.verificationReports', 'Checklist Reports'), target: Number(kpi.verificationReportsNumber), actual: actualVal });
+                                if (hasTarget(kpi.routeReportsNumber) && actuals.route !== null) {
+                                  metrics.push({ key: 'routeReports', name: t('postSites.KPI.metrics.routeReports', 'Route Reports'), target: Number(kpi.routeReportsNumber), actual: Number(actuals.route) });
                                 }
 
                                 return (
