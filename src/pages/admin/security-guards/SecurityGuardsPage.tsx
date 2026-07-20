@@ -5,7 +5,7 @@ import MobileCardList from '@/components/responsive/MobileCardList';
 import GuardCardsGrid, { type GuardCardAction } from './GuardCardsGrid';
 import GuardRatingLevel from './GuardRatingLevel';
 import guardRatingService from '@/lib/api/guardRatingService';
-import { PageHeader, StatCard, Stagger } from '@/components/kit';
+import { PageHeader, StatCard, Stagger, Modal } from '@/components/kit';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import AppLayout from "@/layouts/app-layout";
 
@@ -1476,48 +1476,37 @@ export default function SecurityGuardsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {detailsOpen && detailsGuard && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          role="button"
-          tabIndex={0}
-          aria-label={t('guards.list.aria.closeModal', 'Cerrar modal')}
-          onClick={(e) => {
-            // Solo cerrar si el click es en el fondo, no en el modal
-            if (e.target === e.currentTarget) setDetailsOpen(false);
-          }}
-          onKeyDown={(e) => {
-            // Allow Escape to close and Enter/Space when overlay is focused
-            if (e.key === "Escape") {
-              setDetailsOpen(false);
-              return;
-            }
-            if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) {
-              e.preventDefault();
-              setDetailsOpen(false);
-            }
-          }}
-          onTouchStart={(e) => {
-            // Support touch devices: close when tapping on backdrop
-            if (e.target === e.currentTarget) setDetailsOpen(false);
-          }}
+      {detailsGuard && (
+        <Modal
+          open={detailsOpen}
+          onOpenChange={(o) => { if (!o) setDetailsOpen(false); }}
+          title={t('guards.list.details.title', 'Detalles del Vigilante')}
+          icon={<Eye className="h-5 w-5" />}
+          size="lg"
+          footer={
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setDetailsOpen(false)}
+              >
+                {t('actions.close', 'Cerrar')}
+              </Button>
+              {hasPermission('securityGuardEdit') && (
+                <Button
+                  onClick={() => {
+                    setDetailsOpen(false);
+                    const realId = detailsGuard.raw?.id || detailsGuard.id;
+                    navigate(`/security-guards/edit/${realId}`);
+                  }}
+                >
+                  {t('actions.edit', 'Editar')}
+                </Button>
+              )}
+            </>
+          }
         >
-          <div
-            className="bg-card rounded-xl shadow-xl max-w-xl w-full p-6 sm:p-10 relative border border-border animate-fade-in"
-            role="dialog"
-            aria-modal="true"
-          >
-            <button
-              className="absolute top-3 right-3 text-muted-foreground hover:text-foreground/70 text-xl font-bold"
-              onClick={() => setDetailsOpen(false)}
-              aria-label={t('actions.close', 'Cerrar')}
-              style={{ lineHeight: 1 }}
-            >
-              ×
-            </button>
-            <h2 className="text-xl sm:text-2xl font-bold mb-1 text-center">{t('guards.list.details.title', 'Detalles del Vigilante')}</h2>
-            <div className="mb-4 text-xs sm:text-sm text-muted-foreground text-center">{t('guards.list.details.description', 'Información detallada del vigilante seleccionado.')}</div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mb-6">
+            <div className="mb-4 text-xs sm:text-sm text-muted-foreground">{t('guards.list.details.description', 'Información detallada del vigilante seleccionado.')}</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mb-2">
               <div>
                 <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.firstName', 'Nombre')}</div>
                 <div className="text-foreground text-sm break-words">{detailsGuard.raw?.guard?.firstName ?? "-"}</div>
@@ -1575,29 +1564,7 @@ export default function SecurityGuardsPage() {
                 <div className="text-foreground text-sm break-words">{detailsGuard.raw?.gender ?? "-"}</div>
               </div>
             </div>
-            <div className="flex justify-end gap-2 mt-2">
-              <Button
-                variant="outline"
-                onClick={() => setDetailsOpen(false)}
-                className="text-sm px-4 py-1"
-              >
-                {t('actions.close', 'Cerrar')}
-              </Button>
-              {hasPermission('securityGuardEdit') && (
-                <Button
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm px-4 py-1"
-                  onClick={() => {
-                    setDetailsOpen(false);
-                    const realId = detailsGuard.raw?.id || detailsGuard.id;
-                    navigate(`/security-guards/edit/${realId}`);
-                  }}
-                >
-                  {t('actions.edit', 'Editar')}
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Import dialog (styled like clients import) */}

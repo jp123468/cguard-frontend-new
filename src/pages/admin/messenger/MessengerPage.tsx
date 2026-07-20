@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } fro
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { MessageSquareText, Send, Plus, Search, Loader2, X, Check, CheckCheck, Paperclip, Play, Trash2, Users, Mic, UserPlus, RefreshCw, UserCircle2 } from "lucide-react";
-import { PageHeader } from "@/components/kit";
+import { PageHeader, Modal } from "@/components/kit";
+import { Button } from "@/components/ui/button";
 import { messageService, type MessageAttachment, type GroupMember } from "@/lib/api/messageService";
 import securityGuardService from "@/lib/api/securityGuardService";
 import { postSiteService } from "@/lib/api/postSiteService";
@@ -476,13 +477,27 @@ function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "cli
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border p-4">
-          <h3 className="text-base font-bold text-foreground">Nuevo</h3>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X size={18} /></button>
-        </div>
-        <div className="space-y-3 p-4">
+    <Modal
+      open
+      onOpenChange={(o) => { if (!o) onClose(); }}
+      title="Nuevo"
+      icon={<Plus className="h-5 w-5" />}
+      footer={(
+        <>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          {mode === "direct" ? (
+            <Button onClick={sendDirect} disabled={!picked || !body.trim() || sending}>
+              {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Enviar
+            </Button>
+          ) : (
+            <Button onClick={createGroup} disabled={!groupName.trim() || !site || sending}>
+              {sending ? <Loader2 size={14} className="animate-spin" /> : <Users size={14} />} Crear grupo
+            </Button>
+          )}
+        </>
+      )}
+    >
+        <div className="space-y-3">
           {/* Groups are an operational feature (vigilantes by puesto); clients only get direct chats. */}
           {!isClient && (
             <div className="flex gap-1 rounded-xl bg-muted/50 p-1">
@@ -547,20 +562,7 @@ function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "cli
             </>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-border p-4">
-          <button onClick={onClose} className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">Cancelar</button>
-          {mode === "direct" ? (
-            <button onClick={sendDirect} disabled={!picked || !body.trim() || sending} className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50">
-              {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Enviar
-            </button>
-          ) : (
-            <button onClick={createGroup} disabled={!groupName.trim() || !site || sending} className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50">
-              {sending ? <Loader2 size={14} className="animate-spin" /> : <Users size={14} />} Crear grupo
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 

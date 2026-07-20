@@ -10,7 +10,8 @@ import api from '@/lib/api';
 import { stationService } from '@/lib/api/stationService';
 import { toast } from 'sonner';
 import PostSiteMiniInfo from '@/components/post-sites/PostSiteMiniInfo';
-import { Section, EmptyState, StatusBadge } from '@/components/kit';
+import { Section, EmptyState, StatusBadge, Modal } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 
 // ── Safe label extraction ────────────────────────────────────────────────────
@@ -642,28 +643,27 @@ export default function GuardAsignarSitiosPage() {
 
         {/* Delete confirmation modal */}
         {deleteCtx && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setDeleteCtx(null)}>
-            <div className="fixed inset-0 bg-black/40 backdrop-blur-[1px]" />
-            <div className="relative w-full max-w-sm bg-card shadow-2xl rounded-2xl border" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center gap-3 p-5 border-b">
-                <span className="w-10 h-10 rounded-xl bg-red-500/15 text-red-600 flex items-center justify-center shrink-0"><Trash2 size={18} /></span>
-                <h3 className="text-base font-semibold tracking-tight">{t('guards.assignSites.actions.confirmDeleteTitle', { defaultValue: 'Confirmar eliminación' })}</h3>
-              </div>
-              <div className="p-5">
-                <p className="text-sm text-muted-foreground">
-                  {t('guards.assignSites.actions.confirmDeleteStation', {
-                    defaultValue: '¿Quitar a este vigilante de {{station}}? Se eliminarán {{count}} turnos.',
-                    station: deleteCtx.label,
-                    count: deleteCtx.count,
-                  })}
-                </p>
-              </div>
-              <div className="flex items-center justify-end gap-2 p-4 border-t">
-                <button onClick={() => setDeleteCtx(null)} className="text-sm px-4 py-2 rounded-lg border hover:bg-muted transition">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancelar' })}</button>
-                <button onClick={confirmDelete} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 bg-red-600 text-white rounded-lg shadow-sm hover:bg-red-700 transition"><Trash2 size={15} />{t('guards.assignSites.actions.deleteConfirm', { defaultValue: 'Quitar' })}</button>
-              </div>
-            </div>
-          </div>
+          <Modal
+            open={!!deleteCtx}
+            onOpenChange={(o) => { if (!o) setDeleteCtx(null); }}
+            title={t('guards.assignSites.actions.confirmDeleteTitle', { defaultValue: 'Confirmar eliminación' })}
+            icon={<Trash2 className="h-5 w-5" />}
+            size="sm"
+            footer={
+              <>
+                <Button variant="outline" onClick={() => setDeleteCtx(null)}>{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancelar' })}</Button>
+                <Button variant="destructive" onClick={confirmDelete}><Trash2 size={15} />{t('guards.assignSites.actions.deleteConfirm', { defaultValue: 'Quitar' })}</Button>
+              </>
+            }
+          >
+            <p className="text-sm text-muted-foreground">
+              {t('guards.assignSites.actions.confirmDeleteStation', {
+                defaultValue: '¿Quitar a este vigilante de {{station}}? Se eliminarán {{count}} turnos.',
+                station: deleteCtx.label,
+                count: deleteCtx.count,
+              })}
+            </p>
+          </Modal>
         )}
       </GuardsLayout>
     </AppLayout>

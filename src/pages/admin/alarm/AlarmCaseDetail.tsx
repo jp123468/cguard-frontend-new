@@ -1,5 +1,4 @@
 import * as React from "react";
-import { createPortal } from "react-dom";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import AlarmActionPlan from "@/components/alarm/AlarmActionPlan";
@@ -16,7 +15,6 @@ import {
   Lock,
   AlertTriangle,
   StickyNote,
-  X,
   Clock,
   ShieldAlert,
   Flame,
@@ -42,6 +40,7 @@ import {
   PageContainer,
   Section,
   EmptyState,
+  Modal as KitModal,
 } from "@/components/kit";
 import {
   alarmService,
@@ -167,57 +166,16 @@ function Modal({
   children: React.ReactNode;
   footer?: React.ReactNode;
 }) {
-  React.useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [open, onClose]);
-
-  if (!open) return null;
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
+  return (
+    <KitModal
+      open={open}
+      onOpenChange={(o) => { if (!o) onClose(); }}
+      title={title}
+      icon={icon}
+      footer={footer}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-xl border bg-card text-card-foreground shadow-2xl">
-        <div className="flex items-center justify-between gap-3 border-b px-5 py-4">
-          <div className="flex items-center gap-2.5">
-            <span
-              className="flex size-8 items-center justify-center rounded-lg"
-              style={{ backgroundColor: `${GOLD}1A`, color: GOLD }}
-            >
-              {icon}
-            </span>
-            <h2 className="text-base font-semibold">{title}</h2>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label="Cerrar"
-          >
-            <X className="size-5" />
-          </button>
-        </div>
-        <div className="px-5 py-4">{children}</div>
-        {footer ? (
-          <div className="flex items-center justify-end gap-2 border-t px-5 py-4">{footer}</div>
-        ) : null}
-      </div>
-    </div>,
-    document.body
+      {children}
+    </KitModal>
   );
 }
 

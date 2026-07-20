@@ -19,8 +19,8 @@ import { postSiteService } from '@/lib/api/postSiteService';
 import IncidentTypesService from '@/services/incident-types.service';
 import IncidentMap from '@/components/IncidentMap/IncidentMap';
 import { toast } from 'sonner';
-import { PageContainer, PageHeader } from '@/components/kit';
-import { Printer } from 'lucide-react';
+import { PageContainer, PageHeader, Modal } from '@/components/kit';
+import { Printer, MessageSquarePlus } from 'lucide-react';
 import type { DirectoryOption, NamedEntity, DispatchComment, CommentAttachment } from './types';
 
 export function DispatchDetailsContent({ requestId }: { requestId?: string | null }) {
@@ -383,15 +383,18 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
 
       {/* Comment input box (toggle) */}
       {/* Comment modal (opens on Add) */}
-      {showCommentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black opacity-40" onClick={() => { setShowCommentModal(false); setNewComment(''); }} />
-          <div className="bg-card rounded-md shadow-lg w-full max-w-lg mx-4 z-10">
-            <div className="flex items-center justify-between px-4 py-2 border-b">
-              <div className="text-sm font-medium">{t('dispatcher.comment.new_comment_title') || 'Nuevo comentario'}</div>
-              <button className="p-1 rounded-full hover:bg-muted" onClick={() => { setShowCommentModal(false); setNewComment(''); }}>&times;</button>
-            </div>
-            <div className="p-4">
+      <Modal
+        open={showCommentModal}
+        onOpenChange={(o) => { if (!o) { setShowCommentModal(false); setNewComment(''); } }}
+        title={t('dispatcher.comment.new_comment_title') || 'Nuevo comentario'}
+        icon={<MessageSquarePlus className="h-5 w-5" />}
+        footer={(
+          <>
+            <Button variant="outline" onClick={() => { setNewComment(''); setSelectedFile(null); setShowCommentModal(false); }}>{t('dispatcher.cancel') || 'Cancelar'}</Button>
+            <Button onClick={handleAddComment}>{t('dispatcher.comment.add') || 'Agregar'}</Button>
+          </>
+        )}
+      >
               <label className="text-sm font-medium">{t('dispatcher.comment.note') || 'Nota'}</label>
               <textarea className="w-full border rounded p-2 text-sm mt-2" rows={6} value={newComment} onChange={(e) => setNewComment(e.target.value)} />
               <div className="mt-3">
@@ -417,14 +420,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
                   <div className="text-xs text-foreground mt-2 truncate">{selectedFile ? selectedFile.name : 'Sin archivos seleccionados'}</div>
                 </div>
               </div>
-                <div className="mt-4 flex justify-end gap-2">
-                <Button variant="outline" onClick={() => { setNewComment(''); setSelectedFile(null); setShowCommentModal(false); }}>{t('dispatcher.cancel') || 'Cancelar'}</Button>
-                <Button className="bg-primary text-primary-foreground" onClick={handleAddComment}>{t('dispatcher.comment.add') || 'Agregar'}</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      </Modal>
       {/* Additional detail sections */}
       <div className="mt-4 space-y-4">
         <div className="bg-card border rounded-md overflow-hidden">

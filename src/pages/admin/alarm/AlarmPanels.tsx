@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -14,7 +13,6 @@ import {
   Users,
   Wifi,
   WifiOff,
-  X,
 } from "lucide-react";
 
 import AppLayout from "@/layouts/app-layout";
@@ -30,6 +28,7 @@ import {
   StatCard,
   Stagger,
   EmptyState,
+  Modal,
 } from "@/components/kit";
 
 import {
@@ -337,29 +336,32 @@ function PanelModal({
 
   const showDc09Key = form.protocol === "sia-dc09";
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/50 p-4">
-      <div className="my-8 w-full max-w-2xl rounded-lg bg-background shadow-xl">
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <div>
-            <h2 className="text-lg font-semibold">
-              {editing ? "Editar panel" : "Agregar panel"}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Configura la conexión del panel de alarma con la central receptora.
-            </p>
-          </div>
-          <button
+  return (
+    <Modal
+      open={open}
+      onOpenChange={(o) => { if (!o) onClose(); }}
+      title={editing ? "Editar panel" : "Agregar panel"}
+      description="Configura la conexión del panel de alarma con la central receptora."
+      icon={<ShieldAlert className="h-5 w-5" />}
+      size="lg"
+      footer={
+        <>
+          <Button
             type="button"
+            variant="outline"
             onClick={onClose}
-            className="rounded-md p-1 text-muted-foreground hover:bg-muted"
-            aria-label="Cerrar"
+            disabled={saving}
           >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <form onSubmit={onSubmit} className="space-y-4 px-6 py-4">
+            Cancelar
+          </Button>
+          <Button type="submit" form="alarm-panel-form" variant="brand" disabled={saving}>
+            {saving && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+            {editing ? "Guardar cambios" : "Agregar panel"}
+          </Button>
+        </>
+      }
+    >
+        <form id="alarm-panel-form" onSubmit={onSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label htmlFor="ap-name">Nombre *</Label>
@@ -575,25 +577,8 @@ function PanelModal({
               />
             </div>
           </div>
-
-          <div className="flex justify-end gap-2 border-t pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={saving}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" variant="brand" disabled={saving}>
-              {saving && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-              {editing ? "Guardar cambios" : "Agregar panel"}
-            </Button>
-          </div>
         </form>
-      </div>
-    </div>,
-    document.body,
+    </Modal>
   );
 }
 
@@ -616,28 +601,27 @@ function ConfirmDelete({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
-  if (!open) return null;
-  return createPortal(
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-lg bg-background p-6 shadow-xl">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        <p className="mt-2 text-sm text-muted-foreground">{message}</p>
-        <div className="mt-6 flex justify-end gap-2">
+  return (
+    <Modal
+      open={open}
+      onOpenChange={(o) => { if (!o) onCancel(); }}
+      title={title}
+      icon={<Trash2 className="h-5 w-5" />}
+      size="sm"
+      footer={
+        <>
           <Button variant="outline" onClick={onCancel} disabled={busy}>
             Cancelar
           </Button>
-          <Button
-            onClick={onConfirm}
-            disabled={busy}
-            className="bg-red-600 text-white hover:bg-red-700"
-          >
+          <Button variant="destructive" onClick={onConfirm} disabled={busy}>
             {busy && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
             Eliminar
           </Button>
-        </div>
-      </div>
-    </div>,
-    document.body,
+        </>
+      }
+    >
+      <p className="text-sm text-muted-foreground">{message}</p>
+    </Modal>
   );
 }
 

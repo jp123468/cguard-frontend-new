@@ -40,8 +40,9 @@ import {
     UserPlus,
     Users,
     Plus,
+    Trash2,
 } from "lucide-react";
-import { PageContainer, PageHeader, Section, EmptyState } from "@/components/kit";
+import { PageContainer, PageHeader, Section, EmptyState, Modal } from "@/components/kit";
 import visitorLogService from "@/lib/api/visitorLogService";
 import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
@@ -1210,21 +1211,21 @@ export default function Visitors() {
               </PageContainer>
         </section>
 
-            {
-        confirmDeleteOpen && (
-            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-                <div className="fixed inset-0 bg-black opacity-40" onClick={() => setConfirmDeleteOpen(false)} />
-                <div className="bg-card rounded-t-lg sm:rounded-lg shadow-lg w-full sm:max-w-md z-10 p-4 sm:p-6">
-                    <h3 className="text-lg font-medium text-foreground">{t('visitantes.confirmDeleteTitle') || 'Confirmar eliminación'}</h3>
-                    <p className="mt-2 text-sm text-foreground/70">{t('visitantes.confirmDeleteMessage') || `¿Estás seguro de que deseas eliminar ${confirmDeleteIds.length} registro(s)? Esta acción no se puede deshacer.`}</p>
-                    <div className="mt-4 flex justify-end gap-2">
-                        <Button variant="ghost" onClick={() => { setConfirmDeleteOpen(false); setConfirmDeleteIds([]); }}> {t('actions.cancel') || 'Cancelar'} </Button>
-                        <Button className="bg-red-600 text-white hover:bg-red-700" onClick={performDeleteConfirmed}>{t('actions.delete') || 'Eliminar'}</Button>
-                    </div>
-                </div>
-            </div>
-        )
-    }
+            <Modal
+                open={confirmDeleteOpen}
+                onOpenChange={(o) => { if (!o) { setConfirmDeleteOpen(false); setConfirmDeleteIds([]); } }}
+                title={t('visitantes.confirmDeleteTitle') || 'Confirmar eliminación'}
+                icon={<Trash2 className="h-5 w-5" />}
+                size="sm"
+                footer={
+                    <>
+                        <Button variant="outline" onClick={() => { setConfirmDeleteOpen(false); setConfirmDeleteIds([]); }}>{t('actions.cancel') || 'Cancelar'}</Button>
+                        <Button variant="destructive" onClick={performDeleteConfirmed}>{t('actions.delete') || 'Eliminar'}</Button>
+                    </>
+                }
+            >
+                <p className="text-sm text-foreground/70">{t('visitantes.confirmDeleteMessage') || `¿Estás seguro de que deseas eliminar ${confirmDeleteIds.length} registro(s)? Esta acción no se puede deshacer.`}</p>
+            </Modal>
     <>
         <Sheet open={viewLogOpen} onOpenChange={setViewLogOpen}>
             <SheetContent side="right" className="w-full max-w-lg h-full sm:h-auto">

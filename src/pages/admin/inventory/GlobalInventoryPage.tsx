@@ -13,7 +13,7 @@ import {
   Plus, Search, Pencil, Trash2, X, Package, ChevronDown, ChevronUp, ImagePlus, ZoomIn,
   CheckCircle2, AlertTriangle,
 } from 'lucide-react';
-import { PageContainer, PageHeader, Section, Stagger, StatCard, StatusBadge, EmptyState } from '@/components/kit';
+import { PageContainer, PageHeader, Section, Stagger, StatCard, StatusBadge, EmptyState, Modal } from '@/components/kit';
 import inventoryItemService, {
   InventoryItem, InventoryItemInput, InventoryItemPhoto, ItemType, ItemCondition, ItemStatus,
   ITEM_TYPE_LABELS, ITEM_STATUS_LABELS, ITEM_CONDITION_LABELS, ITEM_STATUS_COLORS,
@@ -489,24 +489,24 @@ export default function GlobalInventoryPage() {
       </div>
 
       {/* Create/Edit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-            {/* Modal header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-              <h2 className="text-lg font-semibold text-foreground">
-                {editingItem ? 'Editar artículo' : 'Nuevo artículo'}
-              </h2>
-              <button
-                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground/70"
-                onClick={closeModal}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal body */}
-            <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
+      <Modal
+        open={showModal}
+        onOpenChange={(o) => { if (!o) closeModal(); }}
+        title={editingItem ? 'Editar artículo' : 'Nuevo artículo'}
+        icon={<Package className="h-5 w-5" />}
+        size="md"
+        footer={(
+          <>
+            <Button variant="outline" onClick={closeModal} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? 'Guardando...' : editingItem ? 'Guardar cambios' : 'Crear artículo'}
+            </Button>
+          </>
+        )}
+      >
+            <div className="space-y-4">
               {/* Name */}
               <div className="space-y-1">
                 <Label htmlFor="inv-name">Nombre <span className="text-red-500">*</span></Label>
@@ -667,19 +667,7 @@ export default function GlobalInventoryPage() {
                 )}
               </div>
             </div>
-
-            {/* Modal footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border">
-              <Button variant="outline" onClick={closeModal} disabled={saving}>
-                Cancelar
-              </Button>
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? 'Guardando...' : editingItem ? 'Guardar cambios' : 'Crear artículo'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
       {/* Lightbox */}
       {lightboxSrc && (
@@ -703,26 +691,29 @@ export default function GlobalInventoryPage() {
       )}
 
       {/* Delete Confirmation */}
-      {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-foreground">Eliminar artículo</h2>
-            <p className="text-sm text-foreground/70">
-              ¿Estás seguro de que quieres eliminar{' '}
-              <span className="font-medium text-foreground">{deleteTarget.name}</span>?
-              Esta acción no se puede deshacer.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
-                Cancelar
-              </Button>
-              <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-                {deleting ? 'Eliminando...' : 'Eliminar'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={!!deleteTarget}
+        onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}
+        title="Eliminar artículo"
+        icon={<Trash2 className="h-5 w-5" />}
+        size="sm"
+        footer={(
+          <>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? 'Eliminando...' : 'Eliminar'}
+            </Button>
+          </>
+        )}
+      >
+        <p className="text-sm text-foreground/70">
+          ¿Estás seguro de que quieres eliminar{' '}
+          <span className="font-medium text-foreground">{deleteTarget?.name}</span>?
+          Esta acción no se puede deshacer.
+        </p>
+      </Modal>
     </AppLayout>
   );
 }

@@ -4,7 +4,8 @@ import { Search, ChevronDown, Plus, X, Clock, EllipsisVertical, Eye, Edit, Trash
 import RondaSettingsForm from '@/pages/admin/Configuration/rondas-settings/RondaSettingsForm';
 import { useTranslation } from 'react-i18next';
 import MobileCardList from '@/components/responsive/MobileCardList';
-import { EmptyState } from '@/components/kit';
+import { EmptyState, Modal } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
@@ -893,96 +894,95 @@ export default function PostSiteTours({ site, guards = [] }: { site?: SiteProp; 
           </div>
 
           {/* Confirm archive modal */}
-          {showConfirmArchive && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
-              <div className="absolute inset-0 bg-black/40" onClick={() => setShowConfirmArchive(false)} />
-              <div className="bg-card rounded-lg shadow-lg z-50 max-w-lg w-full p-6">
-                <h3 className="text-lg font-semibold mb-4">{t('siteTour.actions.confirmArchiveTitle', 'Confirm archive')}</h3>
-                <p className="text-sm text-foreground/70 mb-4">{t('siteTour.actions.confirmArchiveMessage', 'Are you sure you want to archive the selected tours? This action can be undone by editing the tour.')}</p>
-                <div className="flex justify-end gap-3">
-                  <button onClick={() => setShowConfirmArchive(false)} className="px-4 py-2 rounded-full bg-muted text-foreground">{t('siteTour.buttons.cancel', 'Cancel')}</button>
-                  <button
-                    onClick={async () => {
-                      try {
-                        const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
-                        if (!tenantId) {
-                          toast.error(t('siteTour.actions.missingTenant', 'Missing tenant'));
-                          return;
-                        }
-                        // patch each tour to set active=false
-                        await Promise.all((selectedTourIds || []).map(id => ApiService.patch(`/tenant/${tenantId}/site-tour/${encodeURIComponent(id)}`, { active: false })));
-                        toast.success(t('siteTour.actions.archived', 'Selected tours archived'));
-                        setShowConfirmArchive(false);
-                        setSelectedTourIds([]);
-                        try { await fetchTours(); } catch (e) { /* ignore */ }
-                      } catch (err: any) {
-                        console.error('Archive selected failed', err);
-                        const msg = err?.response?.data?.message || err?.message || t('siteTour.actions.archiveError', 'Error archiving selected tours');
-                        toast.error(msg);
+          <Modal
+            open={showConfirmArchive}
+            onOpenChange={(o) => { if (!o) setShowConfirmArchive(false); }}
+            title={t('siteTour.actions.confirmArchiveTitle', 'Confirmar archivado')}
+            size="md"
+            footer={(
+              <>
+                <Button variant="outline" onClick={() => setShowConfirmArchive(false)}>{t('siteTour.buttons.cancel', 'Cancelar')}</Button>
+                <Button
+                  onClick={async () => {
+                    try {
+                      const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+                      if (!tenantId) {
+                        toast.error(t('siteTour.actions.missingTenant', 'Missing tenant'));
+                        return;
                       }
-                    }}
-                    className="px-4 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    {t('siteTour.actions.archive', 'Archive')}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+                      // patch each tour to set active=false
+                      await Promise.all((selectedTourIds || []).map(id => ApiService.patch(`/tenant/${tenantId}/site-tour/${encodeURIComponent(id)}`, { active: false })));
+                      toast.success(t('siteTour.actions.archived', 'Selected tours archived'));
+                      setShowConfirmArchive(false);
+                      setSelectedTourIds([]);
+                      try { await fetchTours(); } catch (e) { /* ignore */ }
+                    } catch (err: any) {
+                      console.error('Archive selected failed', err);
+                      const msg = err?.response?.data?.message || err?.message || t('siteTour.actions.archiveError', 'Error archiving selected tours');
+                      toast.error(msg);
+                    }
+                  }}
+                >
+                  {t('siteTour.actions.archive', 'Archivar')}
+                </Button>
+              </>
+            )}
+          >
+            <p className="text-sm text-foreground/70">{t('siteTour.actions.confirmArchiveMessage', 'Are you sure you want to archive the selected tours? This action can be undone by editing the tour.')}</p>
+          </Modal>
           
 
           {/* Confirm delete modal */}
-          {showConfirmDelete && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
-              <div className="absolute inset-0 bg-black/40" onClick={() => setShowConfirmDelete(false)} />
-              <div className="bg-card rounded-lg shadow-lg z-50 max-w-lg w-full p-6">
-                <h3 className="text-lg font-semibold mb-4">{t('siteTour.actions.confirmDeleteTitle', 'Confirm delete')}</h3>
-                <p className="text-sm text-foreground/70 mb-4">{t('siteTour.actions.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected tours? This action cannot be undone and will remove all associated data.')}</p>
-                <div className="flex justify-end gap-3">
-                  <button onClick={() => setShowConfirmDelete(false)} className="px-4 py-2 rounded-full bg-muted text-foreground">{t('siteTour.buttons.cancel', 'Cancel')}</button>
-                  <button
-                    onClick={async () => {
-                      try {
-                        const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
-                        if (!tenantId) {
-                          toast.error(t('siteTour.actions.missingTenant', 'Missing tenant'));
-                          return;
-                        }
-                        // perform delete for each selected tour
-                        await Promise.all((selectedTourIds || []).map(id => ApiService.delete(`/tenant/${tenantId}/site-tour/${encodeURIComponent(id)}`)));
-                        toast.success(t('siteTour.actions.deleted', 'Selected tours deleted'));
-                        setShowConfirmDelete(false);
-                        setSelectedTourIds([]);
-                        try { await fetchTours(); } catch (e) { /* ignore */ }
-                      } catch (err: any) {
-                        console.error('Delete selected failed', err);
-                        const msg = err?.response?.data?.message || err?.message || t('siteTour.actions.deleteError', 'Error deleting selected tours');
-                        toast.error(msg);
+          <Modal
+            open={showConfirmDelete}
+            onOpenChange={(o) => { if (!o) setShowConfirmDelete(false); }}
+            title={t('siteTour.actions.confirmDeleteTitle', 'Confirmar eliminación')}
+            icon={<Trash className="h-5 w-5" />}
+            size="md"
+            footer={(
+              <>
+                <Button variant="outline" onClick={() => setShowConfirmDelete(false)}>{t('siteTour.buttons.cancel', 'Cancelar')}</Button>
+                <Button
+                  variant="destructive"
+                  onClick={async () => {
+                    try {
+                      const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+                      if (!tenantId) {
+                        toast.error(t('siteTour.actions.missingTenant', 'Missing tenant'));
+                        return;
                       }
-                    }}
-                    className="px-4 py-2 rounded-full bg-red-600 text-white hover:bg-red-700"
-                  >
-                    {t('siteTour.actions.delete', 'Delete')}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+                      // perform delete for each selected tour
+                      await Promise.all((selectedTourIds || []).map(id => ApiService.delete(`/tenant/${tenantId}/site-tour/${encodeURIComponent(id)}`)));
+                      toast.success(t('siteTour.actions.deleted', 'Selected tours deleted'));
+                      setShowConfirmDelete(false);
+                      setSelectedTourIds([]);
+                      try { await fetchTours(); } catch (e) { /* ignore */ }
+                    } catch (err: any) {
+                      console.error('Delete selected failed', err);
+                      const msg = err?.response?.data?.message || err?.message || t('siteTour.actions.deleteError', 'Error deleting selected tours');
+                      toast.error(msg);
+                    }
+                  }}
+                >
+                  {t('siteTour.actions.delete', 'Eliminar')}
+                </Button>
+              </>
+            )}
+          >
+            <p className="text-sm text-foreground/70">{t('siteTour.actions.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected tours? This action cannot be undone and will remove all associated data.')}</p>
+          </Modal>
 
           {/* TagScans removed from inline modal — use the sidebar/menu or dedicated route */}
 
           {/* Detail modal (simplified: only relevant fields + guard/station names) */}
-          {showDetailModal && detailTour && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
-              <div className="absolute inset-0 bg-black/40" onClick={() => setShowDetailModal(false)} />
-              <div className="bg-card rounded-lg shadow-lg z-50 max-w-2xl w-full p-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold">{detailTour.name || detailTour.title || t('siteTour.detail.title', 'Tour details')}</h3>
-                  <button onClick={() => setShowDetailModal(false)} className="p-2 text-muted-foreground hover:text-foreground">
-                    <X size={18} />
-                  </button>
-                </div>
-
+          <Modal
+            open={showDetailModal && !!detailTour}
+            onOpenChange={(o) => { if (!o) setShowDetailModal(false); }}
+            title={detailTour?.name || detailTour?.title || t('siteTour.detail.title', 'Detalles del recorrido')}
+            icon={<Eye className="h-5 w-5" />}
+            size="lg"
+            footer={<Button variant="outline" onClick={() => setShowDetailModal(false)}>{t('common.close', 'Cerrar')}</Button>}
+          >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-muted-foreground">{t('siteTour.field.description', 'Description')}</div>
@@ -1045,14 +1045,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: SiteProp; 
                   {/* Created At / Updated At intentionally omitted per request */}
                 </div>
 
-                <div className="mt-6 flex justify-end">
-                  <button onClick={() => setShowDetailModal(false)} className="px-4 py-2 rounded border">
-                    {t('common.close', 'Close')}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          </Modal>
 
           <div className="md:hidden">
             <MobileCardList
@@ -1303,24 +1296,16 @@ export default function PostSiteTours({ site, guards = [] }: { site?: SiteProp; 
         </div>
       )}
 
-      {showSettingsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowSettingsModal(false)}>
-          <div className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-background" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <div>
-                <h2 className="text-base font-semibold text-foreground">Configuraciones de Rondas</h2>
-                <p className="text-xs text-muted-foreground">{site?.companyName || site?.name || 'Este sitio'}</p>
-              </div>
-              <button onClick={() => setShowSettingsModal(false)} className="text-muted-foreground hover:text-foreground">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="overflow-y-auto p-5">
-              <RondaSettingsForm postSiteId={site?.id} onSaved={() => setShowSettingsModal(false)} />
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={showSettingsModal}
+        onOpenChange={(o) => { if (!o) setShowSettingsModal(false); }}
+        title="Configuraciones de Rondas"
+        description={site?.companyName || site?.name || 'Este sitio'}
+        icon={<Settings className="h-5 w-5" />}
+        size="lg"
+      >
+        <RondaSettingsForm postSiteId={site?.id} onSaved={() => setShowSettingsModal(false)} />
+      </Modal>
     </div>
   );
 }

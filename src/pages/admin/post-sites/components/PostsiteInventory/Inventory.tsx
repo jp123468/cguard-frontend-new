@@ -16,7 +16,7 @@ import inventoryItemService, {
 } from '@/lib/api/inventoryItemService';
 import inventoryAssignmentService, { InventoryAssignment } from '@/lib/api/inventoryAssignmentService';
 import { securityGuardService } from '@/lib/api/securityGuardService';
-import { EmptyState } from '@/components/kit';
+import { EmptyState, Modal } from '@/components/kit';
 import type { PostSite } from '@/types';
 
 type ConditionKey = 'bueno' | 'regular' | 'danado';
@@ -112,14 +112,20 @@ function AssignModal({ postSiteId, onClose, onDone }: AssignModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-card rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-lg font-semibold text-foreground">Asignar artículo al puesto</h2>
-          <button className="p-1 rounded hover:bg-muted text-muted-foreground" onClick={onClose}><X className="w-5 h-5" /></button>
-        </div>
-
-        <div className="overflow-y-auto flex-1 px-6 py-4 space-y-5">
+    <Modal
+      open
+      onOpenChange={(o) => { if (!o) onClose(); }}
+      title="Asignar artículo al puesto"
+      icon={<Package className="h-5 w-5" />}
+      size="md"
+      footer={(
+        <>
+          <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button variant="brand" onClick={handleAssign} disabled={saving || !selectedItem}>{saving ? 'Asignando...' : 'Asignar'}</Button>
+        </>
+      )}
+    >
+      <div className="space-y-5">
           {/* Item */}
           <div className="space-y-2">
             <Label>Artículo del inventario <span className="text-red-500">*</span></Label>
@@ -197,14 +203,8 @@ function AssignModal({ postSiteId, onClose, onDone }: AssignModalProps) {
             <Label>Notas (opcional)</Label>
             <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observaciones..." />
           </div>
-        </div>
-
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border">
-          <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
-          <Button variant="brand" onClick={handleAssign} disabled={saving || !selectedItem}>{saving ? 'Asignando...' : 'Asignar'}</Button>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -235,12 +235,20 @@ function ReturnModal({ assignment, onClose, onDone }: ReturnModalProps) {
   const itemName = (assignment as any).inventoryItem?.name || 'artículo';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-card rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">Devolver artículo</h2>
-          <button className="p-1 rounded hover:bg-muted text-muted-foreground" onClick={onClose}><X className="w-5 h-5" /></button>
-        </div>
+    <Modal
+      open
+      onOpenChange={(o) => { if (!o) onClose(); }}
+      title="Devolver artículo"
+      icon={<RotateCcw className="h-5 w-5" />}
+      size="sm"
+      footer={(
+        <>
+          <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button variant="brand" onClick={handleReturn} disabled={saving}>{saving ? 'Procesando...' : 'Confirmar devolución'}</Button>
+        </>
+      )}
+    >
+      <div className="space-y-4">
         <p className="text-sm text-foreground/70">Devolviendo: <span className="font-medium text-foreground">{itemName}</span></p>
         <div className="space-y-1">
           <Label>Condición al devolver</Label>
@@ -253,12 +261,8 @@ function ReturnModal({ assignment, onClose, onDone }: ReturnModalProps) {
           <Label>Notas (opcional)</Label>
           <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observaciones..." />
         </div>
-        <div className="flex justify-end gap-3 pt-1">
-          <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
-          <Button variant="brand" onClick={handleReturn} disabled={saving}>{saving ? 'Procesando...' : 'Confirmar devolución'}</Button>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 

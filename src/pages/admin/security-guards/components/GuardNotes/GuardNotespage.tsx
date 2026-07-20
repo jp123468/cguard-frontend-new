@@ -5,6 +5,8 @@ import GuardsLayout from '@/layouts/GuardsLayout';
 import AppLayout from '@/layouts/app-layout';
 import { useParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Modal } from '@/components/kit';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
 import api from '@/lib/api';
@@ -562,48 +564,40 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
 
                     {/* Delete confirmation */}
                     {deleteTarget && (
-                        <div
-                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
-                            onClick={() => !deleting && setDeleteTarget(null)}
-                        >
-                            <div
-                                className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-2xl"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
-                                        <Trash2 size={18} />
-                                    </div>
-                                    <h3 className="text-base font-semibold tracking-tight text-foreground">
-                                        {t('guards.notes.delete.title', { defaultValue: 'Eliminar nota' })}
-                                    </h3>
-                                </div>
-                                <p className="mt-4 text-sm text-muted-foreground">
-                                    {t('guards.notes.delete.confirm', {
-                                        defaultValue: '¿Seguro que deseas eliminar "{{title}}"? Esta acción no se puede deshacer.',
-                                        title: deleteTarget?.title || t('guards.notes.untitled', { defaultValue: 'Sin título' }),
-                                    })}
-                                </p>
-                                <div className="mt-6 flex items-center justify-end gap-3">
-                                    <button
+                        <Modal
+                            open={!!deleteTarget}
+                            onOpenChange={(o) => { if (!o && !deleting) setDeleteTarget(null); }}
+                            title={t('guards.notes.delete.title', { defaultValue: 'Eliminar nota' })}
+                            icon={<Trash2 className="h-5 w-5" />}
+                            size="sm"
+                            footer={
+                                <>
+                                    <Button
+                                        variant="outline"
                                         onClick={() => setDeleteTarget(null)}
                                         disabled={deleting}
-                                        className="h-9 rounded-lg border px-4 text-sm font-medium text-foreground transition hover:bg-muted"
                                     >
                                         {t('guards.notes.modal.cancel', { defaultValue: 'Cancelar' })}
-                                    </button>
-                                    <button
+                                    </Button>
+                                    <Button
+                                        variant="destructive"
                                         onClick={handleConfirmDelete}
                                         disabled={deleting}
-                                        className="h-9 rounded-lg bg-red-600 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-red-700 disabled:opacity-60"
                                     >
                                         {deleting
                                             ? t('actions.deleting', { defaultValue: 'Eliminando…' })
                                             : t('guards.notes.actions.delete', { defaultValue: 'Eliminar' })}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                                    </Button>
+                                </>
+                            }
+                        >
+                            <p className="text-sm text-muted-foreground">
+                                {t('guards.notes.delete.confirm', {
+                                    defaultValue: '¿Seguro que deseas eliminar "{{title}}"? Esta acción no se puede deshacer.',
+                                    title: deleteTarget?.title || t('guards.notes.untitled', { defaultValue: 'Sin título' }),
+                                })}
+                            </p>
+                        </Modal>
                     )}
                 </div>
             </GuardsLayout>

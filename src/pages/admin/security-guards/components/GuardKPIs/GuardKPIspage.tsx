@@ -30,7 +30,7 @@ import KpiService from '@/services/kpi.service';
 import { ApiService } from '@/services/api/apiService';
 import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
-import { PageContainer, PageHeader, Section, StatCard, Stagger, EmptyState } from '@/components/kit';
+import { PageContainer, PageHeader, Section, StatCard, Stagger, EmptyState, Modal } from '@/components/kit';
 import { Button } from '@/components/ui/button';
 import type { GuardDetail, Kpi, GuardAssignmentRow } from '../../guardDetailTypes';
 
@@ -1047,18 +1047,16 @@ export default function GuardIndicators({ guard }: Props) {
                 </div>
               )}
               {deleteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }}>
-                  <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-                  <div className="relative w-96 bg-card rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                    <div className="p-6 border-b">
-                      <h3 className="text-lg font-semibold">{t('guards.KPI.modal.confirmDeleteTitle', 'Confirmar eliminación')}</h3>
-                    </div>
-                    <div className="p-6">
-                      <p className="text-sm text-foreground">{t('guards.KPI.modal.confirmDeleteMessage', '¿Estás seguro de que deseas eliminar {toDeleteId ? "este KPI" : `${selectedIds.length} KPI(s)`}? Esta acción no se puede deshacer.')}</p>
-                    </div>
-                    <div className="flex items-center justify-end gap-3 p-6 border-t bg-muted/30">
+                <Modal
+                  open={deleteModalOpen}
+                  onOpenChange={(o) => { if (!o) { setDeleteModalOpen(false); setToDeleteId(null); } }}
+                  title={t('guards.KPI.modal.confirmDeleteTitle', 'Confirmar eliminación')}
+                  icon={<Trash className="h-5 w-5" />}
+                  size="sm"
+                  footer={
+                    <>
                       <Button variant="outline" onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }}>{t('actions.cancel', 'Cancelar')}</Button>
-                      <button onClick={async () => {
+                      <Button variant="destructive" onClick={async () => {
                         try {
                           if (toDeleteId) {
                             await KpiService.destroy(toDeleteId);
@@ -1079,10 +1077,12 @@ export default function GuardIndicators({ guard }: Props) {
                           setToDeleteId(null);
                           setSelectedIds([]);
                         }
-                      }} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">{t('actions.delete', 'Eliminar')}</button>
-                    </div>
-                  </div>
-                </div>
+                      }}>{t('actions.delete', 'Eliminar')}</Button>
+                    </>
+                  }
+                >
+                  <p className="text-sm text-foreground">{t('guards.KPI.modal.confirmDeleteMessage', '¿Estás seguro de que deseas eliminar {toDeleteId ? "este KPI" : `${selectedIds.length} KPI(s)`}? Esta acción no se puede deshacer.')}</p>
+                </Modal>
               )}
             </div>
           </Section>

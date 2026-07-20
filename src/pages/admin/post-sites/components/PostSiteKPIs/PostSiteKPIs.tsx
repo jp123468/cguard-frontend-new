@@ -25,7 +25,7 @@ import KpiBarChart from '@/components/KpiBarChart';
 import { useTranslation } from "react-i18next";
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { Button } from '@/components/ui/button';
-import { EmptyState, StatusBadge } from '@/components/kit';
+import { EmptyState, StatusBadge, Modal } from '@/components/kit';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import type { PostSite } from '@/types';
 type Props = {
@@ -881,44 +881,42 @@ export default function PostSiteKPIs({ site }: Props) {
         </div>
       )}
 
-            {deleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }}>
-          <div className="absolute inset-0 bg-black opacity-30" />
-          <div className="relative w-96 bg-card rounded shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 border-b flex items-center justify-center">
-                <h3 className="text-lg font-semibold text-center">{t('postSites.KPI.confirmDelete.title', 'Confirm deletion')}</h3>
-              </div>
-            <div className="p-6">
-              <p className="text-sm text-foreground">{toDeleteId ? t('postSites.KPI.confirmDelete.messageSingle', 'Are you sure you want to delete this KPI? This action cannot be undone.') : t('postSites.KPI.confirmDelete.messageMultiple', 'Are you sure you want to delete {{count}} KPI(s)? This action cannot be undone.', { count: selectedIds.length })}</p>
-            </div>
-            <div className="flex items-center justify-end gap-3 p-6 border-t bg-card">
-              <button onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }} className="px-4 py-2 border rounded-md text-foreground hover:bg-muted/30">{t('actions.cancel', 'Cancel')}</button>
-              <button onClick={async () => {
-                try {
-                  if (toDeleteId) {
-                    await KpiService.destroy(toDeleteId);
-                    toast.success(t('postSites.KPI.toasts.kpiDeleted', 'KPI deleted'));
-                  } else if (selectedIds.length > 0) {
-                    await Promise.all(selectedIds.map((id) => KpiService.destroy(id)));
-                    toast.success(t('postSites.KPI.toasts.kpisDeleted', 'KPIs deleted'));
-                  } else {
-                    toast.error(t('postSites.KPI.toasts.noSelected', 'No items selected'));
-                    return;
-                  }
-                  await loadKpis();
-                } catch (e) {
-                  console.error(e);
-                  toast.error(t('postSites.KPI.toasts.deleteError', 'Error deleting KPI(s)'));
-                } finally {
-                  setDeleteModalOpen(false);
-                  setToDeleteId(null);
-                  setSelectedIds([]);
+      <Modal
+        open={deleteModalOpen}
+        onOpenChange={(o) => { if (!o) { setDeleteModalOpen(false); setToDeleteId(null); } }}
+        title={t('postSites.KPI.confirmDelete.title', 'Confirmar eliminación')}
+        icon={<Trash className="h-5 w-5" />}
+        size="sm"
+        footer={(
+          <>
+            <Button variant="outline" onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }}>{t('actions.cancel', 'Cancelar')}</Button>
+            <Button variant="destructive" onClick={async () => {
+              try {
+                if (toDeleteId) {
+                  await KpiService.destroy(toDeleteId);
+                  toast.success(t('postSites.KPI.toasts.kpiDeleted', 'KPI deleted'));
+                } else if (selectedIds.length > 0) {
+                  await Promise.all(selectedIds.map((id) => KpiService.destroy(id)));
+                  toast.success(t('postSites.KPI.toasts.kpisDeleted', 'KPIs deleted'));
+                } else {
+                  toast.error(t('postSites.KPI.toasts.noSelected', 'No items selected'));
+                  return;
                 }
-              }} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">{t('actions.delete', 'Delete')}</button>
-            </div>
-          </div>
-        </div>
-      )}
+                await loadKpis();
+              } catch (e) {
+                console.error(e);
+                toast.error(t('postSites.KPI.toasts.deleteError', 'Error deleting KPI(s)'));
+              } finally {
+                setDeleteModalOpen(false);
+                setToDeleteId(null);
+                setSelectedIds([]);
+              }
+            }}>{t('actions.delete', 'Eliminar')}</Button>
+          </>
+        )}
+      >
+        <p className="text-sm text-foreground">{toDeleteId ? t('postSites.KPI.confirmDelete.messageSingle', 'Are you sure you want to delete this KPI? This action cannot be undone.') : t('postSites.KPI.confirmDelete.messageMultiple', 'Are you sure you want to delete {{count}} KPI(s)? This action cannot be undone.', { count: selectedIds.length })}</p>
+      </Modal>
     </div>
   );
 }
