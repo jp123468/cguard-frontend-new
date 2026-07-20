@@ -4,11 +4,11 @@ import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { EllipsisVertical, Pencil, Trash, Plus, X, Users, AlertTriangle } from 'lucide-react';
+import { EllipsisVertical, Pencil, Trash, Plus, Users, AlertTriangle } from 'lucide-react';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { PhoneInput } from "@/components/phone/PhoneInput";
 import MobileCardList from '@/components/responsive/MobileCardList';
-import { EmptyState } from '@/components/kit';
+import { EmptyState, Modal } from '@/components/kit';
 import { Button } from '@/components/ui/button';
 
 
@@ -534,119 +534,97 @@ export default function ClientContacts({ client }: { client: Client & { contacts
         </div>
       </div>
 
-      {showAdd && (
-        <div className={`fixed inset-0 z-50 flex ${isCompact ? 'items-end' : 'items-center'} justify-center`}> 
-          <div className="absolute inset-0 bg-black opacity-30 z-40" onClick={handleCloseAdd} />
-          <div className={`relative w-full sm:ml-auto sm:w-96 bg-card rounded-t-2xl sm:rounded-2xl ${isCompact ? 'h-auto p-4 pb-6 max-h-[90vh]' : 'h-auto p-6 pb-24 max-h-[92vh]'} shadow-2xl overflow-auto z-50`} onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary [&_svg]:size-4">
-                  <Users />
-                </div>
-                <h3 className="font-display text-lg font-semibold">{form && form.id ? t('clients.contacts.editcontact') : t('clients.contacts.form.AddClientContact')}</h3>
-              </div>
-              <button onClick={handleCloseAdd} className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition"><X className="h-4 w-4" /></button>
+      <Modal
+        open={showAdd}
+        onOpenChange={(o) => { if (!o) handleCloseAdd(); }}
+        title={form && form.id ? t('clients.contacts.editcontact', 'Editar contacto') : t('clients.contacts.form.AddClientContact', 'Agregar contacto del cliente')}
+        icon={<Users className="h-5 w-5" />}
+        footer={(
+          <Button onClick={handleAdd} disabled={!canSubmit}>
+            {(form && form.id) ? t('actions.save', 'Guardar') : t('clients.contacts.form.Addcontact', 'Agregar contacto')}
+          </Button>
+        )}
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Name')}</label>
+            <input aria-invalid={!!errors.name} className="w-full border rounded-md h-10 px-3" value={form.name || ''} onChange={e => handleChange('name', e.target.value)} />
+            {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
+          </div>
+          <div>
+            <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Email')}</label>
+            <input aria-invalid={!!errors.email} className="w-full border rounded-md h-10 px-3" value={form.email || ''} onChange={e => handleChange('email', e.target.value)} />
+            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
+          </div>
+          <div>
+            <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Mobile Number')}</label>
+            <div aria-invalid={!!errors.mobile}>
+              <PhoneInput
+                {...({ defaultCountry: phoneCountry,
+                  value: form.mobile || '',
+                  onChange: (v: any, data?: any) => {
+                    const val = String(v || '');
+                    handleChange('mobile', val);
+                    if (data && data.countryCode) setPhoneCountry(String(data.countryCode).toLowerCase());
+                  },
+                  placeholder: "ej. +593987654321",
+                  preferredCountries: ['ec', 'us']
+                } as any)}
+              />
             </div>
-            <div className={`overflow-auto pr-2 pb-20 ${isCompact ? '' : 'max-h-[calc(92vh-220px)]'}`}>
-              <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Name')}</label>
-                <input aria-invalid={!!errors.name} className="w-full border rounded-md h-10 px-3" value={form.name || ''} onChange={e => handleChange('name', e.target.value)} />
-                {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
-              </div>
-              <div>
-                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Email')}</label>
-                <input aria-invalid={!!errors.email} className="w-full border rounded-md h-10 px-3" value={form.email || ''} onChange={e => handleChange('email', e.target.value)} />
-                {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
-              </div>
-            </div>
-              <div>
-                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Mobile Number')}</label>
-                <div aria-invalid={!!errors.mobile}>
-                  {/* Cast props to any to accommodate differing PhoneInputProps signature */}
-                  <PhoneInput
-                    {...({ defaultCountry: phoneCountry,
-                      value: form.mobile || '',
-                      onChange: (v: any, data?: any) => {
-                        // PhoneInput may pass (value, data). Keep supporting single-arg too.
-                        const val = String(v || '');
-                        handleChange('mobile', val);
-                        if (data && data.countryCode) setPhoneCountry(String(data.countryCode).toLowerCase());
-                      },
-                      placeholder: "e.g. +12015550123",
-                      // prefer Ecuador first, then United States
-                      preferredCountries: ['ec', 'us']
-                    } as any)}
-                  />
-                </div>
-                {errors.mobile && <p className="text-xs text-red-600 mt-1">{errors.mobile}</p>}
-              </div>
-              <div>
-                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Description')}</label>
-                <textarea className="w-full border rounded-md px-3 py-2 min-h-[90px]" value={form.description || ''} onChange={e => handleChange('description', e.target.value)} placeholder={t('clients.contacts.form.descriptioninput', 'Enter - description')} rows={6} />
-
-              </div>
-              <div>
-                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.AssignPostSite')}</label>
-                <select
-                  className="w-full border rounded-md h-10 px-3"
-                  value={typeof form.postSite === 'string' ? form.postSite : (form.postSite && form.postSite.id ? String(form.postSite.id) : '')}
-                  onChange={e => handleChange('postSite', e.target.value)}
-                >
-                  <option value="">--</option>
-                  {(Array.isArray(postSites) ? postSites : []).map((ps) => (
-                    <option key={ps.id} value={ps.id}>{ps.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <input id="allowGuard" type="checkbox" className="h-4 w-4" checked={!!form.allowGuard} onChange={e => handleChange('allowGuard', e.target.checked)} />
-                <label htmlFor="allowGuard" className="text-sm text-foreground">{t('clients.contacts.form.checkbox')}</label>
-              </div>
-            </div>
-
-            <div className={isCompact ? 'fixed bottom-6 md:bottom-8 right-6 md:right-10' : 'absolute bottom-6 right-6'}>
-              <button
-                onClick={handleAdd}
-                disabled={!canSubmit}
-                className={`${canSubmit ? 'cg-gradient-brand hover:brightness-[1.04] hover:shadow-lg' : 'bg-primary/60 cursor-not-allowed opacity-60'} text-primary-foreground transition-all duration-300 ease-out px-5 py-2 rounded-lg shadow-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30`}
-              >
-                {(form && form.id) ? (t('save') || 'Save') : (t('clients.contacts.form.Addcontact') || 'ADD')}
-              </button>
-            </div>
+            {errors.mobile && <p className="text-xs text-red-600 mt-1">{errors.mobile}</p>}
+          </div>
+          <div>
+            <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Description')}</label>
+            <textarea className="w-full border rounded-md px-3 py-2 min-h-[90px]" value={form.description || ''} onChange={e => handleChange('description', e.target.value)} placeholder={t('clients.contacts.form.descriptioninput', 'Escribe una descripción')} rows={6} />
+          </div>
+          <div>
+            <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.AssignPostSite')}</label>
+            <select
+              className="w-full border rounded-md h-10 px-3"
+              value={typeof form.postSite === 'string' ? form.postSite : (form.postSite && form.postSite.id ? String(form.postSite.id) : '')}
+              onChange={e => handleChange('postSite', e.target.value)}
+            >
+              <option value="">--</option>
+              {(Array.isArray(postSites) ? postSites : []).map((ps) => (
+                <option key={ps.id} value={ps.id}>{ps.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <input id="allowGuard" type="checkbox" className="h-4 w-4" checked={!!form.allowGuard} onChange={e => handleChange('allowGuard', e.target.checked)} />
+            <label htmlFor="allowGuard" className="text-sm text-foreground">{t('clients.contacts.form.checkbox')}</label>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {/* Confirm delete modal */}
-      {confirmDeleteIds.length > 0 && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setConfirmDeleteIds([])} />
-          <div className="relative bg-card rounded-2xl shadow-2xl p-6 z-70 w-full max-w-md">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/12 text-red-600 [&_svg]:size-6">
-              <AlertTriangle />
-            </div>
-            <h3 className="font-display text-lg font-semibold mb-2 text-center">{t('clients.contacts.confirmDeleteTitle', 'Delete contact(s)?')}</h3>
-            <p className="text-sm font-medium text-foreground mb-2 text-center">{confirmNames.join(', ')}</p>
-            <p className="text-sm text-muted-foreground mb-5 text-center">{t('clients.contacts.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected contact(s)? This action cannot be undone.')}</p>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setConfirmDeleteIds([])}>{t('actions.cancel') || 'Cancel'}</Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  if (confirmDeleteIds.length === 1) {
-                    deleteContact(confirmDeleteIds[0]);
-                  } else {
-                    deleteSelected(confirmDeleteIds);
-                  }
-                }}
-              >
-                {t('actions.delete') || 'Delete'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={confirmDeleteIds.length > 0}
+        onOpenChange={(o) => { if (!o) setConfirmDeleteIds([]); }}
+        title={t('clients.contacts.confirmDeleteTitle', '¿Eliminar contacto(s)?')}
+        icon={<AlertTriangle className="h-5 w-5" />}
+        size="sm"
+        footer={(
+          <>
+            <Button variant="outline" onClick={() => setConfirmDeleteIds([])}>{t('actions.cancel', 'Cancelar')}</Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (confirmDeleteIds.length === 1) {
+                  deleteContact(confirmDeleteIds[0]);
+                } else {
+                  deleteSelected(confirmDeleteIds);
+                }
+              }}
+            >
+              {t('actions.delete', 'Eliminar')}
+            </Button>
+          </>
+        )}
+      >
+        <p className="text-sm font-medium text-foreground mb-2">{confirmNames.join(', ')}</p>
+        <p className="text-sm text-muted-foreground">{t('clients.contacts.confirmDeleteMessage', '¿Seguro que deseas eliminar permanentemente el/los contacto(s) seleccionado(s)? Esta acción no se puede deshacer.')}</p>
+      </Modal>
     </div>
   );
 }
