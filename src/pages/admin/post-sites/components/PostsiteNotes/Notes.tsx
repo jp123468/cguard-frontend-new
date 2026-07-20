@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, Plus, X, EllipsisVertical, Eye, Pencil, Trash, StickyNote } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
-import { EmptyState } from '@/components/kit';
+import { EmptyState, Modal } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { postSiteService } from '@/lib/api/postSiteService';
 import { toast } from 'sonner';
@@ -385,69 +386,73 @@ export default function PostSiteNotes({ site }: Props) {
         </div>
       )}
 
-      {/* Confirm delete modal */}
-      {confirmDeleteIds.length > 0 && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black opacity-30" onClick={() => setConfirmDeleteIds([])} />
-          <div className="bg-card rounded-md shadow-xl p-6 z-70 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-2 text-center">{t('clients.notes.confirmDeleteTitle', 'Delete contact(s)?')}</h3>
-            <p className="text-sm text-foreground/70 mb-4">{t('clients.notes.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected note(s)? This action cannot be undone.')}</p>
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setConfirmDeleteIds([])} className="px-4 py-2 rounded-md border">{t('actions.cancel') || 'Cancel'}</button>
-              <button
-                onClick={async () => {
-                  if (!site || !site.id) {
-                    setNotesData(prev => prev.filter(n => !confirmDeleteIds.includes(String(n.id))));
-                    toast.success(t('notes.deleted', 'Notes deleted'));
-                    setConfirmDeleteIds([]);
-                    return;
+      <Modal
+        open={confirmDeleteIds.length > 0}
+        onOpenChange={(o) => { if (!o) setConfirmDeleteIds([]); }}
+        title={t('clients.notes.confirmDeleteTitle', '¿Eliminar nota(s)?')}
+        icon={<Trash className="h-5 w-5" />}
+        size="sm"
+        footer={(
+          <>
+            <Button variant="outline" onClick={() => setConfirmDeleteIds([])}>{t('actions.cancel', 'Cancelar')}</Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!site || !site.id) {
+                  setNotesData(prev => prev.filter(n => !confirmDeleteIds.includes(String(n.id))));
+                  toast.success(t('notes.deleted', 'Notas eliminadas'));
+                  setConfirmDeleteIds([]);
+                  return;
+                }
+                try {
+                  const results = await Promise.allSettled(confirmDeleteIds.map(id => postSiteService.destroyPostSiteNote(String(site.id), id)));
+                  const successes = results.reduce((acc, r, idx) => (r.status === 'fulfilled' ? acc.concat(confirmDeleteIds[idx]) : acc), [] as string[]);
+                  if (successes.length > 0) {
+                    setNotesData(prev => prev.filter(n => !successes.includes(String(n.id))));
+                    setSelectedIds(prev => prev.filter(id => !successes.includes(id)));
+                    toast.success(t('notes.deleted', 'Notas eliminadas'));
                   }
-
-                  try {
-                    const results = await Promise.allSettled(confirmDeleteIds.map(id => postSiteService.destroyPostSiteNote(String(site.id), id)));
-                    const successes = results.reduce((acc, r, idx) => (r.status === 'fulfilled' ? acc.concat(confirmDeleteIds[idx]) : acc), [] as string[]);
-                    if (successes.length > 0) {
-                      setNotesData(prev => prev.filter(n => !successes.includes(String(n.id))));
-                      setSelectedIds(prev => prev.filter(id => !successes.includes(id)));
-                      toast.success(t('notes.deleted', 'Notes deleted'));
-                    }
-                    const failures = results.filter(r => r.status === 'rejected');
-                    if (failures.length > 0) {
-                      console.error('Some deletions failed', failures);
-                      toast.error(t('notes.deleteError', 'Could not delete notes'));
-                    }
-                  } catch (err) {
-                    console.warn('[PostSiteNotes] delete error', err);
-                    toast.error(t('notes.deleteError', 'Could not delete notes'));
-                  } finally {
-                    setConfirmDeleteIds([]);
+                  const failures = results.filter(r => r.status === 'rejected');
+                  if (failures.length > 0) {
+                    console.error('Some deletions failed', failures);
+                    toast.error(t('notes.deleteError', 'No se pudieron eliminar las notas'));
                   }
-                }}
-                className="px-4 py-2 rounded-md bg-red-600 text-white"
-              >
-                {t('actions.delete') || 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                } catch (err) {
+                  console.warn('[PostSiteNotes] delete error', err);
+                  toast.error(t('notes.deleteError', 'No se pudieron eliminar las notas'));
+                } finally {
+                  setConfirmDeleteIds([]);
+                }
+              }}
+            >
+              {t('actions.delete', 'Eliminar')}
+            </Button>
+          </>
+        )}
+      >
+        <p className="text-sm text-foreground/70">{t('clients.notes.confirmDeleteMessage', '¿Seguro que deseas eliminar permanentemente la(s) nota(s) seleccionada(s)? Esta acción no se puede deshacer.')}</p>
+      </Modal>
 
-      {/* Details modal */}
-      {detailsNote && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black opacity-30" onClick={() => setDetailsNote(null)} />
-          <div className="bg-card rounded-md shadow-xl p-6 z-70 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-2 text-center">{t('clients.notes.detailsTitle', 'Note details')}</h3>
-            <div className="text-sm text-foreground mb-2"><strong>{t('clients.notes.form.Title', 'Title')}: </strong>{detailsNote.title}</div>
-            <div className="text-sm text-foreground mb-2"><strong>{t('clients.notes.form.Date', 'Date')}: </strong>{detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0]}</div>
-            <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.form.Description', 'Description')}: </strong><div className="mt-1 whitespace-pre-wrap">{detailsNote.description}</div></div>
-            <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.addedBy', 'Added by')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdById || '-'}</div>
-            <div className="flex justify-end gap-3">
-              <button onClick={() => { setFormData({ title: detailsNote.title ?? "", description: detailsNote.description ?? "", date: detailsNote.noteDate || detailsNote.createdAt?.split("T")?.[0] || "", attachments: [], id: detailsNote.id || detailsNote._id }); setViewOnly(false); setShowModal(true); setDetailsNote(null); }} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">{t('actions.edit', 'Edit')}</button>
-            </div>
+      <Modal
+        open={!!detailsNote}
+        onOpenChange={(o) => { if (!o) setDetailsNote(null); }}
+        title={t('clients.notes.detailsTitle', 'Detalle de la nota')}
+        icon={<StickyNote className="h-5 w-5" />}
+        footer={detailsNote ? (
+          <Button onClick={() => { setFormData({ title: detailsNote.title ?? "", description: detailsNote.description ?? "", date: detailsNote.noteDate || detailsNote.createdAt?.split("T")?.[0] || "", attachments: [], id: detailsNote.id || detailsNote._id }); setViewOnly(false); setShowModal(true); setDetailsNote(null); }}>
+            {t('actions.edit', 'Editar')}
+          </Button>
+        ) : undefined}
+      >
+        {detailsNote && (
+          <div className="space-y-2">
+            <div className="text-sm text-foreground"><strong>{t('clients.notes.form.Title', 'Título')}: </strong>{detailsNote.title}</div>
+            <div className="text-sm text-foreground"><strong>{t('clients.notes.form.Date', 'Fecha')}: </strong>{detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0]}</div>
+            <div className="text-sm text-foreground"><strong>{t('clients.notes.form.Description', 'Descripción')}: </strong><div className="mt-1 whitespace-pre-wrap">{detailsNote.description}</div></div>
+            <div className="text-sm text-foreground"><strong>{t('clients.notes.addedBy', 'Agregado por')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdById || '-'}</div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }

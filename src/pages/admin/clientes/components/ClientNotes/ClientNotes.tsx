@@ -419,68 +419,70 @@ export default function ClientNotes({ client }: Props) {
                 </div>
             )}
 
-            {/* Details modal */}
-            {detailsNote && (
-                <div className="fixed inset-0 z-60 flex items-center justify-center">
-                    <div className="absolute inset-0 bg-black opacity-30" onClick={() => setDetailsNote(null)} />
-                    <div className="bg-card rounded-md shadow-xl p-6 z-70 w-full max-w-md">
-                        <h3 className="text-lg font-semibold mb-2 text-center">{t('clients.notes.Details.detailsTitle', 'Note details')}</h3>
-                        <div className="text-sm text-foreground mb-2"><strong>{t('clients.notes.Details.Title', 'Title')}: </strong>{detailsNote.title}</div>
-                        <div className="text-sm text-foreground mb-2"><strong>{t('clients.notes.Details.Date', 'Date')}: </strong>{detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0]}</div>
-                        <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.Details.Description', 'Description')}: </strong><div className="mt-1 whitespace-pre-wrap">{detailsNote.description}</div></div>
-                        <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.addedBy', 'Added by')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdById || '-'}</div>
-                        <div className="flex justify-end gap-3">
-                            <button onClick={() => { setFormData({ title: detailsNote.title, description: detailsNote.description, date: detailsNote.noteDate || detailsNote.createdAt?.split("T")?.[0] || "", attachments: [] }); setIsEditing(true); setEditingNoteId(detailsNote.id); setShowModal(true); setDetailsNote(null); }} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">{t('actions.edit') || 'Edit'}</button>
-                        </div>
+            <Modal
+                open={!!detailsNote}
+                onOpenChange={(o) => { if (!o) setDetailsNote(null); }}
+                title={t('clients.notes.Details.detailsTitle', 'Detalle de la nota')}
+                icon={<FileText className="h-5 w-5" />}
+                footer={detailsNote ? (
+                    <Button onClick={() => { setFormData({ title: detailsNote.title, description: detailsNote.description, date: detailsNote.noteDate || detailsNote.createdAt?.split("T")?.[0] || "", attachments: [] }); setIsEditing(true); setEditingNoteId(detailsNote.id); setShowModal(true); setDetailsNote(null); }}>
+                        {t('actions.edit', 'Editar')}
+                    </Button>
+                ) : undefined}
+            >
+                {detailsNote && (
+                    <div className="space-y-2">
+                        <div className="text-sm text-foreground"><strong>{t('clients.notes.Details.Title', 'Título')}: </strong>{detailsNote.title}</div>
+                        <div className="text-sm text-foreground"><strong>{t('clients.notes.Details.Date', 'Fecha')}: </strong>{detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0]}</div>
+                        <div className="text-sm text-foreground"><strong>{t('clients.notes.Details.Description', 'Descripción')}: </strong><div className="mt-1 whitespace-pre-wrap">{detailsNote.description}</div></div>
+                        <div className="text-sm text-foreground"><strong>{t('clients.notes.addedBy', 'Agregado por')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdById || '-'}</div>
                     </div>
-                </div>
-            )}
+                )}
+            </Modal>
 
-            {/* Confirm delete modal */}
-            {confirmDeleteIds.length > 0 && (
-                <div className="fixed inset-0 z-60 flex items-center justify-center">
-                    <div className="absolute inset-0 bg-black opacity-30" onClick={() => setConfirmDeleteIds([])} />
-                    <div className="bg-card rounded-md shadow-xl p-6 z-70 w-full max-w-md">
-                        <h3 className="w-full text-center text-lg font-semibold mb-2">{t('clients.notes.confirmDeleteTitle', 'Delete note(s)?')}</h3>
-                        <p className="text-sm text-foreground/70 mb-2 text-center">{confirmNames.join(', ')}</p>
-                        <p className="text-sm text-foreground/70 mb-4">{t('clients.notes.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected note(s)? This action cannot be undone.')}</p>
-                        <div className="flex justify-end gap-3">
-                            <button onClick={async () => {
-                                // bulk delete selected notes (confirmDeleteIds may contain 1 or many)
-                                if (!confirmDeleteIds || confirmDeleteIds.length === 0) return setConfirmDeleteIds([]);
-                                // local-only (no client id) -> just remove
-                                if (!client || !client.id) {
-                                    setNotesData(prev => prev.filter(n => !confirmDeleteIds.includes(n.id)));
+            <Modal
+                open={confirmDeleteIds.length > 0}
+                onOpenChange={(o) => { if (!o) setConfirmDeleteIds([]); }}
+                title={t('clients.notes.confirmDeleteTitle', '¿Eliminar nota(s)?')}
+                icon={<Trash className="h-5 w-5" />}
+                size="sm"
+                footer={(
+                    <>
+                        <Button variant="outline" onClick={() => setConfirmDeleteIds([])}>{t('actions.cancel', 'Cancelar')}</Button>
+                        <Button variant="destructive" onClick={async () => {
+                            if (!confirmDeleteIds || confirmDeleteIds.length === 0) return setConfirmDeleteIds([]);
+                            if (!client || !client.id) {
+                                setNotesData(prev => prev.filter(n => !confirmDeleteIds.includes(n.id)));
+                                toast.success(t('clients.notes.noteDeleted'));
+                                setSelectedNoteIds([]);
+                                return setConfirmDeleteIds([]);
+                            }
+                            try {
+                                const results = await Promise.allSettled(confirmDeleteIds.map(id => clientService.destroyClientNote(client.id, id)));
+                                const successes = results.reduce((acc, r, idx) => (r.status === 'fulfilled' ? acc.concat(confirmDeleteIds[idx]) : acc), [] as string[]);
+                                if (successes.length > 0) {
+                                    setNotesData(prev => prev.filter(n => !successes.includes(n.id)));
+                                    setSelectedNoteIds(prev => prev.filter(id => !successes.includes(id)));
                                     toast.success(t('clients.notes.noteDeleted'));
-                                    setSelectedNoteIds([]);
-                                    return setConfirmDeleteIds([]);
                                 }
-
-                                try {
-                                    const results = await Promise.allSettled(confirmDeleteIds.map(id => clientService.destroyClientNote(client.id, id)));
-                                    const successes = results.reduce((acc, r, idx) => (r.status === 'fulfilled' ? acc.concat(confirmDeleteIds[idx]) : acc), [] as string[]);
-                                    // remove successfully deleted notes from UI
-                                    if (successes.length > 0) {
-                                        setNotesData(prev => prev.filter(n => !successes.includes(n.id)));
-                                        setSelectedNoteIds(prev => prev.filter(id => !successes.includes(id)));
-                                        toast.success(t('clients.notes.noteDeleted'));
-                                    }
-                                    const failures = results.filter(r => r.status === 'rejected');
-                                    if (failures.length > 0) {
-                                        console.error('Some deletions failed', failures);
-                                        toast.error(t('clients.notes.deleteFailed'));
-                                    }
-                                } catch (err) {
-                                    console.error('Error deleting notes', err);
+                                const failures = results.filter(r => r.status === 'rejected');
+                                if (failures.length > 0) {
+                                    console.error('Some deletions failed', failures);
                                     toast.error(t('clients.notes.deleteFailed'));
-                                } finally {
-                                    setConfirmDeleteIds([]);
                                 }
-                            }} className="px-4 py-2 rounded-md bg-red-600 text-white">{t('clients.contacts.delete', 'Delete')}</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                            } catch (err) {
+                                console.error('Error deleting notes', err);
+                                toast.error(t('clients.notes.deleteFailed'));
+                            } finally {
+                                setConfirmDeleteIds([]);
+                            }
+                        }}>{t('actions.delete', 'Eliminar')}</Button>
+                    </>
+                )}
+            >
+                <p className="text-sm font-medium text-foreground mb-2">{confirmNames.join(', ')}</p>
+                <p className="text-sm text-foreground/70">{t('clients.notes.confirmDeleteMessage', '¿Seguro que deseas eliminar permanentemente la(s) nota(s) seleccionada(s)? Esta acción no se puede deshacer.')}</p>
+            </Modal>
         </div>
     );
 }
