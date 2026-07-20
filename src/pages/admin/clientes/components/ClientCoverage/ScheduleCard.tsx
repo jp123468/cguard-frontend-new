@@ -6,20 +6,29 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw, UserPlus, UserMinus, Loader2 } from 'lucide-react';
 
-const CELL: Record<string, { label: string; cls: string }> = {
-  day: { label: 'D', cls: 'bg-sky-500/15 text-sky-700 dark:text-sky-300' },
-  night: { label: 'N', cls: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300' },
-  rest: { label: 'L', cls: 'bg-muted text-muted-foreground' },
-  none: { label: '·', cls: 'text-muted-foreground/40' },
+const CELL: Record<string, { label: string; cls: string; title: string }> = {
+  day: { label: 'D', cls: 'bg-sky-500/15 text-sky-700 dark:text-sky-300', title: 'Turno de día' },
+  night: { label: 'N', cls: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300', title: 'Turno de noche' },
+  rest: { label: 'L', cls: 'bg-muted text-muted-foreground', title: 'Libre' },
+  // The rotation expected a work day but no turno was generated — a real hole in
+  // the schedule, not a rest day. Painting it as 'L' hid missing coverage.
+  gap: { label: '!', cls: 'bg-red-500/15 text-red-700 dark:text-red-300', title: 'Sin turno generado (hueco de cobertura)' },
+  none: { label: '·', cls: 'text-muted-foreground/40', title: 'Sin rotación configurada' },
 };
 
 const inputCls = 'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-all placeholder:text-muted-foreground hover:border-ring/40 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]';
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 // ── Shape of GET /client-account/:id/schedule (clientAccountSchedule.ts) ──
-type CellStatus = 'day' | 'night' | 'rest' | 'none';
+type CellStatus = 'day' | 'night' | 'rest' | 'gap' | 'none';
 interface ScheduleDay { date: string; dow: string; day: number; isToday: boolean; weekend: boolean; }
-interface ScheduleCell { date: string; status: CellStatus; }
+interface ScheduleCell {
+  date: string;
+  status: CellStatus;
+  hours: string | null;      // real turno window, e.g. "07:00 - 19:00"
+  guardName: string | null;  // who actually covers that day
+  covering: boolean;         // true when it isn't the row's titular vigilante
+}
 interface ScheduleRow {
   stationId: string;
   stationName: string;
@@ -171,7 +180,19 @@ export default function ScheduleCard({ clientId, sedeId }: { clientId: string; s
                     </td>
                     {r.cells.map((c) => {
                       const m = CELL[c.status] || CELL.none;
-                      return <td key={c.date} className="border-b p-0.5 text-center"><span className={`grid h-7 w-full min-w-[26px] place-items-center rounded text-[11px] font-bold ${m.cls}`}>{m.label}</span></td>;
+                      // Tooltip carries the real turno data so the compact grid
+                      // stays readable while still answering "¿qué turno es?".
+                      const tip = [m.title, c.hours, c.covering && c.guardName ? `Cubre: ${c.guardName}` : null]
+                        .filter(Boolean).join(' · ');
+                      return (
+                        <td key={c.date} className="border-b p-0.5 text-center">
+                          <span title={tip} className={`relative grid h-7 w-full min-w-[26px] place-items-center rounded text-[11px] font-bold ${m.cls}`}>
+                            {m.label}
+                            {/* Dot = a different vigilante (sacafranco) covers this day */}
+                            {c.covering && <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-amber-500" />}
+                          </span>
+                        </td>
+                      );
                     })}
                   </tr>
                 )))}
@@ -182,6 +203,8 @@ export default function ScheduleCard({ clientId, sedeId }: { clientId: string; s
             <span className="inline-flex items-center gap-1.5"><span className="grid h-4 w-4 place-items-center rounded bg-sky-500/15 text-[10px] font-bold text-sky-700">D</span> Día</span>
             <span className="inline-flex items-center gap-1.5"><span className="grid h-4 w-4 place-items-center rounded bg-indigo-500/15 text-[10px] font-bold text-indigo-700">N</span> Noche</span>
             <span className="inline-flex items-center gap-1.5"><span className="grid h-4 w-4 place-items-center rounded bg-muted text-[10px] font-bold text-muted-foreground">L</span> Libre</span>
+            <span className="inline-flex items-center gap-1.5"><span className="grid h-4 w-4 place-items-center rounded bg-red-500/15 text-[10px] font-bold text-red-700">!</span> Sin turno generado</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Cubre otro vigilante</span>
             {canEdit && <span className="ml-auto">Toca un vigilante para cambiarlo.</span>}
           </div>
         </>

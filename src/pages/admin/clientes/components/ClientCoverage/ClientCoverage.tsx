@@ -220,6 +220,12 @@ export default function ClientCoverage({ client }: { client: Client }) {
         </div>
       </div>
 
+      {/* Horarios FIRST and full-width: it's a 14-column day grid, so squeezing
+          it under the two-column layout left it cramped while the right-hand
+          summary cards ran out of content and left dead space. Full bleed here,
+          narrower cards below. */}
+      {sedeId && <ScheduleCard clientId={client.id} sedeId={sedeId} />}
+
       {/* The shared client-header KPI cards (ClientsLayout) stay visible on
           this tab — no duplicate per-tab KPI row here. */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_1fr]">
@@ -534,9 +540,6 @@ export default function ClientCoverage({ client }: { client: Client }) {
           </Section>
         </div>
       </div>
-
-      {/* Horarios (schedule grid + guard CRUD) — below Estaciones del sitio */}
-      {sedeId && <ScheduleCard clientId={client.id} sedeId={sedeId} />}
 
       {/* Footer */}
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-muted/30 px-4 py-2.5 text-xs text-muted-foreground">
