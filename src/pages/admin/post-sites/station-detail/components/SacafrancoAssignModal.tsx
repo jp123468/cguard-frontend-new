@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Shield, CheckCircle2, CalendarDays, Loader2 } from 'lucide-react';
+import { Shield, CheckCircle2, CalendarDays, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ApiService } from '@/services/api/apiService';
 import { getTenantTimezone } from '@/utils/tenantLocation';
-import { EmptyState } from '@/components/kit';
+import { EmptyState, Modal } from '@/components/kit';
 
 /** Local (tenant-tz) YYYY-MM-DD for a shift start. */
 function localDateKey(iso: string): string {
@@ -118,30 +118,24 @@ export default function SacafrancoAssignModal({
     } finally { setAssigning(null); }
   };
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-border/40 bg-card shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-border/20 px-5 py-4">
-          <div className="flex items-center gap-2">
-            <Shield size={18} className="text-emerald-500" />
-            <div>
-              <h3 className="text-base font-semibold text-foreground">Asignar sacafranco</h3>
-              <p className="text-[11px] text-muted-foreground">Cubre los días de descanso de los fijos. Más disponibles primero.</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted/40"><X size={18} /></button>
-        </div>
-
+    <Modal
+      open={open}
+      onOpenChange={(o) => { if (!o) onClose(); }}
+      size="lg"
+      icon={<Shield className="h-5 w-5" />}
+      title="Asignar sacafranco"
+      description="Cubre los días de descanso de los fijos. Más disponibles primero."
+    >
+      <div className="space-y-3">
         {/* Legend */}
-        <div className="flex items-center gap-4 border-b border-border/10 px-5 py-2 text-[10px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-4 text-[10px] text-muted-foreground">
           <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-red-500/40" /> Día a cubrir (descanso fijo)</span>
           <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-amber-500/50" /> Ocupado en otro puesto</span>
           <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-emerald-500/40" /> Libre</span>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        <div className="space-y-2">
           {loading ? (
             <div className="flex items-center justify-center py-12 text-muted-foreground"><Loader2 className="animate-spin" /></div>
           ) : candidates.length === 0 ? (
@@ -187,6 +181,6 @@ export default function SacafrancoAssignModal({
           ))}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

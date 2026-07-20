@@ -1,9 +1,10 @@
 import { localToday } from '@/lib/utils';
 import { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Loader2, X, UserPlus, Repeat, CalendarRange } from 'lucide-react';
+import { Loader2, UserPlus, Repeat, CalendarRange } from 'lucide-react';
 import { toast } from 'sonner';
 import { ApiService } from '@/services/api/apiService';
+import { Modal } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 import type { Station } from '@/types';
 
 // Local YYYY-MM-DD (avoid toISOString — it shifts day in negative-UTC zones).
@@ -206,25 +207,27 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
     } finally { setSaving(false); }
   };
 
-  if (!open) return null;
-
   const inputCls = 'w-full rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20';
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
-      <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-border/30 bg-card shadow-2xl max-h-[92vh] animate-in fade-in slide-in-from-bottom-4 duration-200 sm:max-h-[88vh] sm:rounded-2xl sm:zoom-in-95" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between gap-3 border-b border-border/20 px-5 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary"><UserPlus size={18} /></div>
-            <div>
-              <h4 className="text-base font-semibold text-foreground">Asignar vigilante</h4>
-              <p className="text-xs text-muted-foreground">Programa la cobertura del turno de este puesto</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"><X size={16} /></button>
-        </div>
-
-        <div className="flex-1 space-y-4 overflow-y-auto p-5">
+  return (
+    <Modal
+      open={open}
+      onOpenChange={(o) => { if (!o) onClose(); }}
+      size="md"
+      icon={<UserPlus className="h-5 w-5" />}
+      title="Asignar vigilante"
+      description="Programa la cobertura del turno de este puesto"
+      footer={
+        <>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={saveShift} disabled={saving || !shiftGuard || (assignMode === 'rotation' && !selectedPositionId)}>
+            {saving ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+            {assignMode === 'rotation' ? 'Asignar rotación' : 'Crear turno'}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
           <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-muted/20 p-1">
             <button onClick={() => setAssignMode('rotation')} className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${assignMode === 'rotation' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}><Repeat size={14} /> Rotación</button>
             <button onClick={() => setAssignMode('single')} className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${assignMode === 'single' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}><CalendarRange size={14} /> Turno único</button>
@@ -287,17 +290,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
               </div>
             </div>
           )}
-        </div>
-
-        <div className="flex items-center justify-end gap-2 border-t border-border/20 px-5 py-3">
-          <button onClick={onClose} className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted/20 hover:text-foreground">Cancelar</button>
-          <button onClick={saveShift} disabled={saving || !shiftGuard || (assignMode === 'rotation' && !selectedPositionId)} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-40">
-            {saving ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
-            {assignMode === 'rotation' ? 'Asignar rotación' : 'Crear turno'}
-          </button>
-        </div>
       </div>
-    </div>,
-    document.body,
+    </Modal>
   );
 }

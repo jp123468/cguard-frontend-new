@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Loader2, Settings, X, Plus, Trash2, ChevronDown, ChevronRight, MapPin, QrCode, Crosshair, Route,
+  Loader2, Settings, Plus, Trash2, ChevronDown, ChevronRight, MapPin, QrCode, Crosshair, Route,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { confirmDialog } from '@/components/ui/confirmDialog';
 import { ApiService } from '@/services/api/apiService';
 import RondaSettingsForm from '@/pages/admin/Configuration/rondas-settings/RondaSettingsForm';
 import CheckpointLocationPicker from '@/components/maps/CheckpointLocationPicker';
-import { Section, EmptyState, SkeletonCards, StatusBadge } from '@/components/kit';
+import { Section, EmptyState, SkeletonCards, StatusBadge, Modal } from '@/components/kit';
 import { Button } from '@/components/ui/button';
 import type { Station } from '@/types';
 
@@ -320,47 +320,43 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
       </Section>
 
       {/* Create ronda modal */}
-      {showNewTour && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowNewTour(false)}>
-          <div className="w-full max-w-md rounded-2xl border border-border bg-background" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <h2 className="text-base font-semibold text-foreground">{t('station.siteTours.newTitle', 'Nueva ronda')}</h2>
-              <button onClick={() => setShowNewTour(false)} className="text-muted-foreground hover:text-foreground"><X size={20} /></button>
-            </div>
-            <div className="space-y-4 p-5">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">{t('station.siteTours.name', 'Nombre')} *</label>
-                <input className={inputCls} value={tourName} onChange={(e) => setTourName(e.target.value)} placeholder={t('station.siteTours.namePlaceholder', 'Ej. Ronda nocturna') as string} autoFocus />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">{t('station.siteTours.desc', 'Descripción')}</label>
-                <textarea className={`${inputCls} resize-none`} rows={3} value={tourDesc} onChange={(e) => setTourDesc(e.target.value)} />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 border-t border-border px-5 py-4">
-              <Button variant="outline" onClick={() => setShowNewTour(false)}>{t('common.cancel', 'Cancelar')}</Button>
-              <Button variant="brand" onClick={createTour} disabled={savingTour || !tourName.trim()} className="gap-1.5">
-                {savingTour && <Loader2 className="animate-spin" size={14} />} {t('station.siteTours.create', 'Crear ronda')}
-              </Button>
-            </div>
+      <Modal
+        open={showNewTour}
+        onOpenChange={(o) => { if (!o) setShowNewTour(false); }}
+        size="sm"
+        icon={<Plus className="h-5 w-5" />}
+        title={t('station.siteTours.newTitle', 'Nueva ronda')}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setShowNewTour(false)}>{t('common.cancel', 'Cancelar')}</Button>
+            <Button variant="brand" onClick={createTour} disabled={savingTour || !tourName.trim()} className="gap-1.5">
+              {savingTour && <Loader2 className="animate-spin" size={14} />} {t('station.siteTours.create', 'Crear ronda')}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">{t('station.siteTours.name', 'Nombre')} *</label>
+            <input className={inputCls} value={tourName} onChange={(e) => setTourName(e.target.value)} placeholder={t('station.siteTours.namePlaceholder', 'Ej. Ronda nocturna') as string} autoFocus />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">{t('station.siteTours.desc', 'Descripción')}</label>
+            <textarea className={`${inputCls} resize-none`} rows={3} value={tourDesc} onChange={(e) => setTourDesc(e.target.value)} />
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Settings modal */}
-      {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowSettings(false)}>
-          <div className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-background" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <h2 className="text-base font-semibold text-foreground">{t('station.siteTours.settingsTitle', 'Configuraciones de Rondas')}</h2>
-              <button onClick={() => setShowSettings(false)} className="text-muted-foreground hover:text-foreground"><X size={20} /></button>
-            </div>
-            <div className="overflow-y-auto p-5">
-              <RondaSettingsForm postSiteId={postSiteId} onSaved={() => setShowSettings(false)} />
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={showSettings}
+        onOpenChange={(o) => { if (!o) setShowSettings(false); }}
+        size="lg"
+        icon={<Settings className="h-5 w-5" />}
+        title={t('station.siteTours.settingsTitle', 'Configuraciones de Rondas')}
+      >
+        <RondaSettingsForm postSiteId={postSiteId} onSaved={() => setShowSettings(false)} />
+      </Modal>
     </>
   );
 }

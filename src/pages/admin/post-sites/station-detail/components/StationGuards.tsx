@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Loader2, UserPlus, Users, X, Repeat, Shield, RefreshCw, Trash2 } from 'lucide-react';
+import { Loader2, UserPlus, Users, Repeat, Shield, RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { confirmDialog } from '@/components/ui/confirmDialog';
 import { ApiService } from '@/services/api/apiService';
-import { Section, EmptyState, SkeletonCards, StatusBadge } from '@/components/kit';
+import { Section, EmptyState, SkeletonCards, StatusBadge, Modal } from '@/components/kit';
 import { Button } from '@/components/ui/button';
 import ShiftAssignModal from './ShiftAssignModal';
 import { localToday } from '@/lib/utils';
@@ -392,30 +391,27 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
         )}
       </Section>
 
-      {/* Assign / Change modal — portaled so the station layout can't clip it */}
-      {modalOpen && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={closeModal}>
-          <div className="flex w-full max-w-md flex-col overflow-hidden rounded-t-3xl border border-border/30 bg-card shadow-2xl max-h-[90vh] animate-in fade-in slide-in-from-bottom-4 duration-200 sm:rounded-2xl sm:zoom-in-95" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-border/20 px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${modalIsSaca ? 'bg-indigo-500/12 text-indigo-600' : 'bg-primary/12 text-primary'}`}>
-                  {modalIsSaca ? <Repeat size={18} /> : <UserPlus size={18} />}
-                </div>
-                <div>
-                  <h4 className="text-base font-semibold text-foreground">
-                    {changeTarget ? t('station.guards.changeTitle', 'Cambiar vigilante') : modalIsSaca ? t('station.guards.sacaTitle', 'Agregar sacafranco') : t('station.guards.assignTitle', 'Asignar vigilante')}
-                  </h4>
-                  <p className="text-xs text-muted-foreground">
-                    {modalIsSaca
-                      ? t('station.guards.sacaSub', 'Cubre los días de descanso del vigilante fijo')
-                      : t('station.guards.assignSub', 'Vigilante fijo de la rotación del puesto')}
-                  </p>
-                </div>
-              </div>
-              <button onClick={closeModal} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted/30 hover:text-foreground"><X size={16} /></button>
-            </div>
-
-            <div className="flex-1 space-y-4 overflow-y-auto p-5">
+      {/* Assign / Change modal */}
+      <Modal
+        open={modalOpen}
+        onOpenChange={(o) => { if (!o) closeModal(); }}
+        size="sm"
+        icon={modalIsSaca ? <Repeat className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />}
+        title={changeTarget ? t('station.guards.changeTitle', 'Cambiar vigilante') : modalIsSaca ? t('station.guards.sacaTitle', 'Agregar sacafranco') : t('station.guards.assignTitle', 'Asignar vigilante')}
+        description={modalIsSaca
+          ? t('station.guards.sacaSub', 'Cubre los días de descanso del vigilante fijo')
+          : t('station.guards.assignSub', 'Vigilante fijo de la rotación del puesto')}
+        footer={
+          <>
+            <Button variant="outline" onClick={closeModal}>{t('common.cancel', 'Cancelar')}</Button>
+            <Button onClick={submitAssign} disabled={saving || !pickGuard}>
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+              {changeTarget ? t('station.guards.save', 'Guardar') : t('station.guards.assignBtn', 'Asignar')}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
               {changeTarget && (
                 <div className="rounded-xl bg-muted/20 px-3 py-2.5 text-sm">
                   {t('station.guards.replacing', 'Reemplazando a')} <span className="font-medium text-foreground">{changeTarget.guardName}</span>
@@ -448,19 +444,8 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
                   <p className="mt-1.5 text-[11px] text-muted-foreground">{t('station.guards.startDayHint', 'Este vigilante trabaja ese día y luego día por medio. Asigna a su relevo empezando al día siguiente.')}</p>
                 </div>
               )}
-            </div>
-
-            <div className="flex items-center justify-end gap-2 border-t border-border/20 px-5 py-3">
-              <button onClick={closeModal} className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/20 hover:text-foreground">{t('common.cancel', 'Cancelar')}</button>
-              <button onClick={submitAssign} disabled={saving || !pickGuard} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-40">
-                {saving ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
-                {changeTarget ? t('station.guards.save', 'Guardar') : t('station.guards.assignBtn', 'Asignar')}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body,
-      )}
+        </div>
+      </Modal>
 
       <ShiftAssignModal
         open={showShiftModal}
