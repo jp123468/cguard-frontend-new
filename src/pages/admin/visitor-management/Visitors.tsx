@@ -232,7 +232,10 @@ export default function Visitors() {
             if (found) return clientDisplayName(found);
         }
         // fallback to any names present on the record
-        const fallback = clientDisplayName(rec.client ?? rec.clientAccount, '') || rec.clientName || rec.clientAccountName || (rec.postSite && (rec.postSite.clientAccountName || rec.postSite.clientName));
+        // rec.clientAccount is an id string, not a client object — only feed
+        // clientDisplayName something object-shaped.
+        const clientObj = rec.client && typeof rec.client === 'object' ? (rec.client as ClientLike) : null;
+        const fallback = clientDisplayName(clientObj, '') || rec.clientName || rec.clientAccountName || (rec.postSite && (rec.postSite.clientAccountName || rec.postSite.clientName));
         if (fallback) return fallback;
         if (id) return String(id);
         return '-';
