@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { clientDisplayName } from '@/lib/clientName';
 import { useTranslation } from 'react-i18next';
 import { useParams, Link } from 'react-router-dom';
 import AppLayout from '@/layouts/app-layout';
@@ -349,7 +350,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
 
                   <tr className="border-b">
                     <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.client_name') || 'Client Name'}</td>
-                    <td className="py-3 px-4 text-sm text-foreground">{((requestPayload.client && (requestPayload.client.name || requestPayload.client.fullName)) || clients.find((c) => c.id === requestPayload.clientId)?.name || clients.find((c) => c.id === requestPayload.clientId)?.fullName || '-')}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">{(clientDisplayName(requestPayload.client, '') || clientDisplayName(clients.find((c) => c.id === requestPayload.clientId), '') || '-')}</td>
                     <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.post_site_label') || 'Post Site'}</td>
                     <td className="py-3 px-4 text-sm text-foreground">{((requestPayload.site && (requestPayload.site.name || requestPayload.site.companyName)) || postSites.find((s) => s.id === requestPayload.siteId)?.name || '-')}</td>
                   </tr>

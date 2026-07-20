@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { clientDisplayName } from '@/lib/clientName';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ApiService } from '@/services/api/apiService';
@@ -700,7 +701,7 @@ export default function Incidents({ site }: { site?: SiteProp }) {
                             {/* Client as informer option */}
                             {site && (site.client || site.clientId) ? (
                               <>
-                                <SelectItem value={`client:${site.client?.id || site.clientId}`}>{(site.client && (site.client.name || (site.client as { companyName?: string }).companyName)) || String(site.clientId)}</SelectItem>
+                                <SelectItem value={`client:${site.client?.id || site.clientId}`}>{clientDisplayName(site.client as any, String(site.clientId))}</SelectItem>
                               </>
                             ) : null}
                             {/* Client admins */}

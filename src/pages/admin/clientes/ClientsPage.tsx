@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { clientDisplayName } from '@/lib/clientName';
 import { useTranslation } from "react-i18next";
 import i18n from '@/i18n';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -309,7 +310,7 @@ export default function ClientesPage() {
 
   const openCategorizeForClient = async (client: Client) => {
     setCategorizeClientId(client.id);
-    setCategorizeClientName(`${client.name}${client.lastName ? ` ${client.lastName}` : ""}`);
+    setCategorizeClientName(clientDisplayName(client, client.name));
     setCategorizeLoading(true);
     setCategorizeCategories([]);
     setOpenCategorizeDialog(true);
@@ -981,7 +982,9 @@ export default function ClientesPage() {
               <div className="p-4 bg-card border rounded-lg">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-sm truncate">{client.name}{cleanLastName(client.lastName) ? ` ${cleanLastName(client.lastName)}` : ''}</div>
+                    {/* Mobile cards must match the desktop table, which already
+                        shows commercialName. */}
+                    <div className="font-medium text-sm truncate">{clientDisplayName(client, client.name)}</div>
                     <div className="text-xs text-muted-foreground truncate">{client.email || '-'}</div>
                   </div>
 

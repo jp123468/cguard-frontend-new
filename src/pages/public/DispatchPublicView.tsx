@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { clientDisplayName } from '@/lib/clientName';
 import { useParams } from 'react-router-dom';
 import { FileText, ShieldAlert } from 'lucide-react';
 import IncidentMap from '@/components/IncidentMap/IncidentMap';
@@ -210,7 +211,7 @@ export default function DispatchPublicView() {
 
                 <tr className="border-b">
                   <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Client Name</td>
-                  <td className="py-3 px-4 text-sm text-foreground">{((payload.client && (payload.client.name || payload.client.fullName)) || clients.find((c) => c.id === payload.clientId)?.name || clients.find((c) => c.id === payload.clientId)?.fullName || '-')}</td>
+                  <td className="py-3 px-4 text-sm text-foreground">{(clientDisplayName(payload.client, '') || clientDisplayName(clients.find((c) => c.id === payload.clientId), '') || '-')}</td>
                   <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Post Site</td>
                   <td className="py-3 px-4 text-sm text-foreground">{((payload.site && (payload.site.name || payload.site.companyName)) || postSites.find((s) => s.id === payload.siteId)?.name || '-')}</td>
                 </tr>

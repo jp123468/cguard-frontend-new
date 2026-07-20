@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { clientDisplayName } from '@/lib/clientName';
 import { invalidateEntity } from "@/lib/queryClient";
 import { useNavigate } from "react-router-dom";
 import MobileCardList from '@/components/responsive/MobileCardList';
@@ -725,19 +726,10 @@ export default function SecurityGuardsPage() {
                           <SelectItem value="todos">{t('guards.list.filter.clientAll', 'Todos')}</SelectItem>
                           {availableClients.map((c) => (
                             <SelectItem key={c.id} value={String(c.id)}>
-                              {(() => {
-                                const fullFromFields = c.fullName ?? c.full_name ?? c.fullname;
-                                if (fullFromFields && String(fullFromFields).trim()) return String(fullFromFields).trim();
-                                const first = c.firstName ?? c.first_name ?? '';
-                                const last = c.lastName ?? c.last_name ?? '';
-                                if (first && last) return `${first} ${last}`.trim();
-                                if (!first && last && c.name) return `${c.name} ${last}`.trim();
-                                if (first && !last) return first;
-                                if (!first && last) return last;
-                                // If `name` looks like a full name (contains space), prefer it
-                                if (c.name && String(c.name).includes(' ')) return c.name;
-                                return c.name ?? c.companyName ?? c.fullName ?? c.label ?? c.email ?? c.id;
-                              })()}
+                              {/* This filter is labeled "Cliente": show the company.
+                                  It used to work hard to assemble a PERSON's full
+                                  name, which is the legal rep. */}
+                              {clientDisplayName(c, String(c.email ?? c.id))}
                             </SelectItem>
                           ))}
                         </SelectContent>

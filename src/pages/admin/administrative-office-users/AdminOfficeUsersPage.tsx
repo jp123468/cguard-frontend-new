@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { clientDisplayName } from '@/lib/clientName';
 import { ApiService } from "@/services/api/apiService";
 import userService from "@/lib/api/userService";
 import AppLayout from "@/layouts/app-layout";
@@ -173,10 +174,9 @@ export default function AdminOfficeUsersPage() {
       const resp = await ApiService.get(`/tenant/${tenantId}/client-account`);
       const rows = Array.isArray(resp) ? resp : (resp && resp.rows) ? resp.rows : [];
       const mapped = (rows || []).map((c: any) => {
-        const first = c.name || c.firstName || c.label || c.companyName || c.clientName || c.clientAccountName || '';
-        const last = c.lastName || c.last_name || c.surname || c.lastname || '';
-        const display = [first, last].filter(Boolean).join(' ');
-        return { id: c.id ?? c._id ?? String(c.id), name: display || first || last || '' };
+        // Este selector asigna clientes a un usuario: debe listar EMPRESAS.
+        const display = clientDisplayName(c, c.label || c.clientAccountName || '');
+        return { id: c.id ?? c._id ?? String(c.id), name: display };
       });
       setClientOptions(mapped);
     } catch (e) {

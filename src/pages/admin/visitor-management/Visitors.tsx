@@ -1,4 +1,5 @@
 import { useMemo, useState, FormEvent, useEffect } from "react";
+import { clientDisplayName } from '@/lib/clientName';
 import { useAsyncList } from "@/hooks/useAsyncList";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -215,23 +216,14 @@ export default function Visitors() {
     const [guardsForNewVisitor, setGuardsForNewVisitor] = useState<GuardOption[]>([]);
     const { t } = useTranslation();
 
-    const clientDisplayName = (c: ClientLike | null | undefined) => {
-        if (!c) return '';
-        if (c.displayName) return c.displayName;
-        if (c.companyName) return c.companyName;
-        // Prefer `name` + `lastName` (backend uses `name` for first name)
-        const first = c.name ?? c.firstName ?? '';
-        const last = c.lastName ?? '';
-        const joined = `${first} ${last}`.trim();
-        if (joined) return joined;
-        return c.name || c.id || '';
-    };
+    // Local helper removed: it preferred name+lastName (the legal representative)
+    // and never looked at commercialName. Now uses the shared @/lib/clientName.
 
     const getClientLabelFromRecord = (rec: VisitLogRow | null | undefined) => {
         if (!rec) return '-';
         if (rec.client) {
             if (typeof rec.client === 'string' || typeof rec.client === 'number') return String(rec.client);
-            return clientDisplayName(rec.client);
+            return clientDisplayName(rec.client as ClientLike);
         }
         // common id fields
         const id = rec.clientId || rec.clientAccountId || rec.clientAccount || rec.client_id || rec.clientIdAccount;
@@ -240,7 +232,7 @@ export default function Visitors() {
             if (found) return clientDisplayName(found);
         }
         // fallback to any names present on the record
-        const fallback = rec.clientName || rec.clientAccountName || (rec.postSite && (rec.postSite.clientAccountName || rec.postSite.clientName));
+        const fallback = clientDisplayName(rec.client ?? rec.clientAccount, '') || rec.clientName || rec.clientAccountName || (rec.postSite && (rec.postSite.clientAccountName || rec.postSite.clientName));
         if (fallback) return fallback;
         if (id) return String(id);
         return '-';

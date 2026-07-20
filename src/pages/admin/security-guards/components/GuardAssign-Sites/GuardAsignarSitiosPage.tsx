@@ -11,6 +11,7 @@ import { stationService } from '@/lib/api/stationService';
 import { toast } from 'sonner';
 import PostSiteMiniInfo from '@/components/post-sites/PostSiteMiniInfo';
 import { Section, EmptyState, StatusBadge, Modal } from '@/components/kit';
+import { clientDisplayName } from '@/lib/clientName';
 import { Button } from '@/components/ui/button';
 
 
@@ -25,6 +26,9 @@ const labelOf = (val: any): string | null => {
   if (typeof val === 'number') return String(val);
   if (typeof val === 'object') {
     const candidate =
+      // commercialName first: for a client-shaped object every later candidate
+      // resolves to the legal representative, not the company.
+      val.commercialName ??
       val.stationName ?? val.companyName ?? val.postSiteName ?? val.fullName ??
       val.name ?? val.label ?? val.clientName ?? val.clientFullName ??
       val.title ?? val.id ?? null;
@@ -344,12 +348,13 @@ export default function GuardAsignarSitiosPage() {
         const data = (resp as any)?.data ?? resp;
         const rows = Array.isArray(data?.rows) ? data.rows : (Array.isArray(data) ? data : []);
         if (!mounted) return;
-        const items = rows.map((r: any) => {
-          const given = typeof r.name === 'string' ? r.name : (typeof r.firstName === 'string' ? r.firstName : '');
-          const family = typeof r.lastName === 'string' ? r.lastName : (typeof r.surname === 'string' ? r.surname : '');
-          const display = (given || family) ? `${given}${family ? ' ' + family : ''}`.trim() : (labelOf(r) ?? String(r.id ?? ''));
-          return { id: String(r.id ?? ''), name: labelOf(display) ?? String(r.id ?? '') };
-        });
+        // "Cliente" means the COMPANY. This used to build `${name} ${lastName}`,
+        // which is the legal representative — unrecognisable to whoever is
+        // reassigning a vigilante. clientDisplayName prefers commercialName.
+        const items = rows.map((r: any) => ({
+          id: String(r.id ?? ''),
+          name: clientDisplayName(r, String(r.id ?? '')),
+        }));
         setClients(items);
       } catch (err) {
         /* ignore — clients simply won't populate */

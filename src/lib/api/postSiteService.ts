@@ -44,7 +44,7 @@ export interface RawBusinessInfoRow {
   clientAccountId?: string;
   clientId?: string;
   client?: { id: string; name: string };
-  clientAccount?: { id: string; name: string };
+  clientAccount?: { id: string; name: string; lastName?: string; commercialName?: string };
   clientAccountName?: string;
   address?: string;
   secondAddress?: string;

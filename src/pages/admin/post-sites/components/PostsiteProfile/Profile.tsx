@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, RefObject } from 'react';
+import { clientDisplayName } from '@/lib/clientName';
 import { Link, useParams } from 'react-router-dom';
 import { getTenantTimezone } from '@/utils/tenantLocation';
 import { useTranslation } from "react-i18next";
@@ -87,7 +88,10 @@ export default function PostSiteProfile({ site }: { site?: any }) {
     useScrollToTopOnMount(containerRef);
     const { id } = useParams<{ id: string }>();
 
-    const clientName = site?.client?.name || site?.clientAccount?.name || site?.clientAccountName || '-';
+    // "Cliente" = la empresa. clientAccountName ya viene resuelto por el backend
+    // (businessNameOf); commercialName cubre el caso del objeto crudo.
+    const clientName = clientDisplayName(site?.client ?? site?.clientAccount, '')
+      || site?.clientAccountName || '-';
     const siteName = site?.companyName || site?.name || '-';
     const addedOn = formatDate(site?.createdAt || site?.created_at || site?.created_date);
     const address = site?.address || site?.secondAddress || '-';

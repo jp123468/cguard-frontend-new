@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { clientDisplayName } from '@/lib/clientName';
 import type { Client } from '@/types/client';
 import { useNavigate } from 'react-router-dom';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
@@ -50,7 +51,7 @@ export default function ClientPortal({ client }: Props) {
   useScrollToTopOnMount(containerRef);
 
   const email = client?.email || client?.contactEmail || '';
-  const name = client?.name || client?.contactName || 'este cliente';
+  const name = clientDisplayName(client, client?.contactName || 'este cliente');
   const linked = !!client?.userId;
   // Real access roster from /access-users (client.portalUsers never existed in
   // the backend — this card always said 0/1 while Accesos showed the truth).

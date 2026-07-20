@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { clientDisplayName } from '@/lib/clientName';
 import {
   Dialog,
   DialogContent,
@@ -116,7 +117,7 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
                     </button>
                   </div>
                   {clientCollapsed ? (
-                    <div className="text-sm text-muted-foreground">{(site as any).clientAccount.name || '-'} · {(site as any).clientAccount.email || '-'}</div>
+                    <div className="text-sm text-muted-foreground">{clientDisplayName((site as any).clientAccount, '-')} · {(site as any).clientAccount.email || '-'}</div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div>

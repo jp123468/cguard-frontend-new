@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { clientDisplayName } from '@/lib/clientName';
 import { useTranslation } from "react-i18next";
 import { Link } from 'react-router-dom';
 import IncidentMap from "@/components/IncidentMap/IncidentMap";
@@ -24,7 +25,7 @@ interface SiteProp extends PostSite {
   city?: string;
   country?: string;
   clientAccountName?: string;
-  clientAccount?: { name?: string } | null;
+  clientAccount?: { name?: string; lastName?: string; commercialName?: string } | null;
   companyAddress?: string;
   secondAddress?: string;
   serviceType?: string;
@@ -199,8 +200,9 @@ export default function PostSiteOverview({ site }: { site?: SiteProp }) {
   const siteName = site?.businessName || site?.companyName || site?.name || t('postSites.postsite', 'Post Site');
   const address = site?.address || site?.companyAddress || site?.secondAddress ||
     [site?.city, site?.country].filter(Boolean).join(', ');
-  const clientName = site?.clientAccountName || site?.client?.name || site?.clientAccount?.name ||
-    (typeof site?.client === 'string' ? site?.client : '');
+  const clientName = site?.clientAccountName
+    || clientDisplayName(site?.client ?? site?.clientAccount, '')
+    || (typeof site?.client === 'string' ? site?.client : '');
   const phone = site?.contactPhone || site?.phone || '';
   const email = site?.contactEmail || site?.email || '';
   const isActive = site?.active !== false && site?.status !== 'inactive';

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { clientDisplayName } from '@/lib/clientName';
 import type { Client } from '@/types/client';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { useTranslation } from 'react-i18next';
@@ -133,7 +134,7 @@ export default function ClientOverview({ client }: { client: Client & { lat?: nu
           <Section title={t('clients.overview.opsMap', 'Mapa de operaciones')} icon={<MapPin />}>
             {hasCoords ? (
               <div className="h-[300px] overflow-hidden rounded-xl border">
-                <IncidentMap lat={lat} lng={lng} label={client?.name || 'Client location'} />
+                <IncidentMap lat={lat} lng={lng} label={clientDisplayName(client, 'Client location')} />
               </div>
             ) : (
               <div className="flex h-[300px] flex-col items-center justify-center gap-1 rounded-xl border border-dashed bg-muted/30 text-sm text-muted-foreground">

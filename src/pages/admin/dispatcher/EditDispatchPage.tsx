@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { clientDisplayName } from '@/lib/clientName';
 import { Link, useNavigate, useParams } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -75,15 +76,9 @@ export default function EditDispatchPage() {
         if (clientsResp && Array.isArray(clientsResp.rows)) {
           setClientes(
             clientsResp.rows.map((c: any) => {
-              const fn = c.fullName;
-              const first = c.firstName || c.name || "";
-              const last = c.lastName || "";
-              const company = c.company || "";
-              let display = "";
-              if (fn) display = fn;
-              else if (first || last) display = `${first} ${last}`.trim();
-              else if (company) display = company;
-              else display = c.name || "Sin nombre";
+              // El selector dice "Cliente": mostrar la empresa. Este bloque
+              // priorizaba fullName/firstName+lastName, o sea el representante legal.
+              const display = clientDisplayName(c, c.company || "Sin nombre");
 
               return { id: String(c.id), name: display };
             })

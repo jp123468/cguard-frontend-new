@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { clientDisplayName } from '@/lib/clientName';
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RefreshCcw, User, Phone, FileCheck, ShieldCheck, Loader2 } from "lucide-react";
@@ -373,7 +374,8 @@ export default function NewSecurityGuardPage() {
   // Data helpers for combobox
   const clientOptions = clients.map((c) => ({
     value: c.id,
-    label: [c.name, c.lastName].filter(Boolean).join(" ").trim() || c.name,
+    // "Cliente" = la empresa, no el representante legal.
+    label: clientDisplayName(c, c.name),
   }));
   const siteOptions = stations.map((s: StationLike) => ({ value: s.id, label: s.name }));
 

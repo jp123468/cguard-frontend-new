@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { clientDisplayName } from '@/lib/clientName';
 import type { Client } from '@/types/client';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
@@ -242,7 +243,7 @@ export default function ClientReports({ client }: { client: Client & { companyNa
           <Section title="Filtros aplicados" icon={<Search className="h-4 w-4" />}>
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs">Período: {fmtD(from)} – {fmtD(to)}</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs">Cliente: {client?.name || client?.companyName || 'Cliente'}</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs">Cliente: {clientDisplayName(client, 'Cliente')}</span>
             </div>
           </Section>
 

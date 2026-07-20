@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
+import { clientDisplayName } from '@/lib/clientName';
 import { Link, useNavigate } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -294,7 +295,7 @@ export default function DispatcherPage() {
           let cname: string | undefined;
           if (r.client && typeof r.client === 'object') {
             cid = r.client.id || r.client.clientId || r.clientId;
-            cname = r.client.name || r.client.fullName || r.client.displayName;
+            cname = clientDisplayName(r.client, '') || undefined;
           } else if (r.clientId) {
             cid = String(r.clientId);
             cname = r.client || undefined;
@@ -1190,7 +1191,7 @@ export default function DispatcherPage() {
                         {(allClients && allClients.length > 0 ? allClients : clients).length > 0 ? (
                           (allClients && allClients.length > 0 ? allClients : clients).map((c) => (
                             <SelectItem key={c.id} value={c.id}>
-                              {c.name + (c.lastName ? ` ${c.lastName}` : "")}
+                              {clientDisplayName(c, c.name)}
                             </SelectItem>
                           ))
                         ) : (

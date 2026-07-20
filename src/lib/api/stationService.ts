@@ -56,7 +56,7 @@ export interface RawStationRow {
   companyName?: string;
   description?: string;
   client?: { id: string; name: string };
-  clientAccount?: { id: string; name: string };
+  clientAccount?: { id: string; name: string; lastName?: string; commercialName?: string };
   clientAccountId?: string;
   clientId?: string;
   address?: string;

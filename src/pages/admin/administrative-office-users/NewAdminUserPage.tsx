@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm, useWatch } from "react-hook-form";
+import { clientDisplayName } from '@/lib/clientName';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
@@ -229,7 +230,7 @@ export default function NewAdminUserPage() {
 
         const clientsResp = await ApiService.get(`/tenant/${tenantId}/client-account`);
         const clientsRows = Array.isArray(clientsResp) ? clientsResp : (clientsResp && clientsResp.rows) ? clientsResp.rows : [];
-        const mappedClients = (clientsRows || []).map((c: any) => ({ id: c.id ?? c._id ?? String(c.id), name: c.name ?? c.label ?? c.companyName ?? c.clientName ?? c.clientAccountName ?? '' }));
+        const mappedClients = (clientsRows || []).map((c: any) => ({ id: c.id ?? c._id ?? String(c.id), name: clientDisplayName(c, c.label ?? c.clientAccountName ?? '') }));
         setClientOptions(mappedClients);
 
         const sitesResp = await ApiService.get(`/tenant/${tenantId}/business-info`);
