@@ -276,7 +276,7 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
                   <button
                     onClick={onDeleteConversation}
                     title={selected.isGroup ? "Eliminar grupo" : "Eliminar conversación"}
-                    className={`${selected.isGroup ? "" : "ml-auto"} grid h-9 w-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600`}
+                    className={`${selected.isGroup ? "" : "ml-auto"} grid h-9 w-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-600`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -287,7 +287,7 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
                     const mine = m.senderType === "staff";
                     return (
                       <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm ${mine ? "bg-primary text-white" : "bg-muted text-foreground"}`}>
+                        <div className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm ${mine ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
                           {!mine && <p className="mb-0.5 text-[10px] font-semibold opacity-70">{m.senderName}</p>}
                           {Array.isArray(m.attachments) && m.attachments.length > 0 && (
                             <div className="mb-1 grid gap-1.5">
@@ -357,7 +357,7 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
                       </button>
                     )}
                     {(!recorder.supported || draft.trim() || pending.length > 0) && (
-                      <button onClick={onSend} disabled={sending || uploading || recorder.recording || (!draft.trim() && pending.length === 0)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50">
+                      <button onClick={onSend} disabled={sending || uploading || recorder.recording || (!draft.trim() && pending.length === 0)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
                         {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                       </button>
                     )}
@@ -469,7 +469,7 @@ function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "cli
   const Tab = ({ id, icon, label }: { id: "direct" | "group"; icon: ReactNode; label: string }) => (
     <button
       onClick={() => setMode(id)}
-      className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${mode === id ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted"}`}
+      className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${mode === id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
     >
       {icon} {label}
     </button>
@@ -650,7 +650,7 @@ function MembersPanel({ conversation, onClose, onChanged }: { conversation: Conv
                   <p className="text-[10px] text-muted-foreground">{m.participantType === "staff" ? "Operador" : "Vigilante"}{m.role === "admin" ? " · Admin" : ""}{m.source === "auto" ? " · Auto" : ""}</p>
                 </div>
                 {m.role !== "admin" && (
-                  <button onClick={() => removeMember(m.userId)} disabled={busy} title="Quitar" className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground hover:bg-red-50 hover:text-red-600 disabled:opacity-50"><X size={14} /></button>
+                  <button onClick={() => removeMember(m.userId)} disabled={busy} title="Quitar" className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground hover:bg-red-500/10 hover:text-red-600 disabled:opacity-50"><X size={14} /></button>
                 )}
               </div>
             ))

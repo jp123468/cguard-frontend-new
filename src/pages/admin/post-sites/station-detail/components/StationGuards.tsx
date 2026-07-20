@@ -56,7 +56,7 @@ const NEXT_DAYS: Date[] = Array.from({ length: 28 }, (_, i) => {
  *  small gap separates each week. */
 function CoverageStrip({ work, type }: { work: Set<string>; type: PosType }) {
   if (!work || work.size === 0) return null;
-  const onCls = type === 'sacafranco' ? 'bg-indigo-500 text-white' : 'bg-primary text-white';
+  const onCls = type === 'sacafranco' ? 'bg-indigo-500 text-white' : 'bg-primary text-primary-foreground';
   return (
     <div className="mt-1.5 flex gap-px overflow-x-auto pb-1">
       {NEXT_DAYS.map((d, i) => {
@@ -452,7 +452,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
 
             <div className="flex items-center justify-end gap-2 border-t border-border/20 px-5 py-3">
               <button onClick={closeModal} className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/20 hover:text-foreground">{t('common.cancel', 'Cancelar')}</button>
-              <button onClick={submitAssign} disabled={saving || !pickGuard} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-40">
+              <button onClick={submitAssign} disabled={saving || !pickGuard} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-40">
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
                 {changeTarget ? t('station.guards.save', 'Guardar') : t('station.guards.assignBtn', 'Asignar')}
               </button>

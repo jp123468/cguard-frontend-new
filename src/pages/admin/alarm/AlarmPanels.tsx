@@ -46,7 +46,6 @@ import {
 } from "@/lib/api/alarmService";
 import { videoService, type Camera } from "@/lib/api/videoService";
 
-const GOLD = "#C8860A";
 
 // ============================================================
 // Option labels (Spanish UI)
@@ -1405,13 +1404,12 @@ export default function AlarmPanels() {
                       onClick={() => toggleExpand(p.id)}
                       className="flex min-w-0 flex-1 items-start gap-3 text-left"
                     >
-                      <div className="mt-0.5 rounded-md bg-amber-50 p-2">
+                      <div className="mt-0.5 rounded-md bg-amber-500/10 p-2">
                         {isOpen ? (
-                          <ChevronDown className="h-5 w-5" style={{ color: GOLD }} />
+                          <ChevronDown className="h-5 w-5 text-primary" />
                         ) : (
                           <ChevronRight
-                            className="h-5 w-5"
-                            style={{ color: GOLD }}
+                            className="h-5 w-5 text-primary"
                           />
                         )}
                       </div>

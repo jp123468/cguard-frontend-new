@@ -177,7 +177,7 @@ export default function CustomerRequests() {
         {/* Table */}
         <div className="mt-4 border rounded-xl overflow-hidden">
           <Table>
-            <TableHeader className="bg-slate-50">
+            <TableHeader className="bg-muted/50">
               <TableRow>
                 <TableHead className="font-bold text-foreground">Fecha</TableHead>
                 <TableHead className="font-bold text-foreground">Cliente</TableHead>

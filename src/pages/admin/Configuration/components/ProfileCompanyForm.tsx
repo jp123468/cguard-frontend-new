@@ -486,7 +486,7 @@ export default function ProfileCompanyForm() {
 
         <div className="grid grid-cols-1 gap-6">
           {!canEdit && (
-            <div className="p-3 rounded-xl bg-yellow-50 border border-yellow-100 text-sm text-yellow-800">
+            <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-sm text-yellow-700 dark:text-yellow-400">
               Sólo los usuarios con el rol <strong>admin</strong> pueden editar la información de la empresa.
             </div>
           )}

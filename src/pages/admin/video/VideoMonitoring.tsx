@@ -33,7 +33,6 @@ import {
   DispatchModal,
 } from "@/components/video/VideoActionModals";
 
-const GOLD = "#C8860A";
 
 type ModalKind = "trim" | "incident" | "dispatch" | null;
 
@@ -85,7 +84,7 @@ function TileButton({
       title={label}
       aria-label={label}
       className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border bg-background px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-[--gold] hover:text-foreground"
-      style={{ ["--gold" as any]: GOLD }}
+      style={{ ["--gold" as any]: "var(--primary)" }}
     >
       {icon}
       <span className="hidden sm:inline">{label}</span>
@@ -344,7 +343,7 @@ export default function VideoMonitoring() {
         {/* Body */}
         {loading ? (
           <div className="flex flex-col items-center justify-center gap-3 py-24 text-muted-foreground">
-            <Loader2 className="size-7 animate-spin" style={{ color: GOLD }} />
+            <Loader2 className="size-7 animate-spin text-primary" />
             <p className="text-sm">Cargando cámaras…</p>
           </div>
         ) : error ? (
@@ -356,8 +355,8 @@ export default function VideoMonitoring() {
               <button
                 type="button"
                 onClick={load}
-                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-white"
-                style={{ backgroundColor: GOLD }}
+                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-primary-foreground"
+                style={{ backgroundColor: "var(--primary)" }}
               >
                 <RefreshCw className="size-4" />
                 Reintentar

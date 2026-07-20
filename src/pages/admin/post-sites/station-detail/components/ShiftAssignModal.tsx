@@ -291,7 +291,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
 
         <div className="flex items-center justify-end gap-2 border-t border-border/20 px-5 py-3">
           <button onClick={onClose} className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted/20 hover:text-foreground">Cancelar</button>
-          <button onClick={saveShift} disabled={saving || !shiftGuard || (assignMode === 'rotation' && !selectedPositionId)} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-40">
+          <button onClick={saveShift} disabled={saving || !shiftGuard || (assignMode === 'rotation' && !selectedPositionId)} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-40">
             {saving ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
             {assignMode === 'rotation' ? 'Asignar rotación' : 'Crear turno'}
           </button>

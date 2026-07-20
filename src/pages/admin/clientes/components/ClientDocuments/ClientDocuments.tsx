@@ -241,7 +241,7 @@ export default function ClientDocuments({ client }: { client: Client }) {
                         <td className="px-2 py-2.5">
                           <div className="flex justify-end gap-1">
                             {d.downloadUrl ? <a href={d.downloadUrl} target="_blank" rel="noreferrer" title="Descargar" className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><Download className="h-3.5 w-3.5" /></a> : <span className="rounded-md p-1.5 text-muted-foreground/40"><Download className="h-3.5 w-3.5" /></span>}
-                            <button title="Eliminar" onClick={() => doDelete(d)} className="rounded-md p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
+                            <button title="Eliminar" onClick={() => doDelete(d)} className="rounded-md p-1.5 text-muted-foreground hover:bg-red-500/10 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
                           </div>
                         </td>
                       </tr>
@@ -256,7 +256,7 @@ export default function ClientDocuments({ client }: { client: Client }) {
             <span>Mostrando {total === 0 ? 0 : (page - 1) * perPage + 1} a {Math.min(page * perPage, total)} de {total} documentos</span>
             <div className="flex items-center gap-1">
               <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-md border px-2 py-1 disabled:opacity-40">‹</button>
-              {Array.from({ length: Math.min(5, pageCount) }).map((_, k) => { const n = k + 1; return <button key={n} onClick={() => setPage(n)} className={`grid h-7 min-w-[28px] place-items-center rounded-md px-2 text-xs font-semibold ${n === page ? 'bg-primary text-white' : 'border'}`}>{n}</button>; })}
+              {Array.from({ length: Math.min(5, pageCount) }).map((_, k) => { const n = k + 1; return <button key={n} onClick={() => setPage(n)} className={`grid h-7 min-w-[28px] place-items-center rounded-md px-2 text-xs font-semibold ${n === page ? 'bg-primary text-primary-foreground' : 'border'}`}>{n}</button>; })}
               <button disabled={page >= pageCount} onClick={() => setPage((p) => p + 1)} className="rounded-md border px-2 py-1 disabled:opacity-40">›</button>
             </div>
           </div>

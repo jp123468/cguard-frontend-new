@@ -401,8 +401,8 @@ export default function ClientCoverage({ client }: { client: Client }) {
             action={
               <div className="flex items-center gap-1">
                 <div className="flex rounded-lg border p-0.5">
-                  <button onClick={() => setMapType('satellite')} className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs ${mapType === 'satellite' ? 'bg-primary text-white' : 'text-muted-foreground'}`}><Satellite className="h-3.5 w-3.5" /> Satélite</button>
-                  <button onClick={() => setMapType('roadmap')} className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs ${mapType === 'roadmap' ? 'bg-primary text-white' : 'text-muted-foreground'}`}><MapIcon className="h-3.5 w-3.5" /> Mapa</button>
+                  <button onClick={() => setMapType('satellite')} className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs ${mapType === 'satellite' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}><Satellite className="h-3.5 w-3.5" /> Satélite</button>
+                  <button onClick={() => setMapType('roadmap')} className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs ${mapType === 'roadmap' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}><MapIcon className="h-3.5 w-3.5" /> Mapa</button>
                 </div>
               </div>
             }

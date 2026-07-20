@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { videoService, type RelaySite, type RelayBundle } from "@/lib/api/videoService";
 
-const GOLD = "#C8860A";
 
 const STATUS: Record<string, { label: string; cls: string }> = {
   publishing: { label: "Transmitiendo", cls: "bg-green-500/15 text-green-600 border-green-500/30" },
@@ -157,7 +156,7 @@ export default function VideoRelaySites() {
               return (
                 <Card key={s.id} className="cg-card-hover"><CardContent className="flex items-start gap-3 p-4">
                   <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-500/10">
-                    <Server className="h-5 w-5" style={{ color: GOLD }} />
+                    <Server className="h-5 w-5 text-primary" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">

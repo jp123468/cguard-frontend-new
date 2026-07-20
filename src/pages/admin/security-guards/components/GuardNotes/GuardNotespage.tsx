@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import api from '@/lib/api';
 import type { GuardDetail, GuardNote, NoteAttachment, FileDescriptor } from '../../guardDetailTypes';
 
-const GOLD = '#C8860A';
 
 // Notes API shape the page consumes. Defaults to the guard endpoints; a
 // supervisor route injects `notesApi` + `entityId` (+navKey/title) to reuse this
@@ -276,8 +275,7 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                                 {/* Add note */}
                                 <button
                                     onClick={handleAddNote}
-                                    className="inline-flex h-9 items-center gap-2 rounded-lg px-4 text-sm font-medium text-white shadow-sm transition hover:opacity-90"
-                                    style={{ background: GOLD }}
+                                    className="inline-flex h-9 items-center gap-2 rounded-lg px-4 text-sm font-medium bg-primary text-primary-foreground shadow-sm transition hover:opacity-90"
                                 >
                                     <Plus size={16} />
                                     {t('guards.notes.addButton', { defaultValue: 'Agregar nota' })}
@@ -318,8 +316,7 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                                 {!q && (
                                     <button
                                         onClick={handleAddNote}
-                                        className="mt-1 inline-flex h-9 items-center gap-2 rounded-lg px-4 text-sm font-medium text-white shadow-sm transition hover:opacity-90"
-                                        style={{ background: GOLD }}
+                                        className="mt-1 inline-flex h-9 items-center gap-2 rounded-lg px-4 text-sm font-medium bg-primary text-primary-foreground shadow-sm transition hover:opacity-90"
                                     >
                                         <Plus size={16} />
                                         {t('guards.notes.addButton', { defaultValue: 'Agregar nota' })}
@@ -339,8 +336,7 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                                         >
                                             <div className="flex items-start gap-3">
                                                 <div
-                                                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                                                    style={{ background: GOLD }}
+                                                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold bg-primary text-primary-foreground"
                                                 >
                                                     {initials(author)}
                                                 </div>
@@ -517,7 +513,7 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                                                                     {/* Progress Bar */}
                                                                     {typeof uploadProgress[i] !== 'undefined' && (
                                                                         <div className="h-2 w-full overflow-hidden rounded bg-muted">
-                                                                            <div className="h-2" style={{ width: `${uploadProgress[i]}%`, background: GOLD }} />
+                                                                            <div className="h-2" style={{ width: `${uploadProgress[i]}%`, background: 'var(--primary)' }} />
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -555,8 +551,7 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                                     </button>
                                     <button
                                         onClick={handleSubmitNote}
-                                        className="h-9 rounded-lg px-5 text-sm font-medium text-white shadow-sm transition hover:opacity-90"
-                                        style={{ background: GOLD }}
+                                        className="h-9 rounded-lg px-5 text-sm font-medium bg-primary text-primary-foreground shadow-sm transition hover:opacity-90"
                                     >
                                         {t('guards.notes.modal.save', { defaultValue: 'Guardar' })}
                                     </button>

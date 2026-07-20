@@ -265,7 +265,7 @@ export default function ClientReports({ client }: { client: Client & { companyNa
                 {programados.map((s) => (
                   <div key={s.id} className="flex items-start justify-between gap-2 py-2.5">
                     <div className="min-w-0"><div className="text-sm font-medium truncate">{s.name}</div><div className="text-xs text-muted-foreground">{s.frequency || s.cron}</div></div>
-                    <div className="flex shrink-0 items-center gap-1.5"><StatusBadge tone={s.active ? 'green' : 'slate'} dot={false}>{s.active ? 'Activo' : 'Pausado'}</StatusBadge><button onClick={() => delSchedule(s)} className="rounded-md p-1 text-muted-foreground hover:bg-red-50 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button></div>
+                    <div className="flex shrink-0 items-center gap-1.5"><StatusBadge tone={s.active ? 'green' : 'slate'} dot={false}>{s.active ? 'Activo' : 'Pausado'}</StatusBadge><button onClick={() => delSchedule(s)} className="rounded-md p-1 text-muted-foreground hover:bg-red-500/10 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button></div>
                   </div>
                 ))}
               </div>
@@ -307,7 +307,7 @@ export default function ClientReports({ client }: { client: Client & { companyNa
           <span>Mostrando {reportsTotal === 0 ? 0 : (page - 1) * perPage + 1} a {Math.min(page * perPage, reportsTotal)} de {reportsTotal} reportes</span>
           <div className="flex items-center gap-1">
             <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-md border px-2 py-1 disabled:opacity-40">‹</button>
-            {Array.from({ length: Math.min(5, pageCount) }).map((_, k) => { const n = k + 1; return <button key={n} onClick={() => setPage(n)} className={`grid h-7 min-w-[28px] place-items-center rounded-md px-2 text-xs font-semibold ${n === page ? 'bg-primary text-white' : 'border'}`}>{n}</button>; })}
+            {Array.from({ length: Math.min(5, pageCount) }).map((_, k) => { const n = k + 1; return <button key={n} onClick={() => setPage(n)} className={`grid h-7 min-w-[28px] place-items-center rounded-md px-2 text-xs font-semibold ${n === page ? 'bg-primary text-primary-foreground' : 'border'}`}>{n}</button>; })}
             <button disabled={page >= pageCount} onClick={() => setPage((p) => p + 1)} className="rounded-md border px-2 py-1 disabled:opacity-40">›</button>
           </div>
         </div>

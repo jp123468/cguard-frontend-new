@@ -978,7 +978,7 @@ export default function MobilPage() {
                         <TooltipTrigger asChild>
                           <label
                             htmlFor="bannerImage"
-                            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 cursor-pointer"
+                            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 cursor-pointer"
                           >
                             Seleccionar archivo
                           </label>
@@ -1072,7 +1072,7 @@ export default function MobilPage() {
                         <TooltipTrigger asChild>
                           <label
                             htmlFor="certImage"
-                            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 cursor-pointer"
+                            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 cursor-pointer"
                           >
                             Seleccionar archivo
                           </label>
@@ -1103,7 +1103,7 @@ export default function MobilPage() {
                         <TooltipTrigger asChild>
                           <label
                             htmlFor="certIcon"
-                            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 cursor-pointer"
+                            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 cursor-pointer"
                           >
                             Seleccionar archivo
                           </label>

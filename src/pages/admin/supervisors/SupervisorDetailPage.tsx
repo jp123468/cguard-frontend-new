@@ -10,8 +10,6 @@ import {
 } from "lucide-react";
 import { supervisorService, type Supervisor } from "@/lib/api/supervisorService";
 
-const GOLD = "#C8860A";
-
 const WEEKDAYS = [
   { n: 1, label: "Lun" }, { n: 2, label: "Mar" }, { n: 3, label: "Mié" },
   { n: 4, label: "Jue" }, { n: 5, label: "Vie" }, { n: 6, label: "Sáb" }, { n: 0, label: "Dom" },
@@ -136,14 +134,14 @@ export default function SupervisorDetailPage() {
                 <h2 className="text-sm font-semibold text-foreground">Información del supervisor</h2>
                 <div className="flex items-center gap-2">
                   {!editing ? (
-                    <button onClick={beginEdit} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition" style={{ background: GOLD }}>
+                    <button onClick={beginEdit} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-sm hover:opacity-90 transition">
                       <Pencil className="h-4 w-4" /> Editar
                     </button>
                   ) : (
                     <>
                       <button onClick={cancelEdit} disabled={saving} className="text-sm px-3 py-2 rounded-lg border hover:bg-muted transition disabled:opacity-50">Cancelar</button>
-                      <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm disabled:opacity-50" style={{ background: GOLD }}>
-                        {saving ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Check className="h-4 w-4" />}
+                      <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-sm disabled:opacity-50">
+                        {saving ? <span className="w-3.5 h-3.5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> : <Check className="h-4 w-4" />}
                         {saving ? "Guardando…" : "Guardar"}
                       </button>
                     </>

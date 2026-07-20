@@ -213,7 +213,7 @@ export default function PostSiteNotes({ site }: Props) {
             </div>
           </div>
 
-          <button onClick={handleAddNote} className="px-6 py-2 bg-primary text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors">
+          <button onClick={handleAddNote} className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors">
             <Plus size={18} />
            {(t('clients.notes.addNote', 'Add Note'))}
           </button>
@@ -376,7 +376,7 @@ export default function PostSiteNotes({ site }: Props) {
               <button
                 onClick={handleSubmitNote}
                 disabled={!isFormValid}
-                className={`px-6 py-2 bg-primary text-white rounded-md font-semibold hover:bg-primary/90 ${!isFormValid ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`px-6 py-2 bg-primary text-primary-foreground rounded-md font-semibold hover:bg-primary/90 ${!isFormValid ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {t('actions.save', 'Save')}
               </button>
@@ -443,7 +443,7 @@ export default function PostSiteNotes({ site }: Props) {
             <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.form.Description', 'Description')}: </strong><div className="mt-1 whitespace-pre-wrap">{detailsNote.description}</div></div>
             <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.addedBy', 'Added by')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdById || '-'}</div>
             <div className="flex justify-end gap-3">
-              <button onClick={() => { setFormData({ title: detailsNote.title ?? "", description: detailsNote.description ?? "", date: detailsNote.noteDate || detailsNote.createdAt?.split("T")?.[0] || "", attachments: [], id: detailsNote.id || detailsNote._id }); setViewOnly(false); setShowModal(true); setDetailsNote(null); }} className="px-4 py-2 bg-primary text-white rounded-md">{t('actions.edit', 'Edit')}</button>
+              <button onClick={() => { setFormData({ title: detailsNote.title ?? "", description: detailsNote.description ?? "", date: detailsNote.noteDate || detailsNote.createdAt?.split("T")?.[0] || "", attachments: [], id: detailsNote.id || detailsNote._id }); setViewOnly(false); setShowModal(true); setDetailsNote(null); }} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">{t('actions.edit', 'Edit')}</button>
             </div>
           </div>
         </div>

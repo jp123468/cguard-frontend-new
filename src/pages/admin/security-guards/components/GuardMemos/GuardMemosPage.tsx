@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import type { GuardDetail } from '../../guardDetailTypes';
 
-const GOLD = '#C8860A';
 
 type Memo = {
   id: string;
@@ -147,9 +146,9 @@ export default function GuardMemosPage() {
             <div className="relative p-6 flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center shrink-0">
                 {guardInitials ? (
-                  <span className="text-base font-bold" style={{ color: GOLD }}>{guardInitials}</span>
+                  <span className="text-base font-bold text-primary">{guardInitials}</span>
                 ) : (
-                  <FileText size={24} style={{ color: GOLD }} />
+                  <FileText size={24} className="text-primary" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
@@ -175,8 +174,7 @@ export default function GuardMemosPage() {
               </div>
               <button
                 onClick={() => { setForm({ subject: '', content: '' }); setShowModal(true); }}
-                className="inline-flex items-center justify-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition whitespace-nowrap shrink-0"
-                style={{ background: GOLD }}
+                className="inline-flex items-center justify-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-sm hover:opacity-90 transition whitespace-nowrap shrink-0"
               >
                 <Plus size={18} />
                 {t('guards.memos.addButton', { defaultValue: 'Nuevo memo' })}
@@ -233,8 +231,7 @@ export default function GuardMemosPage() {
                 {!query.trim() && (
                   <button
                     onClick={() => { setForm({ subject: '', content: '' }); setShowModal(true); }}
-                    className="mt-1 inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition"
-                    style={{ background: GOLD }}
+                    className="mt-1 inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-sm hover:opacity-90 transition"
                   >
                     <Plus size={16} />
                     {t('guards.memos.addButton', { defaultValue: 'Nuevo memo' })}
@@ -289,7 +286,7 @@ export default function GuardMemosPage() {
               <div className="flex items-center justify-between p-5 border-b sticky top-0 bg-card z-10">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Send size={16} style={{ color: GOLD }} />
+                    <Send size={16} className="text-primary" />
                   </div>
                   <h2 className="font-semibold text-sm tracking-tight">
                     {t('guards.memos.modal.title', { defaultValue: 'Nuevo memo' })}
@@ -342,8 +339,7 @@ export default function GuardMemosPage() {
                 <button
                   onClick={handleCreate}
                   disabled={saving}
-                  className="inline-flex items-center gap-2 text-sm font-medium px-5 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition disabled:opacity-50"
-                  style={{ background: GOLD }}
+                  className="inline-flex items-center gap-2 text-sm font-medium px-5 py-2 rounded-lg bg-primary text-primary-foreground shadow-sm hover:opacity-90 transition disabled:opacity-50"
                 >
                   {saving && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                   {saving ? t('common.saving', { defaultValue: 'Enviando...' }) : t('guards.memos.modal.send', { defaultValue: 'Enviar' })}

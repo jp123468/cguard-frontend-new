@@ -9,7 +9,6 @@ import { Section, EmptyState, SkeletonCards, Modal } from '@/components/kit';
 import securityGuardService from '@/lib/api/securityGuardService';
 import type { FileDescriptor } from '../../guardDetailTypes';
 
-const GOLD = '#C8860A';
 const ACCEPT = 'image/*,application/pdf';
 const MAX_BYTES = 10 * 1024 * 1024; // 10MB
 
@@ -162,10 +161,9 @@ export default function GuardDocumentosPage() {
               className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-8 text-center transition ${
                 dragOver ? 'border-[color:var(--primary)] bg-primary/5' : 'hover:border-foreground/30'
               } ${uploading ? 'pointer-events-none opacity-60' : ''}`}
-              style={dragOver ? { borderColor: GOLD, background: `${GOLD}0d` } : undefined}
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: `${GOLD}1a` }}>
-                <UploadCloud className="h-6 w-6" style={{ color: GOLD }} />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+                <UploadCloud className="h-6 w-6 text-primary" />
               </div>
               <div className="text-sm font-medium text-foreground">
                 {uploading
@@ -197,8 +195,7 @@ export default function GuardDocumentosPage() {
                   action={
                     <button
                       onClick={loadDocs}
-                      className="inline-flex h-9 items-center gap-2 rounded-lg px-4 text-sm font-medium text-white shadow-sm transition hover:opacity-90"
-                      style={{ background: GOLD }}
+                      className="inline-flex h-9 items-center gap-2 rounded-lg px-4 text-sm font-medium bg-primary text-primary-foreground shadow-sm transition hover:opacity-90"
                     >
                       {t('guards.documents.retry', { defaultValue: 'Reintentar' })}
                     </button>

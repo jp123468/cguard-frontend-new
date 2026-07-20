@@ -53,7 +53,6 @@ type Props = {
   licensesApi?: LicensesApi;
 };
 
-const GOLD = '#C8860A';
 
 // ── Expiry status helper ─────────────────────────────────────────────────────
 // Returns a three-state badge config based on the expiry date.
@@ -389,8 +388,7 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
               </div>
               <button
                 onClick={handleAddLicense}
-                className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition whitespace-nowrap"
-                style={{ background: GOLD }}
+                className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-sm hover:opacity-90 transition whitespace-nowrap"
               >
                 <Plus size={16} />
                 {t('guards.licenses.newLicense', { defaultValue: 'New License' })}
@@ -436,8 +434,7 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
               <p className="mt-1 text-sm text-muted-foreground max-w-xs" dangerouslySetInnerHTML={{ __html: t('guards.licenses.empty.description') }} />
               <button
                 onClick={handleAddLicense}
-                className="mt-5 inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition"
-                style={{ background: GOLD }}
+                className="mt-5 inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-sm hover:opacity-90 transition"
               >
                 <Plus size={16} />
                 {t('guards.licenses.newLicense', { defaultValue: 'New License' })}
@@ -465,8 +462,8 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
                     />
 
                     <div className="flex items-start gap-3 pr-6">
-                      <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${GOLD}1a` }}>
-                        <IdCard className="w-5 h-5" style={{ color: GOLD }} />
+                      <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10">
+                        <IdCard className="w-5 h-5 text-primary" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold text-sm tracking-tight truncate">{typeName}</div>
@@ -551,8 +548,8 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-5 border-b sticky top-0 bg-card z-10">
                   <div className="flex items-center gap-2.5">
-                    <span className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${GOLD}1a` }}>
-                      <ShieldCheck className="w-5 h-5" style={{ color: GOLD }} />
+                    <span className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary/10">
+                      <ShieldCheck className="w-5 h-5 text-primary" />
                     </span>
                     <h2 className="text-base font-semibold tracking-tight text-foreground">
                       {isEditing
@@ -666,7 +663,7 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
                 {/* Footer */}
                 <div className="flex items-center justify-end gap-3 px-6 py-4 border-t sticky bottom-0 bg-card">
                   <button onClick={handleCloseModal} className="text-sm px-4 py-2 rounded-lg border hover:bg-muted transition">{t('guards.licenses.modal.cancel', { defaultValue: 'Cancelar' })}</button>
-                  <button onClick={handleSubmitLicense} className="text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition" style={{ background: GOLD }}>{t('guards.licenses.modal.save', { defaultValue: 'Guardar' })}</button>
+                  <button onClick={handleSubmitLicense} className="text-sm font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-sm hover:opacity-90 transition">{t('guards.licenses.modal.save', { defaultValue: 'Guardar' })}</button>
                 </div>
               </div>
             </div>
@@ -699,8 +696,8 @@ export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'gu
             <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-card shadow-2xl overflow-y-auto rounded-l-2xl" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-5 border-b sticky top-0 bg-card z-10">
                 <div className="flex items-center gap-2.5">
-                  <span className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${GOLD}1a` }}>
-                    <IdCard className="w-5 h-5" style={{ color: GOLD }} />
+                  <span className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary/10">
+                    <IdCard className="w-5 h-5 text-primary" />
                   </span>
                   <h2 className="text-base font-semibold tracking-tight text-foreground">{t('guards.licenses.details.title', { defaultValue: 'License details' })}</h2>
                 </div>

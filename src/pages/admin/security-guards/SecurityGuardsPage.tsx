@@ -760,7 +760,7 @@ export default function SecurityGuardsPage() {
                     </div>
 
                     <Button
-                      className="w-full bg-primary hover:bg-primary/90 text-white"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                       onClick={() => {
                         // Aplica tus filtros reales aquí
                         setOpenFilter(false);
@@ -1157,7 +1157,7 @@ export default function SecurityGuardsPage() {
                             : 'Agrega tu primer vigilante para comenzar.'}
                         </p>
                         {hasPermission('securityGuardCreate') && filterStatus === 'todos' && !searchQuery && (
-                          <Button className="mt-4 bg-primary hover:bg-primary/90 text-white" asChild>
+                          <Button className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
                             <Link to="/security-guards/new">
                               <UserPlus className="mr-2 h-4 w-4" />
                               Nuevo Vigilante
@@ -1273,7 +1273,7 @@ export default function SecurityGuardsPage() {
               {t('actions.cancel', 'Cancelar')}
             </Button>
             <Button
-              className="bg-primary hover:bg-primary/90 text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={async () => {
                 if (!guardToArchive) return;
                 setArchiveLoading(true);
@@ -1436,7 +1436,7 @@ export default function SecurityGuardsPage() {
               {t('actions.cancel', 'Cancelar')}
             </Button>
             <Button
-              className={bulkActionType === "eliminar" ? "bg-red-600 hover:bg-red-700 text-white" : "bg-primary hover:bg-primary/90 text-white"}
+              className={bulkActionType === "eliminar" ? "bg-red-600 hover:bg-red-700 text-white" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
               onClick={async () => {
                 setBulkActionLoading(true);
                 try {
@@ -1585,7 +1585,7 @@ export default function SecurityGuardsPage() {
               </Button>
               {hasPermission('securityGuardEdit') && (
                 <Button
-                  className="bg-primary hover:bg-primary/90 text-white text-sm px-4 py-1"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm px-4 py-1"
                   onClick={() => {
                     setDetailsOpen(false);
                     const realId = detailsGuard.raw?.id || detailsGuard.id;
@@ -1981,7 +1981,7 @@ export default function SecurityGuardsPage() {
               <Button variant="outline">Cancelar</Button>
             </DialogClose>
             <Button
-              className="bg-primary hover:bg-primary/90 text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={handleAssignStation}
               disabled={!assignStationId || assignLoading}
             >

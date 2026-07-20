@@ -13,7 +13,6 @@ import type { GuardDetail } from '../../guardDetailTypes';
 // endpoint is user-keyed, so it works for any user id).
 type Props = { guard?: GuardDetail; navKey?: string; title?: string };
 
-const GOLD = '#C8860A';
 
 function fmt(dt: string | null): string {
   if (!dt) return '—';
@@ -103,7 +102,7 @@ export default function GuardDevicePage({ guard, navKey = 'keep-safe', title = '
             <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-primary/15 to-transparent" />
             <div className="relative p-6 flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-muted ring-4 ring-background flex items-center justify-center shadow-md shrink-0">
-                <Smartphone className="w-7 h-7" style={{ color: GOLD }} />
+                <Smartphone className="w-7 h-7 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <h1 className="text-xl font-bold tracking-tight">

@@ -724,7 +724,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: SiteProp; 
               <Settings size={16} />
               <span className="text-sm font-medium">Configuraciones</span>
             </button>
-            <button onClick={() => { setEditingTourId(null); setTourName(''); setTourDesc(''); setScheduledDays([]); setContinuous(false); setTimeMode('specific'); setSelectTime(''); setMaxDuration(''); setStationId(''); setShowNewTourModal(true); }} className="inline-flex items-center gap-3 bg-primary text-white px-4 py-2 rounded-full hover:bg-primary/90">
+            <button onClick={() => { setEditingTourId(null); setTourName(''); setTourDesc(''); setScheduledDays([]); setContinuous(false); setTimeMode('specific'); setSelectTime(''); setMaxDuration(''); setStationId(''); setShowNewTourModal(true); }} className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-4 py-2 rounded-full hover:bg-primary/90">
               <span className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center">
                 <Plus size={14} />
               </span>
@@ -921,7 +921,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: SiteProp; 
                         toast.error(msg);
                       }
                     }}
-                    className="px-4 py-2 rounded-full bg-primary text-white hover:bg-primary/90"
+                    className="px-4 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     {t('siteTour.actions.archive', 'Archive')}
                   </button>
@@ -1292,7 +1292,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: SiteProp; 
                         toast.error(msg);
                       }
                     }}
-                    className={"ml-2 inline-flex items-center justify-center px-4 py-2 rounded-full shadow-lg " + (isFormValid ? "bg-primary text-white hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed")}
+                    className={"ml-2 inline-flex items-center justify-center px-4 py-2 rounded-full shadow-lg " + (isFormValid ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed")}
                   >
                     <span className="text-sm font-semibold">{t('siteTour.buttons.submit')}</span>
                   </button>

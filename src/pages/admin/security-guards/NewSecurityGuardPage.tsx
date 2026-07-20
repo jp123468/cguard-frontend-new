@@ -469,7 +469,7 @@ export default function NewSecurityGuardPage() {
                     );
                   })}
 
-                  <SubmitBar primaryLabel={t('guards.new.form.send')} loading={inviteState.isSubmitting} onPrimary={submitInvite(onSubmitInvite)} primaryClassName="bg-primary text-white px-6 py-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50" />
+                  <SubmitBar primaryLabel={t('guards.new.form.send')} loading={inviteState.isSubmitting} onPrimary={submitInvite(onSubmitInvite)} primaryClassName="bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50" />
                 </form>
               </Form>
             </>
@@ -514,7 +514,7 @@ export default function NewSecurityGuardPage() {
                     </FormBlock>
                   ))}
 
-                  <SubmitBar primaryLabel={t('guards.new.form.send')} loading={joinState.isSubmitting} onPrimary={submitJoin(onSubmitJoin)} primaryClassName="bg-primary text-white px-6 py-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50" />
+                  <SubmitBar primaryLabel={t('guards.new.form.send')} loading={joinState.isSubmitting} onPrimary={submitJoin(onSubmitJoin)} primaryClassName="bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50" />
                 </form>
               </Form>
             </>
@@ -548,7 +548,7 @@ export default function NewSecurityGuardPage() {
                     </FormBlock>
                   ))}
 
-                  <SubmitBar primaryLabel={t('guards.new.form.send')} loading={linkState.isSubmitting} onPrimary={submitLink(onSubmitLink)} primaryClassName="bg-primary text-white px-6 py-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50" />
+                  <SubmitBar primaryLabel={t('guards.new.form.send')} loading={linkState.isSubmitting} onPrimary={submitLink(onSubmitLink)} primaryClassName="bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50" />
                 </form>
               </Form>
             </>
@@ -843,7 +843,7 @@ export default function NewSecurityGuardPage() {
                       primaryLabel={t('guards.new.form.create_and_send')}
                       loading={createState.isSubmitting || uploading}
                       onPrimary={() => { createIntentRef.current = "create_send"; submitCreate(onSubmitCreate)(); }}
-                      primaryClassName="bg-primary text-white px-6 py-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50"
+                      primaryClassName="bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50"
                     />
                   </div>
 

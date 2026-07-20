@@ -836,7 +836,7 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
                   {DAYS_ES[i]}
                 </div>
                 <div className={`mt-1 w-8 h-8 mx-auto flex items-center justify-center rounded-full text-sm font-semibold transition-all ${
-                  isToday(d) ? 'bg-primary text-white shadow-sm shadow-primary/30' :
+                  isToday(d) ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30' :
                   selectedDate === key ? 'bg-foreground/8 text-foreground' :
                   'text-foreground group-hover:bg-muted/20'
                 }`}>
@@ -1128,7 +1128,7 @@ function MonthView({ days, eventsByDate, coverageByDate, guardColorMap, selected
                   } ${!isCurrentMonth ? 'opacity-25' : ''}`}
                 >
                   <span className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full transition-all ${
-                    isToday(day) ? 'bg-primary text-white shadow-sm shadow-primary/30' :
+                    isToday(day) ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30' :
                     selectedDate === key ? 'text-primary font-semibold' :
                     'text-foreground group-hover:bg-muted/20'
                   }`}>

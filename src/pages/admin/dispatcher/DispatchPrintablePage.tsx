@@ -419,7 +419,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
               </div>
                 <div className="mt-4 flex justify-end gap-2">
                 <Button variant="outline" onClick={() => { setNewComment(''); setSelectedFile(null); setShowCommentModal(false); }}>{t('dispatcher.cancel') || 'Cancelar'}</Button>
-                <Button className="bg-primary text-white" onClick={handleAddComment}>{t('dispatcher.comment.add') || 'Agregar'}</Button>
+                <Button className="bg-primary text-primary-foreground" onClick={handleAddComment}>{t('dispatcher.comment.add') || 'Agregar'}</Button>
               </div>
             </div>
           </div>
@@ -519,7 +519,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
         </div>
 
       </div>
-      <Button className="bg-primary text-white text-sm" onClick={() => setShowCommentModal((s) => !s)}>
+      <Button className="bg-primary text-primary-foreground text-sm" onClick={() => setShowCommentModal((s) => !s)}>
         {showCommentModal ? (t('dispatcher.close') || 'Cerrar') : (t('dispatcher.add_comment_button') || 'Agregar comentario')}
       </Button>
     </div>

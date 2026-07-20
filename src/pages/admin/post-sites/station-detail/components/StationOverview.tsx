@@ -460,7 +460,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+              className="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
             >
               {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
               Guardar
@@ -544,7 +544,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             <button
               onClick={updateHorario}
               disabled={savingHorario}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               {savingHorario ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
               Actualizar horario
@@ -563,7 +563,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             <button
               onClick={saveLocation}
               disabled={savingLoc}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               {savingLoc ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
               Guardar ubicación y geocerca

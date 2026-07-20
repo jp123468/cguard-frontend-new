@@ -70,7 +70,7 @@ export function AnalyticsShell({
               <div className="flex rounded-lg border border-border bg-card p-0.5">
                 {PRESETS.map((p) => (
                   <button key={p.days} onClick={() => setDays(p.days)}
-                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-all ${days === p.days ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"}`}>
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-all ${days === p.days ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                     {p.label}
                   </button>
                 ))}

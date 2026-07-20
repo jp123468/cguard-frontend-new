@@ -1333,7 +1333,7 @@ export default function DispatcherPage() {
 
                   {/* Botón aplicar */}
                   <Button
-                    className="w-full bg-primary text-white hover:bg-primary/90"
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                     onClick={() => void aplicarFiltros()}
                   >
                     {t('dispatcher.apply_filters')}
@@ -1755,7 +1755,7 @@ export default function DispatcherPage() {
 
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction className="bg-primary text-white hover:bg-primary/90" onClick={handleCreateShare} disabled={shareLoading}>
+                <AlertDialogAction className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCreateShare} disabled={shareLoading}>
                   {shareLoading ? 'Creando...' : 'Generar y copiar'}
                 </AlertDialogAction>
               </AlertDialogFooter>

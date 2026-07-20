@@ -364,7 +364,7 @@ export default function ClientContract({ client }: { client: Client }) {
                       <td className="px-2 py-2.5">
                         <div className="flex justify-end gap-1">
                           <button onClick={() => openSvc(s)} className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
-                          <button onClick={() => delSvc(s)} className="rounded-md p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
+                          <button onClick={() => delSvc(s)} className="rounded-md p-1.5 text-muted-foreground hover:bg-red-500/10 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
                         </div>
                       </td>
                     </tr>
@@ -439,7 +439,7 @@ export default function ClientContract({ client }: { client: Client }) {
                       <td className="px-2 py-2.5">
                         <div className="flex justify-end gap-1">
                           <button onClick={() => openRen(r)} className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
-                          <button onClick={() => delRen(r)} className="rounded-md p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
+                          <button onClick={() => delRen(r)} className="rounded-md p-1.5 text-muted-foreground hover:bg-red-500/10 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
                         </div>
                       </td>
                     </tr>

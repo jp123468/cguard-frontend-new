@@ -493,7 +493,7 @@ export default function PostSiteContacts({ site }: { site?: SiteProp }) {
                 <button
                   onClick={handleAdd}
                   disabled={!canSubmit}
-                  className={`${canSubmit ? 'bg-primary hover:bg-primary' : 'bg-primary/60 cursor-not-allowed opacity-60'} text-white transition-colors duration-300 ease-out px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30`}>
+                  className={`${canSubmit ? 'bg-primary hover:bg-primary' : 'bg-primary/60 cursor-not-allowed opacity-60'} text-primary-foreground transition-colors duration-300 ease-out px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30`}>
                   {(form && (form as any).id) ? (t('actions.save') || 'Save') : (t('actions.save') || 'Add Contact')}
                 </button>
               </div>

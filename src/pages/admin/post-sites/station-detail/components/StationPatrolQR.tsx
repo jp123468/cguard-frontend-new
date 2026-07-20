@@ -253,7 +253,7 @@ export default function StationPatrolQR({ station, stationId }: Props) {
                         <button
                           onClick={() => useStationLocation(cp)}
                           disabled={settingLoc === cp.id}
-                          className="inline-flex w-fit items-center gap-1.5 rounded border border-amber-300 bg-white px-2 py-1 font-medium text-amber-800 hover:bg-amber-50 disabled:opacity-50"
+                          className="inline-flex w-fit items-center gap-1.5 rounded border border-amber-300 bg-white px-2 py-1 font-medium text-amber-800 hover:bg-amber-500/10 disabled:opacity-50"
                         >
                           {settingLoc === cp.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Crosshair className="h-3 w-3" />}
                           {t('station.patrolQr.useStationLocation', 'Usar ubicación del puesto')}

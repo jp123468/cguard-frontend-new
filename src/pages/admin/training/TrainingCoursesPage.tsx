@@ -48,8 +48,6 @@ import {
 } from '@/lib/api/trainingCourseService';
 import { TRAINING_CATEGORIES, TRAINING_LEVELS, categoryLabel, levelLabel } from './trainingConstants';
 
-const GOLD = '#C8860A';
-
 const emptyForm: TrainingCourseInput = {
   title: '',
   description: '',
@@ -260,7 +258,7 @@ export default function TrainingCoursesPage() {
                   <td className="px-4 py-3">{levelLabel(c.level)}</td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center gap-1">
-                      <Award className="h-3.5 w-3.5" style={{ color: GOLD }} /> {c.pointsValue ?? 0}
+                      <Award className="h-3.5 w-3.5 text-primary" /> {c.pointsValue ?? 0}
                     </span>
                   </td>
                   <td className="px-4 py-3">

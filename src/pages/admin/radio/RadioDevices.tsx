@@ -49,8 +49,6 @@ import {
   type RadioTransport,
 } from "@/lib/api/radioDeviceService";
 
-const GOLD = "#C8860A";
-
 type FormState = {
   name: string;
   host: string;
@@ -279,7 +277,7 @@ export default function RadioDevices() {
                     ) : d.status === "offline" || d.status === "error" ? (
                       <WifiOff className="h-5 w-5 text-zinc-500" />
                     ) : (
-                      <Radio className="h-5 w-5" style={{ color: GOLD }} />
+                      <Radio className="h-5 w-5 text-primary" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">

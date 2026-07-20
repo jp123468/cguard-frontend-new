@@ -37,7 +37,6 @@ import {
   type Camera,
 } from "@/lib/api/videoService";
 
-const GOLD = "#C8860A";
 
 /* ------------------------------------------------------------------ */
 /* Status / type / severity metadata (Spanish labels)                  */
@@ -237,7 +236,7 @@ export default function VideoEvents() {
                 className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors"
                 style={
                   active
-                    ? { backgroundColor: GOLD, borderColor: GOLD, color: "#fff" }
+                    ? { backgroundColor: "var(--primary)", borderColor: "var(--primary)", color: "var(--primary-foreground)" }
                     : undefined
                 }
               >
@@ -356,7 +355,7 @@ export default function VideoEvents() {
                         size="sm"
                         disabled={rowBusy}
                         onClick={() => setDispatchEvent(ev)}
-                        style={{ backgroundColor: GOLD, color: "#fff" }}
+                        style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}
                         className="hover:opacity-90"
                       >
                         <Radio className="size-4" />

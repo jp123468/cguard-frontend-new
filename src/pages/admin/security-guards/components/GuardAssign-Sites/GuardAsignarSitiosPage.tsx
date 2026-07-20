@@ -12,7 +12,6 @@ import { toast } from 'sonner';
 import PostSiteMiniInfo from '@/components/post-sites/PostSiteMiniInfo';
 import { Section, EmptyState, StatusBadge } from '@/components/kit';
 
-const GOLD = '#C8860A';
 
 // ── Safe label extraction ────────────────────────────────────────────────────
 // The backend may return raw association OBJECTS (full Sequelize models) for
@@ -456,8 +455,7 @@ export default function GuardAsignarSitiosPage() {
                 </div>
                 <button
                   onClick={() => setAssignModalOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 text-sm font-medium px-3.5 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition"
-                  style={{ background: GOLD }}
+                  className="inline-flex items-center justify-center gap-2 text-sm font-medium px-3.5 py-2 rounded-lg bg-primary text-primary-foreground shadow-sm hover:opacity-90 transition"
                 >
                   <Plus size={16} />
                   {t('guards.assignSites.assignButton', { defaultValue: 'Asignar puesto' })}
@@ -477,8 +475,7 @@ export default function GuardAsignarSitiosPage() {
                 action={
                   <button
                     onClick={() => setAssignModalOpen(true)}
-                    className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition"
-                    style={{ background: GOLD }}
+                    className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-sm hover:opacity-90 transition"
                   >
                     <Plus size={16} />
                     {t('guards.assignSites.assignButton', { defaultValue: 'Asignar puesto' })}
@@ -572,7 +569,7 @@ export default function GuardAsignarSitiosPage() {
             <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-card shadow-2xl flex flex-col rounded-l-2xl" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between p-5 border-b sticky top-0 bg-card z-10">
                 <div className="flex items-center gap-2.5">
-                  <span className="w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: GOLD }}><MapPin className="w-4.5 h-4.5" /></span>
+                  <span className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary text-primary-foreground shrink-0"><MapPin className="w-4.5 h-4.5" /></span>
                   <h3 className="text-base font-semibold tracking-tight">{t('guards.assignSites.modal.title', { defaultValue: 'Asignar puesto' })}</h3>
                 </div>
                 <button onClick={() => setAssignModalOpen(false)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition"><X size={18} /></button>
@@ -634,7 +631,7 @@ export default function GuardAsignarSitiosPage() {
 
               <div className="flex items-center justify-end gap-2 p-4 border-t bg-card">
                 <button onClick={() => setAssignModalOpen(false)} className="text-sm px-4 py-2 rounded-lg border hover:bg-muted transition">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancelar' })}</button>
-                <button onClick={assignSite} disabled={assigning} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition disabled:opacity-60" style={{ background: GOLD }}>
+                <button onClick={assignSite} disabled={assigning} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-sm hover:opacity-90 transition disabled:opacity-60">
                   <Plus size={16} />
                   {t('guards.assignSites.modal.assign', { defaultValue: 'Asignar' })}
                 </button>

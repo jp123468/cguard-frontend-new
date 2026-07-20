@@ -31,7 +31,6 @@ import {
 } from "@/lib/api/alarmService";
 import { openEventStream } from "@/lib/api/eventStream";
 
-const GOLD = "#C8860A";
 
 /* ------------------------------------------------------------------ */
 /* Metadata (Spanish labels)                                           */
@@ -279,7 +278,7 @@ export default function AlarmQueue() {
                 className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors"
                 style={
                   active
-                    ? { backgroundColor: GOLD, borderColor: GOLD, color: "#fff" }
+                    ? { backgroundColor: "var(--primary)", borderColor: "var(--primary)", color: "var(--primary-foreground)" }
                     : undefined
                 }
               >

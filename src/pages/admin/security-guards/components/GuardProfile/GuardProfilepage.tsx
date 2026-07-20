@@ -70,7 +70,6 @@ interface GuardShiftRow {
   punchOutTime?: string;
 }
 
-const GOLD = '#C8860A';
 
 /** Dropdown options matching the backend isIn validators. */
 const FIELD_OPTIONS: Record<string, string[]> = {
@@ -282,14 +281,14 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
             <h2 className="text-sm font-semibold text-foreground">{t('guards.nav.perfil', 'Perfil')}</h2>
             <div className="flex items-center gap-2">
               {!editing ? (
-                <button onClick={beginEdit} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition" style={{ background: GOLD }}>
+                <button onClick={beginEdit} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-sm hover:opacity-90 transition">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-2a2 2 0 01.586-1.414z" /></svg>
                   {t('guards.profile.actions.edit') || 'Editar'}
                 </button>
               ) : (
                 <>
                   <button onClick={cancelEdit} disabled={saving} className="text-sm px-3 py-2 rounded-lg border hover:bg-muted transition disabled:opacity-50">{t('guards.profile.actions.cancel') || 'Cancelar'}</button>
-                  <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm disabled:opacity-50" style={{ background: GOLD }}>
+                  <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-sm disabled:opacity-50">
                     {saving && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                     {saving ? (t('guards.profile.actions.saving') || 'Guardando…') : (t('guards.profile.actions.save') || 'Guardar')}
                   </button>
@@ -445,7 +444,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                     <div className="text-xs text-muted-foreground">{t('guards.profile.access.sendTo') || 'Enviar a'}: <span className="font-medium text-foreground">{data.guard.email}</span></div>
                   )}
                   {data?.guard?.email && (
-                    <button onClick={handleSendAppAccess} disabled={sendingInvite} className="mt-1 w-full flex items-center justify-center gap-2 text-white text-sm font-medium py-2 px-4 rounded-lg disabled:opacity-60 transition" style={{ background: GOLD }}>
+                    <button onClick={handleSendAppAccess} disabled={sendingInvite} className="mt-1 w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground text-sm font-medium py-2 px-4 rounded-lg disabled:opacity-60 transition">
                       {sendingInvite ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : (
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                       )}

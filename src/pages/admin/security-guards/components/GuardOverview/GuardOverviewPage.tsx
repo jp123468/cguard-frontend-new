@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import type { GuardDetail } from '../../guardDetailTypes';
 
-const GOLD = '#C8860A';
 
 // The loaded guard record, flattened with the derived photo URL. The linked app
 // `user` (under `guard`) may carry live duty/account fields.

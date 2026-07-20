@@ -692,10 +692,10 @@ export default function Stations({ site }: { site?: SiteProp }) {
 
             <div className="flex flex-shrink-0 items-center gap-2">
               <div className="hidden md:inline-flex items-center rounded-xl border bg-card p-0.5">
-                <button onClick={() => setViewMode('cards')} className={`flex h-8 items-center rounded-md px-2.5 ${viewMode === 'cards' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'}`} aria-label="Vista de tarjetas"><LayoutGrid className="h-4 w-4" /></button>
-                <button onClick={() => setViewMode('list')} className={`flex h-8 items-center rounded-md px-2.5 ${viewMode === 'list' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'}`} aria-label="Vista de lista"><ListIcon className="h-4 w-4" /></button>
+                <button onClick={() => setViewMode('cards')} className={`flex h-8 items-center rounded-md px-2.5 ${viewMode === 'cards' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`} aria-label="Vista de tarjetas"><LayoutGrid className="h-4 w-4" /></button>
+                <button onClick={() => setViewMode('list')} className={`flex h-8 items-center rounded-md px-2.5 ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`} aria-label="Vista de lista"><ListIcon className="h-4 w-4" /></button>
               </div>
-              <button onClick={() => navigate(`/post-sites/${site?.id || ''}/stations/new`)} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors shadow">
+              <button onClick={() => navigate(`/post-sites/${site?.id || ''}/stations/new`)} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors shadow">
                 <Plus size={16} /> {t('postSites.stations.add', 'Crear estación')}
               </button>
             </div>
@@ -1065,7 +1065,7 @@ export default function Stations({ site }: { site?: SiteProp }) {
 
             <div className="flex items-center justify-end gap-3 p-6 border-t bg-card rounded-b-md">
               <button onClick={() => setShowShiftModal(false)} className="px-4 py-2 rounded-md border text-sm">{t('actions.cancel') || 'Cancel'}</button>
-              <button onClick={saveShift} disabled={!shiftStart || !shiftEnd} className={`px-6 py-2 bg-primary text-white rounded-md font-semibold hover:bg-primary/90 text-sm ${(!shiftStart || !shiftEnd) ? 'opacity-50 cursor-not-allowed' : ''}`}>{t('actions.save', 'Save')}</button>
+              <button onClick={saveShift} disabled={!shiftStart || !shiftEnd} className={`px-6 py-2 bg-primary text-primary-foreground rounded-md font-semibold hover:bg-primary/90 text-sm ${(!shiftStart || !shiftEnd) ? 'opacity-50 cursor-not-allowed' : ''}`}>{t('actions.save', 'Save')}</button>
             </div>
           </div>
         </div>

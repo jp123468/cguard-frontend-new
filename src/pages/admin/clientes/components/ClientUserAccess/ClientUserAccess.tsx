@@ -81,7 +81,7 @@ export default function ClientUserAccess({ client }: Props) {
                 <div className="flex shrink-0 items-center gap-2">
                   <StatusBadge tone={u.isTitular ? 'green' : 'blue'} dot={false}>{u.role || 'Acceso'}</StatusBadge>
                   {!u.isTitular && u.pivotId && (
-                    <button onClick={() => revoke(u)} title="Revocar acceso" className="rounded-md p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => revoke(u)} title="Revocar acceso" className="rounded-md p-1.5 text-muted-foreground hover:bg-red-500/10 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
                   )}
                 </div>
               </div>
