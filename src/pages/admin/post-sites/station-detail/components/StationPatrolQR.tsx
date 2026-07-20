@@ -144,16 +144,32 @@ export default function StationPatrolQR({ station, stationId }: Props) {
   const printQrs = (list: Checkpoint[]) => {
     const w = window.open('', '_blank', 'width=900,height=1200');
     if (!w) return;
+    // Checkpoint name/identifier/tour are user-supplied — escape before injecting
+    // into the print HTML so a value like `<img onerror=...>` can't run in the popup.
+    const esc = (val: unknown): string =>
+      String(val ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const cards = list.map((cp) => `
       <div style="display:inline-block;width:300px;margin:14px;padding:16px;border:1px solid #e5e7eb;border-radius:12px;text-align:center;page-break-inside:avoid;vertical-align:top;">
-        <img src="${qrUrl(cp.tagIdentifier, 400)}" style="width:240px;height:240px;" />
-        <div style="font:bold 16px sans-serif;margin-top:10px;color:#111827;">${cp.name}</div>
-        <div style="font:12px monospace;color:#6b7280;margin-top:4px;">${cp.tagIdentifier}</div>
-        ${cp.tourName ? `<div style="font:12px sans-serif;color:#9ca3af;margin-top:2px;">${cp.tourName}</div>` : ''}
+        <img src="${esc(qrUrl(cp.tagIdentifier, 400))}" style="width:240px;height:240px;" />
+        <div style="font:bold 16px sans-serif;margin-top:10px;color:#111827;">${esc(cp.name)}</div>
+        <div style="font:12px monospace;color:#6b7280;margin-top:4px;">${esc(cp.tagIdentifier)}</div>
+        ${cp.tourName ? `<div style="font:12px sans-serif;color:#9ca3af;margin-top:2px;">${esc(cp.tourName)}</div>` : ''}
       </div>`).join('');
-    w.document.write(`<html><head><title>QR Rondas</title></head><body style="font-family:sans-serif;text-align:center;">${cards}</body></html>`);
+    // Wait for every QR image to finish loading before printing so the sheet is
+    // never printed with blank/broken QR boxes on a slow connection. A 5s fallback
+    // guards against a hung remote image blocking the print forever.
+    const printScript = `<script>(function(){
+      var printed=false; var go=function(){ if(printed) return; printed=true; window.focus(); window.print(); };
+      var imgs=Array.prototype.slice.call(document.images); var pending=imgs.length;
+      if(!pending){ go(); return; }
+      var one=function(){ if(--pending<=0) go(); };
+      imgs.forEach(function(im){ if(im.complete){ one(); } else { im.onload=one; im.onerror=one; } });
+      setTimeout(go, 5000);
+    })();<\/script>`;
+    w.document.write(`<html><head><title>QR Rondas</title></head><body style="font-family:sans-serif;text-align:center;">${cards}${printScript}</body></html>`);
     w.document.close();
-    setTimeout(() => { w.focus(); w.print(); }, 400);
   };
 
   // One-click: set a checkpoint's coordinates to the station's, so location

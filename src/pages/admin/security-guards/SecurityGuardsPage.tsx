@@ -221,8 +221,9 @@ export default function SecurityGuardsPage() {
     const header = ["name", "email", "phone", "status"];
     const csv = [header.join(",")]
       .concat(rows.map((r) => `${escapeCsv(r.name)},${escapeCsv(r.email)},${escapeCsv(r.phone)},${escapeCsv(r.status)}`))
-      .join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      .join("\r\n");
+    // Prepend UTF-8 BOM so Excel renders accented guard names (ñ/á/é) correctly.
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -363,8 +364,10 @@ export default function SecurityGuardsPage() {
     let mounted = true;
     setLoading(true);
     setError(null);
-    // Always load all guards — status tabs filter client-side for instant switching without refetch
-    const params: Record<string, any> = { "filter[status]": "ALL,archived" };
+    // Always load all guards — status tabs filter client-side for instant switching
+    // without refetch. Explicit high limit so a backend default page size can't
+    // silently truncate the list (and the client-side export that reads it).
+    const params: Record<string, any> = { "filter[status]": "ALL,archived", limit: 100000 };
 
     // Additional filters — only client + site are backend-supported (resolved
     // via guardAssignment). Category/skills/department have no guard-level data.

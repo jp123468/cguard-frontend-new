@@ -819,14 +819,21 @@ export default function DispatcherPage() {
         if (!tenantId) { toast.error(t('dispatcher.tenantUnavailable')); return; }
         const api = (await import('@/lib/api')).default;
 
-        // Fetch full details for each selected id to ensure all fields are present
-        const promises = selectedIds.map((id) => api.get(`/tenant/${tenantId}/request/${id}`));
-        const responses = await Promise.all(promises);
+        // Fetch full details for each selected id to ensure all fields are present.
+        // Batched (not one big Promise.all) so selecting many tickets doesn't fire
+        // hundreds of simultaneous requests and trip the per-token rate limiter.
+        const BATCH = 8;
+        const responses: any[] = [];
+        for (let i = 0; i < selectedIds.length; i += BATCH) {
+          const chunk = selectedIds.slice(i, i + BATCH);
+          const settled = await Promise.all(chunk.map((id) => api.get(`/tenant/${tenantId}/request/${id}`)));
+          responses.push(...settled);
+        }
         const records = responses.map((r) => (r && r.data ? r.data : r));
 
         const rows = records.map((r: any) => ({
           'Client Name': getClientDisplay(r),
-          'Post Site': r.site?.name || r.site || '',
+          'Post Site': r.site?.name || r.site?.companyName || (typeof r.site === 'string' ? r.site : '') || '',
           'Caller Type': r.callerType || '',
           'Caller Name': r.callerName || (r.guardName && (r.guardName.fullName || r.guardName.name)) || '',
           'Incident Type': (r.incidentType && (r.incidentType.name || r.incidentType)) || r.incidentTypeId || '',
@@ -1441,19 +1448,20 @@ export default function DispatcherPage() {
               <tr className="border-b">
                 <th className="px-4 py-3">
                   <Checkbox
-                    checked={visibleRows.length > 0 && visibleRows.every((r) => selectedIds.includes(r.id))}
+                    // Selects ALL filtered tickets (every loaded row), not just the
+                    // current page — otherwise Export/Print silently ships only the
+                    // ≤50 visible rows when the user believes they picked everything.
+                    checked={rows.length > 0 && rows.every((r) => selectedIds.includes(r.id))}
                     onCheckedChange={(v) => {
                       const checked = Boolean(v);
                       if (checked) {
-                        // add all visible row ids
                         setSelectedIds((prev) => {
                           const ids = new Set(prev);
-                          visibleRows.forEach((r) => ids.add(r.id));
+                          rows.forEach((r) => ids.add(r.id));
                           return Array.from(ids);
                         });
                       } else {
-                        // remove visible row ids
-                        setSelectedIds((prev) => prev.filter((id) => !visibleRows.some((r) => r.id === id)));
+                        setSelectedIds((prev) => prev.filter((id) => !rows.some((r) => r.id === id)));
                       }
                     }}
                   />

@@ -1,4 +1,4 @@
-import { useMemo, useState, FormEvent, useEffect } from "react";
+import { useMemo, useState, FormEvent, useEffect, useCallback } from "react";
 import { clientDisplayName } from '@/lib/clientName';
 import { useAsyncList } from "@/hooks/useAsyncList";
 import AppLayout from "@/layouts/app-layout";
@@ -258,13 +258,36 @@ export default function Visitors() {
         setSelectedLogs((s) => ({ ...s, [id]: !s[id] }));
     };
 
-    const selectAllLogs = (checked: boolean) => {
-        if (checked) {
-            const map: Record<string, boolean> = {};
-            logs.forEach((l) => (map[l.id] = true));
-            setSelectedLogs(map);
-        } else {
+    const selectAllLogs = async (checked: boolean) => {
+        if (!checked) {
             setSelectedLogs({});
+            return;
+        }
+        // Select across ALL pages of the filtered set, not just the visible page,
+        // so a subsequent export isn't silently truncated to the current page.
+        const map: Record<string, boolean> = {};
+        try {
+            const all = logsCount > logs.length ? await fetchAllLogs() : logs;
+            all.forEach((l) => (map[l.id] = true));
+        } catch (e) {
+            console.error('select-all fetch failed', e);
+            logs.forEach((l) => (map[l.id] = true));
+        }
+        setSelectedLogs(map);
+    };
+
+    // Resolves selected ids to full row objects. When the selection spans pages
+    // (ids not all present in the current page), fetch the full filtered set.
+    const resolveExportRows = async (ids: string[]): Promise<VisitLogRow[]> => {
+        const fromPage = logs.filter((r) => ids.includes(String(r.id)));
+        if (fromPage.length === ids.length || logsCount <= logs.length) return fromPage;
+        try {
+            const all = await fetchAllLogs();
+            return all.filter((r) => ids.includes(String(r.id)));
+        } catch (e) {
+            console.error('export full-set fetch failed', e);
+            toast.error('No se pudo obtener el listado completo; se exportó la página actual');
+            return fromPage;
         }
     };
 
@@ -363,14 +386,14 @@ export default function Visitors() {
     };
 
 
-    const handleExportCSV = () => {
+    const handleExportCSV = async () => {
         const ids = Object.keys(selectedLogs).filter((k) => selectedLogs[k]);
         if (!ids || ids.length === 0) {
             toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
             return;
         }
 
-        const rowsToExport = logs.filter((r) => ids.includes(String(r.id)));
+        const rowsToExport = await resolveExportRows(ids);
         if (!rowsToExport.length) {
             toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
             return;
@@ -392,9 +415,10 @@ export default function Visitors() {
 
         const csv = [keys.join(',')]
             .concat(rowsCsv.map((r) => keys.map((k) => `"${String((r as Record<string, unknown>)[k] ?? '').replace(/"/g, '""')}"`).join(',')))
-            .join('\n');
+            .join('\r\n');
 
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        // Prepend UTF-8 BOM so Excel renders accented Spanish text (ñ/á/é) correctly.
+        const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -403,14 +427,14 @@ export default function Visitors() {
         URL.revokeObjectURL(url);
     };
 
-    const handleExportExcel = () => {
+    const handleExportExcel = async () => {
         const ids = Object.keys(selectedLogs).filter((k) => selectedLogs[k]);
         if (!ids || ids.length === 0) {
             toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
             return;
         }
 
-        const rowsToExport = logs.filter((r) => ids.includes(String(r.id)));
+        const rowsToExport = await resolveExportRows(ids);
         if (!rowsToExport.length) {
             toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
             return;
@@ -518,14 +542,14 @@ export default function Visitors() {
         }
     };
 
-    const handleExportPDF = () => {
+    const handleExportPDF = async () => {
         const ids = Object.keys(selectedLogs).filter((k) => selectedLogs[k]);
         if (!ids || ids.length === 0) {
             toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
             return;
         }
 
-        const rowsToExport = logs.filter((r) => ids.includes(String(r.id)));
+        const rowsToExport = await resolveExportRows(ids);
         if (!rowsToExport.length) {
             toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
             return;
@@ -548,14 +572,14 @@ export default function Visitors() {
         });
     };
 
-    const handlePrintSelected = () => {
+    const handlePrintSelected = async () => {
         const ids = Object.keys(selectedLogs).filter((k) => selectedLogs[k]);
         if (!ids || ids.length === 0) {
             toast.error(t('visitantes.notprint') || 'No hay registros seleccionados para imprimir');
             return;
         }
 
-        const rowsToPrint = logs.filter((r) => ids.includes(String(r.id)));
+        const rowsToPrint = await resolveExportRows(ids);
         if (!rowsToPrint.length) {
             toast.error(t('visitantes.notprint') || 'No hay registros seleccionados para imprimir');
             return;
@@ -569,21 +593,33 @@ export default function Visitors() {
 
     // Shared async-list hook: debounced (one request per typing burst),
     // latest-response-wins, unmount-safe. refetch() reloads after a mutation.
+    // Shared by the paginated list query and the full-dataset export fetch so
+    // both always scope to the same active filters.
+    const buildLogsFilter = useCallback((): VisitorLogFilters & { query?: string } => {
+        const f: VisitorLogFilters & { query?: string } = {};
+        if (logsSearch) {
+            const s = String(logsSearch).trim();
+            if (/^[0-9]+$/.test(s)) f.idNumber = s;
+            else if (s) f.query = s;
+        }
+        if (filters.client) f.clientId = filters.client;
+        if (filters.site) f.postSiteId = filters.site;
+        if (filters.guard) f.guardId = filters.guard;
+        if (filters.placeType) f.placeType = filters.placeType;
+        if (filters.tag) f.tag = filters.tag;
+        if (typeof filters.archived === 'boolean') f.archived = filters.archived;
+        return f;
+    }, [logsSearch, filters.client, filters.site, filters.guard, filters.placeType, filters.tag, filters.archived]);
+
+    // Fetches the FULL filtered log set (all pages) for select-all / export.
+    const fetchAllLogs = useCallback(async (): Promise<VisitLogRow[]> => {
+        const resp = await visitorLogService.list(buildLogsFilter(), { limit: 10000, offset: 0 });
+        return (resp?.rows as VisitLogRow[]) || [];
+    }, [buildLogsFilter]);
+
     const { data: logsData, loading: logsLoading, refetch: fetchLogs } = useAsyncList(
         () => {
-            const f: VisitorLogFilters & { query?: string } = {};
-            if (logsSearch) {
-                const s = String(logsSearch).trim();
-                if (/^[0-9]+$/.test(s)) f.idNumber = s;
-                else if (s) f.query = s;
-            }
-            if (filters.client) f.clientId = filters.client;
-            if (filters.site) f.postSiteId = filters.site;
-            if (filters.guard) f.guardId = filters.guard;
-            if (filters.placeType) f.placeType = filters.placeType;
-            if (filters.tag) f.tag = filters.tag;
-            if (typeof filters.archived === 'boolean') f.archived = filters.archived;
-            return visitorLogService.list(f, { limit: logsLimit, offset: logsOffset });
+            return visitorLogService.list(buildLogsFilter(), { limit: logsLimit, offset: logsOffset });
         },
         [
             logsSearch, logsLimit, logsOffset,

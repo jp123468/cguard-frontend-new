@@ -173,9 +173,10 @@ export default function NominaPayrollSummary() {
         .map((v) => `"${String(v).replace(/"/g, '""')}"`)
         .join(","),
     );
-    const csv = [headers.join(","), ...lines].join("\n");
+    const csv = [headers.join(","), ...lines].join("\r\n");
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    // Prepend UTF-8 BOM so Excel renders accented guard names (ñ/á/é) correctly.
+    link.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
     link.download = `nomina-${from}_${to}.csv`;
     link.click();
   };

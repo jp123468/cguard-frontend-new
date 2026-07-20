@@ -71,10 +71,14 @@ export default function TrackingHistoryPage() {
 
   const exportCsv = () => {
     if (!points.length) return;
+    const csvCell = (v: unknown) => {
+      const s = v === null || v === undefined ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
     const header = "Fecha/Hora,Latitud,Longitud,Velocidad(m/s),Precisión(m),Batería(%)";
     const body = points
-      .map((p) => [new Date(p.at).toLocaleString("es-EC"), p.lat, p.lng, p.speed ?? "", p.accuracy ?? "", p.battery ?? ""].join(","))
-      .join("\n");
+      .map((p) => [new Date(p.at).toLocaleString("es-EC"), p.lat, p.lng, p.speed ?? "", p.accuracy ?? "", p.battery ?? ""].map(csvCell).join(","))
+      .join("\r\n");
     const blob = new Blob(["﻿" + header + "\n" + body], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

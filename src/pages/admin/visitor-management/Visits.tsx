@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, FormEvent } from "react";
+import { useMemo, useState, useEffect, useCallback, FormEvent } from "react";
 import { useAsyncList } from "@/hooks/useAsyncList";
 import { Search, Filter as FilterIcon, MoreVertical, FileDown, FileSpreadsheet, Printer, ClipboardList } from "lucide-react";
 import { PageContainer, PageHeader, Section, EmptyState } from "@/components/kit";
@@ -203,22 +203,29 @@ export default function Visits() {
 
     // Load via the shared async-list hook: debounced (one request per typing
     // burst, not per keystroke), latest-response-wins (no stale overwrite), and
+    // Builds the active filter object — shared by the paginated list query and
+    // the full-dataset export fetch so both always agree on scope.
+    const buildFilter = useCallback((): VisitorLogFilters & { query?: string } => {
+        const f: VisitorLogFilters & { query?: string } = {};
+        const s = search.trim();
+        if (s) {
+            if (/^[0-9]+$/.test(s)) f.idNumber = s;
+            else f.query = s;
+        }
+        if (filters.clientId) f.clientId = filters.clientId;
+        if (filters.siteId) f.postSiteId = filters.siteId;
+        if (filters.guardId) f.guardId = filters.guardId;
+        f.archived = filters.showArchived;
+        const range = buildDateRange();
+        if (range) f.visitDateRange = range;
+        return f;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [search, filters.clientId, filters.siteId, filters.guardId, filters.fromDate, filters.fromTime, filters.toDate, filters.toTime, filters.showArchived]);
+
     // unmount-safe. refetch() reloads after a mutation.
     const { data, loading, refetch } = useAsyncList(
         () => {
-            const f: VisitorLogFilters & { query?: string } = {};
-            const s = search.trim();
-            if (s) {
-                if (/^[0-9]+$/.test(s)) f.idNumber = s;
-                else f.query = s;
-            }
-            if (filters.clientId) f.clientId = filters.clientId;
-            if (filters.siteId) f.postSiteId = filters.siteId;
-            if (filters.guardId) f.guardId = filters.guardId;
-            f.archived = filters.showArchived;
-            const range = buildDateRange();
-            if (range) f.visitDateRange = range;
-            return visitorLogService.list(f, { limit, offset });
+            return visitorLogService.list(buildFilter(), { limit, offset });
         },
         [
             search, offset, limit,
@@ -255,9 +262,21 @@ export default function Visits() {
         return rows.filter((r) => ids.includes(String(r.id)));
     };
 
-    const exportSubjects = () => {
+    // When rows are explicitly selected, export exactly those. Otherwise export
+    // the FULL filtered dataset from the server — not just the current page, which
+    // would silently drop every record beyond the first page.
+    const exportSubjects = async (): Promise<VisitLogRow[]> => {
         const sel = selectedRows();
-        return sel.length ? sel : rows;
+        if (sel.length) return sel;
+        if (count <= rows.length) return rows;
+        try {
+            const resp = await visitorLogService.list(buildFilter(), { limit: Math.max(count, 10000), offset: 0 });
+            return (resp?.rows as VisitLogRow[]) || rows;
+        } catch (e) {
+            console.error("Error fetching full export set", e);
+            toast.error("No se pudo obtener el listado completo; se exportó la página actual");
+            return rows;
+        }
     };
 
     const handleDeleteSelected = async () => {
@@ -305,8 +324,8 @@ export default function Visits() {
         "Puesto de seguridad": getPostSiteLabel(r) === "-" ? "" : getPostSiteLabel(r),
     });
 
-    const handleExportExcel = () => {
-        const subjects = exportSubjects();
+    const handleExportExcel = async () => {
+        const subjects = await exportSubjects();
         if (!subjects.length) {
             toast.error("No hay registros para exportar");
             return;
@@ -332,8 +351,8 @@ export default function Visits() {
         }
     };
 
-    const buildAndPrint = (title: string) => {
-        const subjects = exportSubjects();
+    const buildAndPrint = async (title: string) => {
+        const subjects = await exportSubjects();
         if (!subjects.length) {
             toast.error("No hay registros para imprimir");
             return;
