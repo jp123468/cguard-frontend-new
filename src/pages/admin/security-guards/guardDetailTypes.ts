@@ -196,10 +196,15 @@ export interface ScheduleDay {
   weekend?: boolean;
 }
 
-/** One cell (day/night/rest) in a schedule row. */
+/** One cell (day/night/rest/gap/none) in a schedule row. */
 export interface ScheduleCell {
   date: string;
   status: string;
+  /** Real turno window in tenant time, e.g. "07:00 - 19:00". */
+  hours?: string | null;
+  /** Who actually covers the day (may be a sacafranco, not the titular). */
+  guardName?: string | null;
+  covering?: boolean;
 }
 
 /** One station/position row in the schedule snapshot. */

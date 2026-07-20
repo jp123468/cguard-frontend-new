@@ -7,11 +7,14 @@ import securityGuardService from '@/lib/api/securityGuardService';
 import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import type { ScheduleSnapshot } from '../../guardDetailTypes';
 
-const CELL: Record<string, { label: string; cls: string }> = {
-  day: { label: 'D', cls: 'bg-sky-500/15 text-sky-700 dark:text-sky-300' },
-  night: { label: 'N', cls: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300' },
-  rest: { label: 'L', cls: 'bg-muted text-muted-foreground' },
-  none: { label: '·', cls: 'text-muted-foreground/40' },
+// Must stay identical to the client ScheduleCard legend — same engine
+// (scheduleGridService) feeds both, so the codes must read the same too.
+const CELL: Record<string, { label: string; cls: string; title: string }> = {
+  day: { label: 'D', cls: 'bg-sky-500/15 text-sky-700 dark:text-sky-300', title: 'Turno de día' },
+  night: { label: 'N', cls: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300', title: 'Turno de noche' },
+  rest: { label: 'L', cls: 'bg-muted text-muted-foreground', title: 'Libre' },
+  gap: { label: '!', cls: 'bg-red-500/15 text-red-700 dark:text-red-300', title: 'Sin turno generado (hueco de cobertura)' },
+  none: { label: '·', cls: 'text-muted-foreground/40', title: 'Sin rotación configurada' },
 };
 
 const ymd = (d: Date) =>
@@ -105,7 +108,16 @@ export default function GuardHorarioPage() {
                           </td>
                           {(r.cells || []).map((c) => {
                             const m = CELL[c.status] || CELL.none;
-                            return <td key={c.date} className="border-b p-0.5 text-center"><span className={`grid h-7 w-full min-w-[26px] place-items-center rounded text-[11px] font-bold ${m.cls}`}>{m.label}</span></td>;
+                            const tip = [m.title, c.hours, c.covering && c.guardName ? `Cubre: ${c.guardName}` : null]
+                              .filter(Boolean).join(' · ');
+                            return (
+                              <td key={c.date} className="border-b p-0.5 text-center">
+                                <span title={tip} className={`relative grid h-7 w-full min-w-[26px] place-items-center rounded text-[11px] font-bold ${m.cls}`}>
+                                  {m.label}
+                                  {c.covering && <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-amber-500" />}
+                                </span>
+                              </td>
+                            );
                           })}
                         </tr>
                       ))}
@@ -116,6 +128,8 @@ export default function GuardHorarioPage() {
                   <span className="inline-flex items-center gap-1.5"><span className="grid h-4 w-4 place-items-center rounded bg-sky-500/15 text-[10px] font-bold text-sky-700">D</span> Día</span>
                   <span className="inline-flex items-center gap-1.5"><span className="grid h-4 w-4 place-items-center rounded bg-indigo-500/15 text-[10px] font-bold text-indigo-700">N</span> Noche</span>
                   <span className="inline-flex items-center gap-1.5"><span className="grid h-4 w-4 place-items-center rounded bg-muted text-[10px] font-bold text-muted-foreground">L</span> Libre</span>
+                  <span className="inline-flex items-center gap-1.5"><span className="grid h-4 w-4 place-items-center rounded bg-red-500/15 text-[10px] font-bold text-red-700">!</span> Sin turno generado</span>
+                  <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Cubre otro vigilante</span>
                   <span className="ml-auto">La rotación se configura en la estación.</span>
                 </div>
               </>
