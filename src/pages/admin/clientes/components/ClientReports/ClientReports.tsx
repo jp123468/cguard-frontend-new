@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
   TrendingUp, TrendingDown, Search, AlertTriangle, Route as RouteIcon, Users, MapPin, Clock,
-  ShieldCheck, FileBarChart, CalendarClock, Plus, Trash2, Download, RefreshCw, FileText,
+  ShieldCheck, FileBarChart, CalendarClock, Plus, Trash2, Download, RefreshCw, FileText, UserCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -48,7 +48,7 @@ interface ReportsData {
 
 const TONE_HEX: Record<string, string> = { red: '#ef4444', green: '#16a34a', blue: '#2563eb', violet: '#7c3aed', orange: '#f59e0b' };
 const TYPE_COLORS = ['#2563eb', '#06b6d4', '#f59e0b', '#f97316', '#ef4444', '#7c3aed', '#16a34a'];
-const QUICK_ICON: Record<string, LucideIcon> = { incidents: AlertTriangle, rounds: RouteIcon, attendance: Users, coverage: MapPin, 'guard-activity': Users };
+const QUICK_ICON: Record<string, LucideIcon> = { incidents: AlertTriangle, rounds: RouteIcon, visitors: UserCheck, attendance: Users, coverage: MapPin, 'guard-activity': Users };
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const fmtDT = (iso: string) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
 const fmtD = (iso: string) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric' }); };
@@ -327,7 +327,7 @@ export default function ClientReports({ client }: { client: Client & { companyNa
           <div><label className="mb-1 block text-xs font-medium text-muted-foreground">Nombre</label><input className={inputCls} placeholder="Informe semanal de operaciones" value={schedForm.name} onChange={(e) => setSchedForm({ ...schedForm, name: e.target.value })} /></div>
           <div><label className="mb-1 block text-xs font-medium text-muted-foreground">Reporte</label>
             <select className={inputCls} value={schedForm.type} onChange={(e) => setSchedForm({ ...schedForm, type: e.target.value })}>
-              <option value="incidents">Reporte de incidentes</option><option value="rounds">Reporte de rondas</option><option value="attendance">Reporte de asistencia</option><option value="coverage">Cumplimiento de estaciones</option><option value="guard-activity">Actividad por guardia</option>
+              <option value="incidents">Reporte de incidentes</option><option value="rounds">Reporte de rondas</option><option value="visitors">Reporte de visitas</option><option value="attendance">Reporte de asistencia</option><option value="coverage">Cumplimiento de estaciones</option><option value="guard-activity">Actividad por guardia</option>
             </select>
           </div>
           <div><label className="mb-1 block text-xs font-medium text-muted-foreground">Frecuencia</label>
