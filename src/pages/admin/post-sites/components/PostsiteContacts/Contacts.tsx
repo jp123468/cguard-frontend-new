@@ -8,10 +8,10 @@ import { clientService } from '@/lib/api/clientService';
 import { postSiteService } from '@/lib/api/postSiteService';
 import { PhoneInput } from "@/components/phone/PhoneInput";
 import { toast } from "sonner";
-import { EllipsisVertical, Pencil, Trash, Plus, X, Users } from 'lucide-react';
+import { EllipsisVertical, Pencil, Trash, Plus, Users } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { Button } from '@/components/ui/button';
-import { Section, EmptyState } from '@/components/kit';
+import { Section, EmptyState, Modal } from '@/components/kit';
 import type { PostSite } from '@/types';
 
 
@@ -447,88 +447,76 @@ export default function PostSiteContacts({ site }: { site?: SiteProp }) {
         </div>
       </Section>
 
-      {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center">
-          <div className="absolute inset-0 bg-black opacity-30 z-40" onClick={handleCloseAdd} />
-          <div className="w-full sm:ml-auto sm:w-96 bg-card h-full sm:h-auto shadow-xl p-6 overflow-auto z-50 rounded-t-lg sm:rounded-md" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">{t('clients.contacts.form.AddClientContact') || 'Add Contact to Post Site'}</h3>
-              <button onClick={handleCloseAdd} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+      <Modal
+        open={showAdd}
+        onOpenChange={(o) => { if (!o) handleCloseAdd(); }}
+        title={t('clients.contacts.form.AddClientContact', 'Agregar contacto a la sede')}
+        icon={<Users className="h-5 w-5" />}
+        footer={(
+          <Button onClick={handleAdd} disabled={!canSubmit}>
+            {(form && (form as any).id) ? t('actions.save', 'Guardar') : t('clients.contacts.form.addContact', 'Agregar contacto')}
+          </Button>
+        )}
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Name')}</label>
+            <input className="w-full border rounded-md h-10 px-3" value={form.name || ''} onChange={e => handleChange('name', e.target.value)} />
+            {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
+          </div>
+          <div>
+            <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Email')}</label>
+            <input className="w-full border rounded-md h-10 px-3" value={form.email || ''} onChange={e => handleChange('email', e.target.value)} />
+            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
+          </div>
+          <div>
+            <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Mobile Number')}</label>
+            <div aria-invalid={!!errors.mobile}>
+              <PhoneInput
+                value={form.mobile || ''}
+                onChange={(v) => handleChange('mobile', v)}
+                placeholder={t('clients.contacts.form.mobilePlaceholder', 'ej. +593987654321')}
+              />
             </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Name')}</label>
-                <input className="w-full border rounded-md h-10 px-3" value={form.name || ''} onChange={e => handleChange('name', e.target.value)} />
-                {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
-              </div>
-              <div>
-                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Email')}</label>
-                <input className="w-full border rounded-md h-10 px-3" value={form.email || ''} onChange={e => handleChange('email', e.target.value)} />
-                {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
-              </div>
-              <div>
-                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Mobile Number')}</label>
-                <div aria-invalid={!!errors.mobile}>
-                  <PhoneInput
-                    value={form.mobile || ''}
-                    onChange={(v) => handleChange('mobile', v)}
-                    placeholder={t('clients.contacts.form.mobilePlaceholder', 'e.g. +12015550123')}
-                  />
-                </div>
-                {errors.mobile && <p className="text-xs text-red-600 mt-1">{errors.mobile}</p>}
-              </div>
-              <div>
-                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Description')}</label>
-                <textarea className="w-full border rounded-md px-3 py-2 min-h-[90px]" value={(form as any).description || ''} onChange={e => handleChange('description', e.target.value)} />
-              </div>
-              <div className="flex items-center gap-2">
-                <input id="allowGuard" type="checkbox" className="h-4 w-4" checked={!!(form as any).allowGuard} onChange={e => handleChange('allowGuard', e.target.checked)} />
-                <label htmlFor="allowGuard" className="text-sm text-foreground">{t('clients.contacts.form.checkbox') || 'Allow guard to view contact'}</label>
-              </div>
-            </div>
-
-            <div className="mt-4 sm:mt-6 sticky bottom-0 bg-card pt-4 z-10">
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={handleAdd}
-                  disabled={!canSubmit}
-                  className={`${canSubmit ? 'bg-primary hover:bg-primary' : 'bg-primary/60 cursor-not-allowed opacity-60'} text-primary-foreground transition-colors duration-300 ease-out px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30`}>
-                  {(form && (form as any).id) ? (t('actions.save') || 'Save') : (t('actions.save') || 'Add Contact')}
-                </button>
-              </div>
-            </div>
+            {errors.mobile && <p className="text-xs text-red-600 mt-1">{errors.mobile}</p>}
+          </div>
+          <div>
+            <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Description')}</label>
+            <textarea className="w-full border rounded-md px-3 py-2 min-h-[90px]" value={(form as any).description || ''} onChange={e => handleChange('description', e.target.value)} />
+          </div>
+          <div className="flex items-center gap-2">
+            <input id="allowGuard" type="checkbox" className="h-4 w-4" checked={!!(form as any).allowGuard} onChange={e => handleChange('allowGuard', e.target.checked)} />
+            <label htmlFor="allowGuard" className="text-sm text-foreground">{t('clients.contacts.form.checkbox', 'Permitir que el vigilante vea el contacto')}</label>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {/* Confirm delete modal */}
-      {confirmDeleteIds.length > 0 && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black opacity-30" onClick={() => setConfirmDeleteIds([])} />
-          <div className="bg-card rounded-md shadow-xl p-6 z-70 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-2">{t('clients.contacts.confirmDeleteTitle') || 'Confirm delete'}</h3>
-            <p className="text-sm text-foreground/70 mb-4">{t('clients.contacts.confirmDeleteMessage') || 'Are you sure you want to delete the selected contact(s)?'}</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setConfirmDeleteIds([])} className="px-4 py-2 border rounded-md">{t('actions.cancel') || 'Cancel'}</button>
-              <button
-                  onClick={() => {
-                  const removedCount = confirmDeleteIds.length;
-                  // Persist the deletion via the API (deleteContact handles the
-                  // server call + local state removal). Was local-only before.
-                  confirmDeleteIds.forEach((cid) => deleteContact(cid));
-                  setConfirmDeleteIds([]);
-                  const base = t('clients.contacts.contactDeleted', 'Contacto eliminado');
-                  toast.success(removedCount > 1 ? `${base} (${removedCount})` : base);
-                 }}
-                 className="px-4 py-2 bg-red-600 text-white rounded-md"
-               >
-                 {t('actions.delete') || 'Delete'}
-               </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={confirmDeleteIds.length > 0}
+        onOpenChange={(o) => { if (!o) setConfirmDeleteIds([]); }}
+        title={t('clients.contacts.confirmDeleteTitle', 'Confirmar eliminación')}
+        icon={<Trash className="h-5 w-5" />}
+        size="sm"
+        footer={(
+          <>
+            <Button variant="outline" onClick={() => setConfirmDeleteIds([])}>{t('actions.cancel', 'Cancelar')}</Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                const removedCount = confirmDeleteIds.length;
+                confirmDeleteIds.forEach((cid) => deleteContact(cid));
+                setConfirmDeleteIds([]);
+                const base = t('clients.contacts.contactDeleted', 'Contacto eliminado');
+                toast.success(removedCount > 1 ? `${base} (${removedCount})` : base);
+              }}
+            >
+              {t('actions.delete', 'Eliminar')}
+            </Button>
+          </>
+        )}
+      >
+        <p className="text-sm text-foreground/70">{t('clients.contacts.confirmDeleteMessage', '¿Seguro que deseas eliminar el/los contacto(s) seleccionado(s)?')}</p>
+      </Modal>
     </div>
   );
 }
