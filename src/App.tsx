@@ -184,6 +184,7 @@ const TenantsPage = lazy(() => import("./pages/admin/superadmin/TenantsPage"));
 import RequireGlobalAdmin from "./components/RequireGlobalAdmin";
 
 import { ClientSelectionProvider } from "./contexts/ClientSelectionContext";
+import CoBrowseAgent from "./components/cobrowse/CoBrowseAgent";
 
 function normalizeInviteToken(value: string | null | undefined) {
   return value && value !== 'null' && value !== 'undefined' ? value : undefined;
@@ -239,6 +240,7 @@ export default function App() {
     <LanguageProvider>
       <AuthProvider>
         <ClientSelectionProvider>
+          <CoBrowseAgent />
           <BrowserRouter>
             <Suspense fallback={<div style={{minHeight:"60vh",display:"flex",alignItems:"center",justifyContent:"center"}}><div className="animate-spin" aria-label="Cargando" style={{width:28,height:28,border:"3px solid var(--border,#e5e7eb)",borderTopColor:"var(--primary,#C8860A)",borderRadius:"50%"}}/></div>}>
             <Routes>

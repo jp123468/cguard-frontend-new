@@ -75,6 +75,7 @@
     "react-phone-number-input": "^3.4.14",
     "react-router-dom": "6.23.0",
     "react-select": "^5.10.2",
+    "rrweb": "^2.0.0-alpha.4",
     "socket.io-client": "^4.8.3",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
