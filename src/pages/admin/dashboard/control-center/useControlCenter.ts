@@ -67,6 +67,12 @@ const rows = (r: unknown): unknown[] => {
   return o?.rows ?? o?.data ?? [];
 };
 const coord = (v: unknown): number | null => { const n = parseFloat(v as string); return Number.isFinite(n) ? n : null; };
+const sameDay = (iso?: string): boolean => {
+  if (!iso) return false;
+  const d = new Date(iso); if (Number.isNaN(d.getTime())) return false;
+  const n = new Date();
+  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+};
 
 async function safe<T>(p: Promise<T>, fallback: T): Promise<T> {
   try { return await p; } catch { return fallback; }
@@ -93,7 +99,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
     let alive = true;
     (async () => {
       const gaps: string[] = [];
-      const [stats, active, stationsR, postsR, clientsR, guardsR, incidentsR, openIncR, usersR, tenantR, eventsR] = await Promise.all([
+      const [stats, active, stationsR, postsR, clientsR, guardsR, incidentsR, openIncR, usersR, tenantR, eventsR, opsR] = await Promise.all([
         safe<DashboardStats>(get("/dashboard/stats"), {}),
         safe(securityGuardService.activeLocations(), null as any),
         safe(get("/station?limit=500"), null),
@@ -110,6 +116,9 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
         // this is the real "Actividad reciente". NOTE: the events route is
         // /:tenantId/events (no /tenant/ prefix), so it bypasses the get() helper.
         safe(api.get(`/${tenantId()}/events?limit=40`).then((r) => r.data), null),
+        // Operational "today" counters (incidents today, rondas/tag-scans today) —
+        // computed server-side with correct day boundaries. Route has no /tenant/ prefix.
+        safe(api.get(`/operations/kpis`).then((r) => r.data), null),
       ]);
       if (!alive) return;
 
@@ -177,16 +186,28 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
 
       const lastResponse = responseTrend.length ? responseTrend[responseTrend.length - 1].value : null;
 
+      // Server-computed operational "today" counters (correct day boundaries).
+      const opsBy: Record<string, number> = {};
+      for (const r of (rows(opsR) as Array<{ id?: string; value?: string | number }>)) {
+        if (r && r.id != null) opsBy[String(r.id)] = num(r.value);
+      }
+      const incidentsToday = opsBy.incidents ?? incidentRows.filter((i) => sameDay(i.incidentAt || i.createdAt)).length;
+      const patrolsToday = opsBy.rondas ?? null;
+      // Coverage: on-duty guards vs. active posts — a real, at-a-glance operational health metric.
+      const coverage = counts.stations > 0 ? Math.min(100, Math.round((onDuty / counts.stations) * 100)) : null;
+      const incSpark = incidentsTrend.map((p) => p.value).slice(-8);
+      const respSpark = responseTrend.map((p) => p.value).slice(-8);
+
       // ── KPIs (real where available; fallback flagged otherwise) ──
       const kpis: Kpi[] = [
-        kpi("onDuty", "Vigilantes en servicio", onDuty, { status: onDuty > 0 ? "online" : "offline" }),
-        kpi("stations", "Puestos activos", counts.stations, { status: "patrol" }),
-        kpi("supervisors", "Supervisores", supervisors, { status: "online", hint: "Estado en línea no disponible en backend." , fallback: supervisors === 0 }),
-        kpi("openIncidents", "Incidentes abiertos", openIncidents, { status: openIncidents > 0 ? "incident" : "online" }),
-        kpi("clients", "Clientes", counts.clients, { status: "neutral" }),
-        kpi("response", "Tiempo de respuesta", lastResponse ?? "—", { unit: lastResponse != null ? "min" : "", status: "neutral", trend: trendOf(responseTrend, true), fallback: lastResponse == null, hint: lastResponse == null ? "Sin datos de desempeño." : undefined }),
-        kpi("patrolsToday", "Rondas hoy", "—", { fallback: true, hint: "Falta endpoint de estadísticas de rondas (tourAssignment por estado/fecha)." }),
-        kpi("compliance", "Cumplimiento de turnos", "—", { unit: "%", fallback: true, hint: "Requiere agregación de turnos vs. fichajes." }),
+        kpi("onDuty", "Vigilantes en servicio", onDuty, { status: onDuty > 0 ? "online" : "offline", sub: `de ${counts.guards || onDuty} vigilantes` }),
+        kpi("stations", "Puestos activos", counts.stations, { status: "patrol", sub: `${counts.postSites || 0} sedes` }),
+        kpi("openIncidents", "Incidentes abiertos", openIncidents, { status: openIncidents > 0 ? "incident" : "online", sub: `${incidentsToday} hoy`, spark: incSpark }),
+        kpi("patrolsToday", "Rondas hoy", patrolsToday ?? "—", { status: (patrolsToday ?? 0) > 0 ? "patrol" : "neutral", sub: "puntos escaneados", fallback: patrolsToday == null }),
+        kpi("coverage", "Cobertura de puestos", coverage ?? "—", { unit: coverage != null ? "%" : "", status: coverage == null ? "neutral" : coverage >= 80 ? "online" : coverage >= 50 ? "delayed" : "incident", sub: `${onDuty}/${counts.stations} cubiertos`, fallback: coverage == null }),
+        kpi("supervisors", "Supervisores", supervisors, { status: "online", sub: `equipo de ${counts.team || 0}`, hint: "Estado en línea no disponible en backend.", fallback: supervisors === 0 }),
+        kpi("response", "Tiempo de respuesta", lastResponse ?? "—", { unit: lastResponse != null ? "min" : "", status: "neutral", trend: trendOf(responseTrend, true), spark: respSpark, sub: "promedio mensual", fallback: lastResponse == null, hint: lastResponse == null ? "Sin datos de desempeño." : undefined }),
+        kpi("clients", "Clientes", counts.clients, { status: "neutral", sub: `${counts.stations} puestos` }),
       ];
 
       // Primary feed: recent platform events (the rich activity stream). Falls back

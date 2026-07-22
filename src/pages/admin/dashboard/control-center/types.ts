@@ -32,6 +32,10 @@ export interface Kpi {
   hint?: string;
   /** Destination route when the card is clicked (see ./navigation). */
   to?: string;
+  /** Short contextual line under the value (e.g. "de 24 puestos"). */
+  sub?: string;
+  /** Optional mini series for the trailing sparkline. */
+  spark?: number[];
 }
 
 export interface RevenueSeries {

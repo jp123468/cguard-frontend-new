@@ -17,7 +17,7 @@ export const KPI_ROUTES: Record<string, string> = {
   clients: "/clients",
   response: "/analytics/reporting", // response-time analytics
   patrolsToday: "/reports/site-tour", // rounds / tours report
-  compliance: "/nomina/records", // shift vs. punch compliance
+  coverage: "/live-tracking", // on-duty vs posts → live map
 };
 
 /** System-health tile label → route (tiles without an entry stay static). */

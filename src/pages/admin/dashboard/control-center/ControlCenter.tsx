@@ -1,7 +1,7 @@
 import { useMemo, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  User, Shield, UserCog, AlertTriangle, Building2, Timer, Route, CheckCircle2,
+  User, Shield, UserCog, AlertTriangle, Building2, Timer, Route, ShieldCheck,
   Activity, Cpu, Radio, Map as MapIcon, Maximize2, LayoutDashboard, type LucideIcon,
 } from "lucide-react";
 import { Stagger, EmptyState } from "@/components/kit";
@@ -24,7 +24,7 @@ import { HEALTH_ROUTES } from "./navigation";
 
 const KPI_ICON: Record<string, LucideIcon> = {
   onDuty: User, stations: Shield, supervisors: UserCog, openIncidents: AlertTriangle,
-  clients: Building2, response: Timer, patrolsToday: Route, compliance: CheckCircle2,
+  clients: Building2, response: Timer, patrolsToday: Route, coverage: ShieldCheck,
 };
 
 export default function ControlCenter() {
@@ -83,8 +83,8 @@ export default function ControlCenter() {
             </GlassCard>
           ) : (
             <>
-              {/* KPI grid */}
-              <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
+              {/* KPI grid — wider cards (4-up) so each carries real context. */}
+              <Stagger className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
                 {data.kpis.map((k, i) => (
                   <KpiCard key={k.key} kpi={k} icon={KPI_ICON[k.key]} index={i} />
                 ))}

@@ -143,14 +143,14 @@ function buildBase(): ControlCenterData {
 
   return {
     kpis: [
-      kpi("onDuty", "Vigilantes en servicio", guards.length, { status: "online", trend: 0.09 }),
-      kpi("stations", "Puestos activos", stations.length, { status: "patrol" }),
-      kpi("supervisors", "Supervisores", SUPERVISOR_NAMES.length, { status: "online" }),
-      kpi("openIncidents", "Incidentes abiertos", 1, { status: "incident", trend: -0.33 }),
-      kpi("clients", "Clientes", 14, { status: "neutral", trend: 0.16 }),
-      kpi("response", "Tiempo de respuesta", 4.2, { unit: "min", status: "neutral", trend: -0.12 }),
-      kpi("patrolsToday", "Rondas hoy", 27, { status: "online", trend: 0.21 }),
-      kpi("compliance", "Cumplimiento de turnos", 96, { unit: "%", status: "online", trend: 0.04 }),
+      kpi("onDuty", "Vigilantes en servicio", guards.length, { status: "online", trend: 0.09, sub: `de ${guards.length + 4} vigilantes` }),
+      kpi("stations", "Puestos activos", stations.length, { status: "patrol", sub: "6 sedes" }),
+      kpi("openIncidents", "Incidentes abiertos", 1, { status: "incident", trend: -0.33, sub: "2 hoy", spark: [3, 4, 2, 5, 3, 2, 1, 1] }),
+      kpi("patrolsToday", "Rondas hoy", 27, { status: "patrol", trend: 0.21, sub: "puntos escaneados" }),
+      kpi("coverage", "Cobertura de puestos", 92, { unit: "%", status: "online", sub: `${guards.length}/${stations.length} cubiertos` }),
+      kpi("supervisors", "Supervisores", SUPERVISOR_NAMES.length, { status: "online", sub: "equipo de 18" }),
+      kpi("response", "Tiempo de respuesta", 4.2, { unit: "min", status: "neutral", trend: -0.12, sub: "promedio mensual", spark: [6.1, 5.4, 5.8, 4.9, 4.6, 4.4, 4.5, 4.2] }),
+      kpi("clients", "Clientes", 14, { status: "neutral", trend: 0.16, sub: `${stations.length} puestos` }),
     ],
     entities: [tenant, ...stations, ...guards],
     revenue: buildRevenue(),
