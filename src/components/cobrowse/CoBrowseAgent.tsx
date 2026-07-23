@@ -14,7 +14,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { getAuthToken } from '@/lib/api';
-import { Eye } from 'lucide-react';
+import { Eye, MousePointer2, Hand } from 'lucide-react';
 
 const SOCKET_PATH = '/api/socket.io';
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) || '';
@@ -28,10 +28,22 @@ function socketOrigin(): string {
 
 export default function CoBrowseAgent() {
   const [watchedBy, setWatchedBy] = useState<string | null>(null);
+  // Shared control: who currently drives (null = the tenant), and the support
+  // agent's live cursor position so the tenant sees where they're pointing.
+  const [controller, setController] = useState<string | null>(null);
+  const [cursor, setCursor] = useState<{ x: number; y: number; visible: boolean }>({ x: 0, y: 0, visible: false });
+  const turnRef = useRef<'tenant' | 'support'>('tenant');
   const socketRef = useRef<Socket | null>(null);
   const stopRecordRef = useRef<null | (() => void)>(null);
   const bufferRef = useRef<any[]>([]);
   const flushTimerRef = useRef<any>(null);
+
+  // Tenant reclaims control from support.
+  const reclaimControl = () => {
+    turnRef.current = 'tenant';
+    setController(null);
+    socketRef.current?.emit('cobrowse:turn', { holder: 'tenant' });
+  };
 
   useEffect(() => {
     let disposed = false;
@@ -50,6 +62,37 @@ export default function CoBrowseAgent() {
       stopRecordRef.current = null;
       if (flushTimerRef.current) { clearInterval(flushTimerRef.current); flushTimerRef.current = null; }
       bufferRef.current = [];
+    };
+
+    // Support's cursor / click / scroll, relayed from the superadmin viewer.
+    // Coordinates are normalized (0..1) against the viewport so they map across
+    // the different window sizes. The cursor always shows; clicks/scrolls only
+    // take effect while support holds the turn (turnRef === 'support').
+    const executeControl = (payload: { by?: string; event?: any } = {}) => {
+      const ev = payload.event;
+      if (!ev) return;
+      const x = Math.round((ev.nx ?? 0) * window.innerWidth);
+      const y = Math.round((ev.ny ?? 0) * window.innerHeight);
+      if (ev.kind === 'cursor') { setCursor({ x, y, visible: true }); return; }
+      if (turnRef.current !== 'support') return;
+      if (ev.kind === 'scroll') {
+        try { window.scrollBy({ top: ev.dy || 0, left: ev.dx || 0 }); } catch { /* ignore */ }
+        return;
+      }
+      if (ev.kind === 'click') {
+        setCursor({ x, y, visible: true });
+        try {
+          const el = document.elementFromPoint(x, y) as HTMLElement | null;
+          if (el) {
+            el.focus?.();
+            const opts: any = { bubbles: true, cancelable: true, view: window, clientX: x, clientY: y };
+            el.dispatchEvent(new MouseEvent('mousedown', opts));
+            el.dispatchEvent(new MouseEvent('mouseup', opts));
+            el.dispatchEvent(new MouseEvent('click', opts));
+            el.click?.();
+          }
+        } catch { /* ignore */ }
+      }
     };
 
     const startRecording = async (fresh: boolean) => {
@@ -122,6 +165,16 @@ export default function CoBrowseAgent() {
       socket.on('cobrowse:stop', () => {
         setWatchedBy(null);
         stopRecording();
+        turnRef.current = 'tenant';
+        setController(null);
+        setCursor((c) => ({ ...c, visible: false }));
+      });
+      // Shared-control channel from the superadmin.
+      socket.on('cobrowse:control', executeControl);
+      socket.on('cobrowse:turn', (p: { holder?: string; by?: string } = {}) => {
+        const holder = p.holder === 'support' ? 'support' : 'tenant';
+        turnRef.current = holder;
+        setController(holder === 'support' ? (p.by || 'Soporte') : null);
       });
       return true;
     };
@@ -145,18 +198,44 @@ export default function CoBrowseAgent() {
 
   if (!watchedBy) return null;
 
+  const controlling = !!controller;
+
   return (
-    <div
-      role="status"
-      className="fixed inset-x-0 top-0 z-[9999] flex items-center justify-center gap-2 bg-amber-500 px-3 py-1.5 text-center text-xs font-semibold text-black shadow-md"
-      style={{ paddingTop: 'max(6px, env(safe-area-inset-top))' }}
-    >
-      <span className="relative flex h-2.5 w-2.5">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-600 opacity-75" />
-        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-600" />
-      </span>
-      <Eye className="h-3.5 w-3.5" />
-      Soporte ({watchedBy}) está viendo tu sesión en vivo para ayudarte.
-    </div>
+    <>
+      {/* Awareness banner — amber while watched, red while support is controlling. */}
+      <div
+        role="status"
+        className={`fixed inset-x-0 top-0 z-[100000] flex items-center justify-center gap-2 px-3 py-1.5 text-center text-xs font-semibold shadow-md ${controlling ? 'bg-red-600 text-white' : 'bg-amber-500 text-black'}`}
+        style={{ paddingTop: 'max(6px, env(safe-area-inset-top))' }}
+      >
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
+        </span>
+        {controlling ? <Hand className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+        {controlling
+          ? `Soporte (${controller}) está controlando tu pantalla.`
+          : `Soporte (${watchedBy}) está viendo tu sesión en vivo para ayudarte.`}
+        {controlling && (
+          <button
+            onClick={reclaimControl}
+            className="ml-2 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-bold text-red-700 hover:bg-white"
+          >
+            Recuperar control
+          </button>
+        )}
+      </div>
+
+      {/* Support's live cursor. */}
+      {cursor.visible && (
+        <div
+          className="pointer-events-none fixed z-[100001] flex items-center gap-1"
+          style={{ left: cursor.x, top: cursor.y, transform: 'translate(-2px, -2px)' }}
+        >
+          <MousePointer2 className="h-5 w-5 fill-amber-400 text-amber-600 drop-shadow" />
+          <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-black shadow">Soporte</span>
+        </div>
+      )}
+    </>
   );
 }
