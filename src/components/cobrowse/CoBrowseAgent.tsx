@@ -66,7 +66,14 @@ export default function CoBrowseAgent() {
       }
       try {
         const rr: any = await import('rrweb');
-        const stop = rr.record({
+        const rec = rr?.record || rr?.default?.record || rr?.default;
+        // eslint-disable-next-line no-console
+        console.log('[cobrowse] rrweb loaded, record is', typeof rec);
+        if (typeof rec !== 'function') {
+          socket.emit('cobrowse:ack', { stage: 'no-record-export' });
+          return;
+        }
+        const stop = rec({
           emit(event: any) {
             bufferRef.current.push(event);
             if (bufferRef.current.length >= 40) flush();
@@ -78,10 +85,14 @@ export default function CoBrowseAgent() {
         });
         stopRecordRef.current = typeof stop === 'function' ? stop : null;
         flushTimerRef.current = setInterval(flush, 250);
+        socket.emit('cobrowse:ack', { stage: 'recording' });
+        // eslint-disable-next-line no-console
+        console.log('[cobrowse] recording started');
       } catch (e) {
         // rrweb failed to load — fail closed (no stream), never break the CRM.
         // eslint-disable-next-line no-console
         console.warn('[cobrowse] recorder unavailable', e);
+        socket.emit('cobrowse:ack', { stage: 'error' });
       }
     };
 
@@ -93,6 +104,9 @@ export default function CoBrowseAgent() {
     };
 
     socket.on('cobrowse:start', (p: { by?: string; fresh?: boolean } = {}) => {
+      // eslint-disable-next-line no-console
+      console.log('[cobrowse] start received from', p.by);
+      socket.emit('cobrowse:ack', { stage: 'received' });
       setWatchedBy(p.by || 'Soporte');
       startRecording(!!p.fresh);
     });
