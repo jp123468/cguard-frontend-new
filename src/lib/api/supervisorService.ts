@@ -94,4 +94,10 @@ export const supervisorService = {
   // Generated upcoming schedule (rotation plan) for the supervisor.
   getSchedule: (userId: string): Promise<{ rows: SupervisorScheduleRow[]; position: SupervisorScheduleRow['position'] }> =>
     ApiService.get(`/tenant/${tid()}/supervisors/${userId}/schedule`),
+  // (Re)send the app-access invitation so the supervisor can create their account.
+  resendInvite: (userId: string): Promise<{ resent: boolean; emailed: boolean; email: string; link: string }> =>
+    ApiService.post(`/tenant/${tid()}/supervisors/${userId}/resend-invite`, {}),
+  // Admin-triggered password reset (emails a reset link + pushes to devices).
+  sendPasswordReset: (userId: string): Promise<{ success: boolean; email: string; emailed: boolean; pushed: number; link: string }> =>
+    ApiService.post(`/tenant/${tid()}/supervisors/${userId}/send-password-reset`, {}),
 };

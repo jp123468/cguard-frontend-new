@@ -8,7 +8,11 @@ import { toast } from "sonner";
 import {
   ShieldCheck, Plus, Radar, UserPlus, Car, MapPin, Users, Clock,
   LayoutGrid, List as ListIcon, Search, Mail, Phone,
+  MoreVertical, Send, KeyRound, Eye,
 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   PageContainer, PageHeader, Section, SkeletonCards, StatCard, StatusBadge, Modal, Stagger,
 } from "@/components/kit";
@@ -107,6 +111,50 @@ export default function SupervisorsPage() {
     }
   };
 
+  // (Re)send the supervisor app-access invitation so they can create their account.
+  const resendInvite = async (s: Supervisor) => {
+    try {
+      const r = await supervisorService.resendInvite(s.id);
+      try { if (r?.link) await navigator.clipboard.writeText(r.link); } catch { /* clipboard optional */ }
+      toast.success(r?.emailed ? "Acceso a la app enviado por correo y enlace copiado" : "Enlace de acceso copiado al portapapeles");
+    } catch (e: any) {
+      toast.error(e?.message || "No se pudo enviar el acceso a la app");
+    }
+  };
+
+  const sendPasswordReset = async (s: Supervisor) => {
+    try {
+      const r = await supervisorService.sendPasswordReset(s.id);
+      try { if (r?.link) await navigator.clipboard.writeText(r.link); } catch { /* clipboard optional */ }
+      const via = [r?.emailed && "correo", r?.pushed && "push"].filter(Boolean).join(" + ");
+      toast.success(`Enlace de restablecimiento ${via ? `enviado por ${via} y ` : ""}copiado al portapapeles`);
+    } catch (e: any) {
+      toast.error(e?.message || "No se pudo restablecer la contraseña");
+    }
+  };
+
+  // Per-row quick actions (3-dot menu) — shared by the list and cards views.
+  const rowActions = (s: Supervisor) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Acciones" onClick={(e) => e.stopPropagation()}>
+          <MoreVertical className="h-5 w-5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+        <DropdownMenuItem onClick={() => navigate(`/supervisors/${s.id}`)}>
+          <Eye className="mr-2 h-4 w-4" /> Ver detalles
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => resendInvite(s)}>
+          <Send className="mr-2 h-4 w-4" /> Enviar acceso a la app
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => sendPasswordReset(s)}>
+          <KeyRound className="mr-2 h-4 w-4" /> Restablecer contraseña
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   const columns: Column<Supervisor & { id: string }>[] = [
     { key: "fullName", header: "Nombre", render: (_v, r) => <span className="font-medium text-foreground">{r.fullName}</span> },
     { key: "zone", header: "Zona", render: (_v, r) => <span className="text-xs text-muted-foreground">{r.zone || "—"}</span> },
@@ -118,6 +166,7 @@ export default function SupervisorsPage() {
           : <StatusBadge tone="slate" dot={false}>Fuera</StatusBadge>,
     },
     { key: "email", header: "Correo", render: (_v, r) => <span className="text-xs text-muted-foreground">{r.email || "—"}</span> },
+    { key: "actions", header: "", render: (_v, r) => <div className="text-right">{rowActions(r)}</div> },
   ];
 
   return (
@@ -200,10 +249,13 @@ export default function SupervisorsPage() {
             ) : (
               <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {filtered.map((s) => (
-                  <button
+                  <div
                     key={s.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => navigate(`/supervisors/${s.id}`)}
-                    className="cg-card cg-card-hover p-4 text-left transition-shadow hover:shadow-md"
+                    onKeyDown={(e) => { if (e.key === "Enter") navigate(`/supervisors/${s.id}`); }}
+                    className="cg-card cg-card-hover cursor-pointer p-4 text-left transition-shadow hover:shadow-md"
                   >
                     <div className="flex items-start gap-3">
                       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/12 text-sm font-bold text-primary">
@@ -212,9 +264,12 @@ export default function SupervisorsPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
                           <span className="truncate font-semibold text-foreground">{s.fullName || "—"}</span>
-                          {s.isOnDuty
-                            ? <StatusBadge tone="green">En turno</StatusBadge>
-                            : <StatusBadge tone="slate" dot={false}>Fuera</StatusBadge>}
+                          <div className="flex shrink-0 items-center gap-1">
+                            {s.isOnDuty
+                              ? <StatusBadge tone="green">En turno</StatusBadge>
+                              : <StatusBadge tone="slate" dot={false}>Fuera</StatusBadge>}
+                            {rowActions(s)}
+                          </div>
                         </div>
                         <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                           <MapPin className="h-3.5 w-3.5 shrink-0" />
@@ -240,7 +295,7 @@ export default function SupervisorsPage() {
                         </div>
                       )}
                     </div>
-                  </button>
+                  </div>
                 ))}
               </Stagger>
             )}
