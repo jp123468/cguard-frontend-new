@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   ShieldCheck, Plus, Radar, UserPlus, Car, MapPin, Users, Clock,
   LayoutGrid, List as ListIcon, Search, Mail, Phone,
-  MoreVertical, Send, KeyRound, Eye,
+  MoreVertical, Send, KeyRound, Eye, Trash2,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -133,6 +133,19 @@ export default function SupervisorsPage() {
     }
   };
 
+  // Remove a supervisor from this business (revokes access; account may live in other tenants).
+  const removeSupervisor = async (s: Supervisor) => {
+    const name = s.fullName || s.email || "este supervisor";
+    if (!window.confirm(`¿Eliminar a ${name}? Perderá el acceso a este negocio. Esta acción no se puede deshacer.`)) return;
+    try {
+      await supervisorService.remove(s.id);
+      toast.success("Supervisor eliminado");
+      load();
+    } catch (e: any) {
+      toast.error(e?.message || "No se pudo eliminar el supervisor");
+    }
+  };
+
   // Per-row quick actions (3-dot menu) — shared by the list and cards views.
   const rowActions = (s: Supervisor) => (
     <DropdownMenu>
@@ -150,6 +163,12 @@ export default function SupervisorsPage() {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => sendPasswordReset(s)}>
           <KeyRound className="mr-2 h-4 w-4" /> Restablecer contraseña
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => removeSupervisor(s)}
+          className="text-red-600 focus:text-red-600"
+        >
+          <Trash2 className="mr-2 h-4 w-4" /> Eliminar supervisor
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

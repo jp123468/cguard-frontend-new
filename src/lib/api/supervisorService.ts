@@ -88,6 +88,8 @@ export const supervisorService = {
     ApiService.post(`/tenant/${tid()}/supervisors`, body),
   update: (userId: string, body: Partial<Supervisor>): Promise<Supervisor> =>
     ApiService.put(`/tenant/${tid()}/supervisors/${userId}`, body),
+  remove: (userId: string): Promise<{ deleted: boolean; userId: string }> =>
+    ApiService.delete(`/tenant/${tid()}/supervisors/${userId}`),
   // Zone/stations the supervisor covers (resolved from their puesto assignments).
   getCoverage: (userId: string): Promise<{ positions: SupervisorCoveragePosition[] }> =>
     ApiService.get(`/tenant/${tid()}/supervisors/${userId}/coverage`),
