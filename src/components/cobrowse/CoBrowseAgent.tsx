@@ -34,26 +34,27 @@ export default function CoBrowseAgent() {
   const flushTimerRef = useRef<any>(null);
 
   useEffect(() => {
-    const token = getAuthToken();
-    const tenantId = (() => { try { return localStorage.getItem('tenantId') || ''; } catch { return ''; } })();
-    if (!token || !tenantId) return;
-
-    const socket = io(socketOrigin(), {
-      path: SOCKET_PATH,
-      transports: ['websocket'],
-      withCredentials: true,
-      auth: { token, tenantId },
-    });
-    socketRef.current = socket;
+    let disposed = false;
+    let pollTimer: any = null;
 
     const flush = () => {
-      if (!bufferRef.current.length || !socket.connected) return;
+      const socket = socketRef.current;
+      if (!socket || !bufferRef.current.length || !socket.connected) return;
       const batch = bufferRef.current;
       bufferRef.current = [];
       socket.emit('cobrowse:event', { events: batch });
     };
 
+    const stopRecording = () => {
+      try { stopRecordRef.current?.(); } catch { /* ignore */ }
+      stopRecordRef.current = null;
+      if (flushTimerRef.current) { clearInterval(flushTimerRef.current); flushTimerRef.current = null; }
+      bufferRef.current = [];
+    };
+
     const startRecording = async (fresh: boolean) => {
+      const socket = socketRef.current;
+      if (!socket) return;
       // A late-joining watcher needs a Meta(4) + FullSnapshot(2) to boot the
       // Replayer. `record.takeFullSnapshot()` on an already-running recorder is
       // unreliable across rrweb builds (often a no-op), leaving the viewer blank
@@ -92,33 +93,52 @@ export default function CoBrowseAgent() {
         // rrweb failed to load — fail closed (no stream), never break the CRM.
         // eslint-disable-next-line no-console
         console.warn('[cobrowse] recorder unavailable', e);
-        socket.emit('cobrowse:ack', { stage: 'error' });
+        socketRef.current?.emit('cobrowse:ack', { stage: 'error' });
       }
     };
 
-    const stopRecording = () => {
-      try { stopRecordRef.current?.(); } catch { /* ignore */ }
-      stopRecordRef.current = null;
-      if (flushTimerRef.current) { clearInterval(flushTimerRef.current); flushTimerRef.current = null; }
-      bufferRef.current = [];
+    // Connect only once BOTH the auth token and tenantId are available. The agent
+    // mounts at the app root (even on the login page), so at first mount there is
+    // usually no token yet — we must retry after the user logs in, otherwise the
+    // recorder never connects and a watched session renders nothing.
+    const connect = (): boolean => {
+      const token = getAuthToken();
+      const tenantId = (() => { try { return localStorage.getItem('tenantId') || ''; } catch { return ''; } })();
+      if (!token || !tenantId) return false;
+      const socket = io(socketOrigin(), {
+        path: SOCKET_PATH,
+        transports: ['websocket'],
+        withCredentials: true,
+        auth: { token, tenantId },
+      });
+      socketRef.current = socket;
+      socket.on('cobrowse:start', (p: { by?: string; fresh?: boolean } = {}) => {
+        // eslint-disable-next-line no-console
+        console.log('[cobrowse] start received from', p.by);
+        socket.emit('cobrowse:ack', { stage: 'received' });
+        setWatchedBy(p.by || 'Soporte');
+        startRecording(!!p.fresh);
+      });
+      socket.on('cobrowse:stop', () => {
+        setWatchedBy(null);
+        stopRecording();
+      });
+      return true;
     };
 
-    socket.on('cobrowse:start', (p: { by?: string; fresh?: boolean } = {}) => {
-      // eslint-disable-next-line no-console
-      console.log('[cobrowse] start received from', p.by);
-      socket.emit('cobrowse:ack', { stage: 'received' });
-      setWatchedBy(p.by || 'Soporte');
-      startRecording(!!p.fresh);
-    });
-    socket.on('cobrowse:stop', () => {
-      setWatchedBy(null);
-      stopRecording();
-    });
+    if (!connect()) {
+      pollTimer = setInterval(() => {
+        if (disposed) return;
+        if (connect()) { clearInterval(pollTimer); pollTimer = null; }
+      }, 2000);
+    }
 
     return () => {
+      disposed = true;
+      if (pollTimer) clearInterval(pollTimer);
       stopRecording();
-      socket.removeAllListeners();
-      socket.disconnect();
+      const socket = socketRef.current;
+      if (socket) { socket.removeAllListeners(); socket.disconnect(); }
       socketRef.current = null;
     };
   }, []);
