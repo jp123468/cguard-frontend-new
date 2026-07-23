@@ -54,15 +54,15 @@ export default function CoBrowseAgent() {
     };
 
     const startRecording = async (fresh: boolean) => {
-      // Already recording → just push a fresh full snapshot for a late watcher.
+      // A late-joining watcher needs a Meta(4) + FullSnapshot(2) to boot the
+      // Replayer. `record.takeFullSnapshot()` on an already-running recorder is
+      // unreliable across rrweb builds (often a no-op), leaving the viewer blank
+      // ("keeps connecting, nothing renders"). So on every FRESH watch we tear the
+      // recorder down and start it clean — a fresh record() always re-emits the
+      // Meta + FullSnapshot the viewer needs.
       if (stopRecordRef.current) {
-        if (fresh) {
-          try {
-            const rr: any = await import('rrweb');
-            (rr.record as any)?.takeFullSnapshot?.(true);
-          } catch { /* ignore */ }
-        }
-        return;
+        if (!fresh) return; // already recording and no new watcher — nothing to do
+        stopRecording();    // restart clean below so a full snapshot is guaranteed
       }
       try {
         const rr: any = await import('rrweb');
