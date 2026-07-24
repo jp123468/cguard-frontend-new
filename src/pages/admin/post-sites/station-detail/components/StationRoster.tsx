@@ -89,6 +89,13 @@ export default function StationRoster({ stationId, tenantId, events, guardColorM
           const color = guardColorMap[g.id] || { accent: 'var(--primary)', bg: 'rgba(200,134,10,0.08)', text: 'inherit' };
           const isSf = g.role?.isRelief;
           const accent = isSf ? '#10b981' : color.accent;
+          // Rest weekday(s) straight from the REAL generated schedule: days in the
+          // window with no shift = descanso. Makes the libre day visible at a glance
+          // (a fijo's rest should be a consistent weekday when the cycle is weekly).
+          const restWeekdays = Array.from(new Set(
+            days.filter((d) => !g.pattern[d]).map((d) => new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long' })),
+          ));
+          const restLabel = restWeekdays.length === 1 ? restWeekdays[0] : restWeekdays.slice(0, 2).join(', ');
           return (
             <div key={g.id} className="w-[228px] shrink-0 rounded-xl border border-border/30 bg-card p-3">
               <div className="flex items-center gap-2">
@@ -102,6 +109,11 @@ export default function StationRoster({ stationId, tenantId, events, guardColorM
                     {isSf ? <Shield size={10} /> : <User size={10} />}
                     {g.role?.label || (isSf ? 'Sacafranco' : 'Fijo')}
                   </p>
+                  {!isSf && restLabel && (
+                    <p className="mt-0.5 flex items-center gap-1 truncate text-[10px] capitalize text-muted-foreground" title={`Descansa: ${restLabel}`}>
+                      <Moon size={9} className="shrink-0 text-indigo-400" /> Descansa: {restLabel}
+                    </p>
+                  )}
                 </div>
               </div>
               {/* 14-day turno strip */}
