@@ -1,4 +1,4 @@
-import { localToday, nextRestDates, offsetForRestStart, weeklyRestWeekday, shortRestLabel, type RotationCycle } from '@/lib/utils';
+import { localToday, rotationDseOf, nextRestDates, weeklyRestWeekday, shortRestLabel, type RotationCycle } from '@/lib/utils';
 import { useEffect, useMemo, useState } from 'react';
 import { Loader2, UserPlus, Repeat, CalendarRange, Moon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -56,10 +56,6 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
   // Optional end date: assign the guard to the station only until this date (e.g.
   // temporary cover). Empty ⇒ indefinite. Backend already supports endDate.
   const [rotationEndDate, setRotationEndDate] = useState('');
-  // Optional planner override: pick the guard's FIRST day of descanso. Empty ⇒ the
-  // station position's own staggered phase (the default). When set, we re-phase the
-  // assignment after creating it so the rest day lands exactly where the planner wants.
-  const [restStartDate, setRestStartDate] = useState('');
   const [rotationStyles, setRotationStyles] = useState<RotationStyleRow[]>([]);
   const [selectedPositionId, setSelectedPositionId] = useState('');
   const [shiftStart, setShiftStart] = useState('');
@@ -88,21 +84,26 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
     [guardsOptions, occupiedGuardIds],
   );
 
-  // Live rest-day preview for the selected fijo puesto. Uses the station's patrón +
-  // the position's staggered offset (or the planner's chosen rest day, if set), so
-  // the planner SEES the descanso before saving — no more invisible wrong weekday.
+  // Live rest-day preview for the selected fijo puesto. THE PHASE IS THE START DATE:
+  // the cycle's day-0 (first work day) is the guard's fecha de inicio, so the planner
+  // sees "empieza X → descansa Y" and adjusts the start date until the libre is right.
+  // No offset knob — the start date is the single control (matches the backend).
   const restPreview = useMemo(() => {
     const pos = positions.find((p) => p.id === selectedPositionId);
     if (!pos || (pos.type || 'fijo') === 'sacafranco') return null;
     const style = rotationStyles.find((s) => String(s.id) === String((station as any).rotationStyleId));
     if (!style) return null;
     const cycle = style.dayShifts + style.nightShifts + style.restDays;
-    if (cycle <= 0) return null;
-    const override = restStartDate ? offsetForRestStart(style, new Date(restStartDate + 'T12:00:00')) : null;
-    const offset = override ?? (typeof pos.platoonOffset === 'number' ? pos.platoonOffset : (pos.sortOrder || 0));
-    const dates = nextRestDates(style, offset, new Date(), style.restDays >= 2 ? 2 : 1);
-    return { weekday: weeklyRestWeekday(style, offset), dates, styleName: style.name, overridden: !!override };
-  }, [positions, selectedPositionId, rotationStyles, station, restStartDate]);
+    if (cycle <= 0 || !rotationStartDate) return null;
+    const start = new Date(rotationStartDate + 'T12:00:00');
+    const offset = ((rotationDseOf(start) % cycle) + cycle) % cycle; // phase = startDate
+    const dates = nextRestDates(style, offset, start, style.restDays >= 2 ? 2 : 1);
+    return {
+      weekday: weeklyRestWeekday(style, offset),
+      dates,
+      startWeekday: start.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }),
+    };
+  }, [positions, selectedPositionId, rotationStyles, station, rotationStartDate]);
 
   // Initialize + load data each time the modal opens.
   useEffect(() => {
@@ -114,7 +115,6 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
     setShiftEnd(`${target}T${endHour}`);
     setShiftGuard(presetGuardId || '');
     setRotationStartDate(target);
-    setRestStartDate('');
     setAssignMode('rotation');
     setSelectedPositionId('');
 
@@ -218,7 +218,9 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
     const isRelief = (pos?.type || 'fijo') === 'sacafranco';
     setSaving(true);
     try {
-      const created: any = await ApiService.post(`/tenant/${tenantId}/guard-assignment`, {
+      // Single POST — the backend derives the rotation phase from startDate
+      // (day-0 = fecha de inicio). No offset, no rephase.
+      await ApiService.post(`/tenant/${tenantId}/guard-assignment`, {
         data: {
           guardId: shiftGuard,
           stationId,
@@ -228,23 +230,6 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
           isRelief,
         },
       });
-      // Planner chose an explicit first day of descanso → re-phase the fresh
-      // assignment (updates position + assignment offset + regenerates) so the rest
-      // day lands exactly there, on any station type.
-      if (restStartDate && !isRelief) {
-        let asgId = created?.id || created?.data?.id || created?.rows?.[0]?.id;
-        if (!asgId) {
-          try {
-            const list: any = await ApiService.get(`/tenant/${tenantId}/guard-assignments?status=active`);
-            const rows = Array.isArray(list) ? list : (list?.rows ?? []);
-            asgId = rows.find((a: any) => String(a.guardId) === String(shiftGuard) && String(a.positionId) === String(selectedPositionId) && String(a.stationId) === String(stationId))?.id;
-          } catch { /* best-effort */ }
-        }
-        if (asgId) {
-          try { await ApiService.post(`/tenant/${tenantId}/guard-assignment/${asgId}/rephase`, { data: { restStartDate } }); }
-          catch { toast.warning('Se asignó, pero no se pudo fijar el día de descanso. Ajústalo en Programador › Horario.'); }
-        }
-      }
       toast.success('Vigilante asignado · si es fijo, la rotación se genera automáticamente; los sacafrancos se colocan a mano en Programador › Horario');
       onSaved(new Date(rotationStartDate + 'T12:00:00'));
     } catch (e: any) {
@@ -314,29 +299,28 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
                     ))}
                   </div>
                 )}
-                <p className="mt-1.5 text-[11px] text-muted-foreground">Rotación automática: los vigilantes alternan día y noche de forma escalonada según el horario de la estación. No requiere fecha de inicio.</p>
+                <p className="mt-1.5 text-[11px] text-muted-foreground">Los vigilantes alternan día y noche según el horario de la estación. El ciclo arranca en su <b>fecha de inicio</b> — cámbiala para mover el día de descanso.</p>
               </div>
 
-              {restPreview && (
-                <div className="rounded-xl border border-primary/25 bg-primary/[0.04] px-3 py-2.5">
-                  <div className="flex items-center gap-2 text-xs font-medium text-foreground">
-                    <Moon size={13} className="text-primary" />
-                    {restPreview.weekday
-                      ? <span>Descansa: <span className="font-semibold capitalize text-primary">{restPreview.weekday}</span></span>
-                      : <span>Próximo descanso</span>}
+              {/* Fecha de inicio = la fase de la rotación (día-0 del ciclo). */}
+              <div>
+                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Fecha de inicio del turno</label>
+                <input type="date" value={rotationStartDate} onChange={(e) => setRotationStartDate(e.target.value)} className={inputCls} />
+                {restPreview && (
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-primary/25 bg-primary/[0.04] px-3 py-2">
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <CalendarRange size={13} className="text-primary" /> Empieza <span className="font-medium capitalize text-foreground">{restPreview.startWeekday}</span>
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs">
+                      <Moon size={13} className="text-primary" />
+                      {restPreview.weekday
+                        ? <span className="text-muted-foreground">Descansa: <span className="font-semibold capitalize text-primary">{restPreview.weekday}</span></span>
+                        : <span className="capitalize text-muted-foreground">Descanso: {restPreview.dates.map(shortRestLabel).join(' · ')}</span>}
+                    </span>
                   </div>
-                  {restPreview.dates.length > 0 && (
-                    <p className="mt-1 text-[11px] capitalize text-muted-foreground">
-                      {restPreview.dates.map(shortRestLabel).join(' · ')}{restPreview.overridden ? ' · ajustado' : ''}
-                    </p>
-                  )}
-                  <div className="mt-2.5">
-                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Primer día de descanso (opcional)</label>
-                    <input type="date" value={restStartDate} min={rotationStartDate} onChange={(e) => setRestStartDate(e.target.value)} className={inputCls} />
-                    <p className="mt-1 text-[10px] text-muted-foreground/70">Vacío = fase automática del puesto. Elige un día para fijar el descanso del vigilante desde esa fecha.</p>
-                  </div>
-                </div>
-              )}
+                )}
+                <p className="mt-1 text-[10px] text-muted-foreground/70">Para escalonar dos vigilantes en un puesto 24h, dales fechas de inicio distintas.</p>
+              </div>
 
               <div>
                 <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Hasta (opcional)</label>
