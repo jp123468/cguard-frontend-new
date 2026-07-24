@@ -920,6 +920,14 @@ export default function Schedule() {
     if (posAssignments.length) {
       const a = posAssignments[0];
       const guardName = a.guard ? `${a.guard.firstName || ''} ${a.guard.lastName || ''}`.trim() : 'Vigilante';
+      // On a rest (L) day the puesto is uncovered — offer to assign a sacafranco
+      // to cover it (opens the picker modal). Skip when it's already covered.
+      const resting = isWorkDay(a, new Date(dateStr + 'T00:00:00')) === 'rest';
+      const alreadyCovered = (sfStationCoverage.get(`${station.id}-${dateStr}`) || []).length > 0;
+      if (resting && !alreadyCovered) {
+        items.push({ label: 'Asignar sacafranco…', onClick: () => setSfPick({ station, pos, dateStr, assignment: a, guardName }) });
+        items.push({ label: '—' });
+      }
       items.push({ label: 'Registrar novedad…', onClick: () => setOverrideTarget({ guardId: a.guardId, guardName, date: dateStr, assignmentId: a.id }) });
       const ov = getOverride(a.guardId, dateStr);
       if (ov) items.push({ label: `Quitar novedad (${ov.type})`, danger: true, onClick: () => void removeOverride(ov.id) });
@@ -1690,11 +1698,8 @@ export default function Schedule() {
                 return (
                   <div
                     key={assignment.id}
-                    className={`flex-1 min-h-[18px] rounded flex items-center justify-center cursor-pointer relative ${sfLabel ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-muted/30 hover:bg-emerald-500/15'}`}
-                    title={sfLabel
-                      ? `${guardName} — Libre · Cubre: ${sfTooltip} (doble clic: novedad)`
-                      : `${guardName} — Libre · Clic para asignar un sacafranco`}
-                    onClick={sfLabel ? undefined : (e) => { e.stopPropagation(); setSfPick({ station, pos, dateStr, assignment, guardName }); }}
+                    className={`flex-1 min-h-[18px] rounded flex items-center justify-center cursor-pointer relative ${sfLabel ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-muted/30 hover:bg-muted/50'}`}
+                    title={`${guardName} — Libre${sfTooltip ? ` · Cubre: ${sfTooltip}` : ' (clic derecho: asignar sacafranco)'}`}
                     onDoubleClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
                   >
                     {sfLabel ? (
