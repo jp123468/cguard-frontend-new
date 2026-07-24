@@ -762,6 +762,12 @@ export default function Schedule() {
     startStr: string; endStr: string; suggested: string;
   } | null>(null);
   const [sfCoverSaving, setSfCoverSaving] = useState(false);
+  // Click-to-assign: clicking a fijo's "L" cell opens a picker of sacafrancos to
+  // cover that day (no dragging needed — critical for puestos high up the grid).
+  const [sfPick, setSfPick] = useState<{
+    station: Station; pos: StationPosition; dateStr: string;
+    assignment: GuardAssignment; guardName: string;
+  } | null>(null);
 
   const placeSfCoverage = async (station: Station, pos: StationPosition, dateStr: string, sfGuardId: string) => {
     const stFijos = assignments.filter(a =>
@@ -1684,8 +1690,11 @@ export default function Schedule() {
                 return (
                   <div
                     key={assignment.id}
-                    className={`flex-1 min-h-[18px] rounded flex items-center justify-center cursor-pointer relative ${sfLabel ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-muted/30 hover:bg-muted/50'}`}
-                    title={`${guardName} — Libre${sfTooltip ? ` · Cubre: ${sfTooltip}` : ' (sin cobertura)'}`}
+                    className={`flex-1 min-h-[18px] rounded flex items-center justify-center cursor-pointer relative ${sfLabel ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-muted/30 hover:bg-emerald-500/15'}`}
+                    title={sfLabel
+                      ? `${guardName} — Libre · Cubre: ${sfTooltip} (doble clic: novedad)`
+                      : `${guardName} — Libre · Clic para asignar un sacafranco`}
+                    onClick={sfLabel ? undefined : (e) => { e.stopPropagation(); setSfPick({ station, pos, dateStr, assignment, guardName }); }}
                     onDoubleClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
                   >
                     {sfLabel ? (
@@ -2048,9 +2057,13 @@ export default function Schedule() {
                     const sfPositions = positions.filter(p => p.type === 'sacafranco');
                     if (sfPositions.length === 0) return null;
                     return (
-                      <div className="border-t-2 border-emerald-500/30">
+                      // When EXPANDED, pin the sacafranco section to the bottom of
+                      // the scroll viewport (sticky bottom-0) so the fijo stations
+                      // scroll BEHIND it — you can reach a puesto high up the grid
+                      // and still drag/assign an SF from here without it scrolling away.
+                      <div className={`border-t-2 border-emerald-500/30${sfSectionOpen ? ' sticky bottom-0 z-30 bg-card shadow-[0_-8px_20px_-6px_rgba(0,0,0,0.30)]' : ''}`}>
                         {/* SF Header - clickable to expand/collapse */}
-                        <div className="grid cursor-pointer" style={{ gridTemplateColumns: gridCols }} onClick={() => setSfSectionOpen(!sfSectionOpen)}>
+                        <div className="grid cursor-pointer bg-card" style={{ gridTemplateColumns: gridCols }} onClick={() => setSfSectionOpen(!sfSectionOpen)}>
                           <div className="px-4 py-2.5 flex items-center gap-2 border-r border-border/20 sticky left-0 z-20 bg-card">
                             <Shield size={14} className="text-emerald-500" />
                             <div className="flex-1">
@@ -2541,6 +2554,65 @@ export default function Schedule() {
                 >
                   {sfCoverSaving ? <Loader2 size={14} className="animate-spin" /> : 'Cubrir puesto'}
                 </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ─── Sacafranco picker (click on an "L" cell) ─────────────────────── */}
+      {sfPick && (() => {
+        const { station, pos, dateStr } = sfPick;
+        const fecha = new Date(dateStr + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+        const rows = sacafrancoData.map(sf => {
+          const gid = sf.assignments[0]?.guardId;
+          const av = sf.availability.find(a => fmtDate(a.date) === dateStr);
+          const name = sf.guard
+            ? `${sf.guard.firstName || ''} ${sf.guard.lastName || ''}`.trim()
+            : (guardsPool.find(g => g.id === gid)?.label || 'Sacafranco');
+          return { gid, name: name || 'Sacafranco', busy: av?.status === 'covering', where: av?.stationName };
+        }).filter(r => !!r.gid);
+        const free = rows.filter(r => !r.busy);
+        const busy = rows.filter(r => r.busy);
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setSfPick(null)}>
+            <div className="bg-card border border-border/30 rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+              <div className="px-5 py-4 border-b border-border/20 flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground">Asignar sacafranco</h4>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{station.stationName} · {fecha}</p>
+                </div>
+                <button onClick={() => setSfPick(null)} className="p-1.5 rounded-lg hover:bg-muted/30 text-muted-foreground"><X size={15} /></button>
+              </div>
+              <div className="p-4 space-y-1.5 max-h-[50vh] overflow-y-auto">
+                {rows.length === 0 && (
+                  <p className="text-[12px] text-muted-foreground text-center py-4">No hay sacafrancos configurados. Crea un puesto sacafranco en la estación primero.</p>
+                )}
+                {free.map(r => (
+                  <button
+                    key={r.gid}
+                    onClick={() => { setSfPick(null); void placeSfCoverage(station, pos, dateStr, r.gid!); }}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border/40 hover:border-emerald-500/50 hover:bg-emerald-500/5 text-left transition-all"
+                  >
+                    <span className="grid h-7 w-7 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 text-xs font-bold">{(r.name[0] || '?').toUpperCase()}</span>
+                    <span className="flex-1 text-sm font-medium text-foreground">{r.name}</span>
+                    <span className="text-[10px] font-semibold text-emerald-600">Libre</span>
+                  </button>
+                ))}
+                {busy.map(r => (
+                  <div key={r.gid} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border/20 opacity-60">
+                    <span className="grid h-7 w-7 place-items-center rounded-full bg-muted/40 text-muted-foreground text-xs font-bold">{(r.name[0] || '?').toUpperCase()}</span>
+                    <span className="flex-1 text-sm font-medium text-muted-foreground">{r.name}</span>
+                    <span className="text-[10px] text-muted-foreground">Cubre {r.where || 'otro puesto'}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="px-5 py-3 border-t border-border/20 flex items-center justify-between">
+                <button
+                  onClick={() => { const p = sfPick; setSfPick(null); setOverrideTarget({ guardId: p.assignment.guardId, guardName: p.guardName, date: p.dateStr, assignmentId: p.assignment.id }); }}
+                  className="text-[11px] font-medium text-muted-foreground hover:text-foreground"
+                >Marcar novedad…</button>
+                <button onClick={() => setSfPick(null)} className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/20">Cerrar</button>
               </div>
             </div>
           </div>
