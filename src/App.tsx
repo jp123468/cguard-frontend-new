@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams, useLocation } from "react-router-dom"
 import { useEffect, lazy, Suspense } from "react"
 import ProtectedRoute, { PublicOnlyRoute } from "@/components/ProtectedRoute"
+import AppLayout from "@/layouts/app-layout"
 import Login from "./pages/auth/login";
 import ForgotPassword from "./pages/auth/forgot-password";
 import ResetPassword from "./pages/auth/reset-password";
@@ -233,6 +234,38 @@ function LoginRouteResolver() {
   );
 }
 
+// Routes that render WITHOUT the app chrome (topbar/sidebar): public/auth pages
+// and the few full-screen views (shared video clip, style guide, the new-tab
+// operations map). Everything else gets the persistent shell.
+const NO_CHROME_PREFIXES = [
+  "/login", "/register", "/forgot-password", "/reset-password", "/guard_registration",
+  "/auth/", "/client/registration", "/supervisor/registration",
+  "/video/shared", "/style-guide", "/dashboard/operations-map",
+];
+function isNoChromePath(pathname: string): boolean {
+  if (pathname === "/") return true;
+  // Guard-mode web app owns its chrome (GuardAppLayout has its own header) — it
+  // must NOT get the admin shell. Match /guard and /guard/* but NOT /guards/*
+  // (the admin guard-management pages, which DO want the admin shell).
+  if (pathname === "/guard" || pathname.startsWith("/guard/")) return true;
+  return NO_CHROME_PREFIXES.some((p) => pathname === p || pathname.startsWith(p));
+}
+
+/**
+ * Mounts the app shell (topbar + side menu + radio/onboarding providers) ONCE and
+ * keeps it mounted across navigation — only the routed page inside it swaps. This
+ * is what makes the CRM behave like a real SPA: clicking a menu item no longer
+ * reloads the whole chrome. Pages still wrapping themselves in <AppLayout> become
+ * transparent passthroughs (see app-layout.tsx). Bare render for unauthenticated
+ * sessions and full-screen/public routes.
+ */
+function PersistentChrome({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated || isNoChromePath(location.pathname)) return <>{children}</>;
+  return <AppLayout>{children}</AppLayout>;
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -242,6 +275,7 @@ export default function App() {
         <ClientSelectionProvider>
           <CoBrowseAgent />
           <BrowserRouter>
+            <PersistentChrome>
             <Suspense fallback={<div style={{minHeight:"60vh",display:"flex",alignItems:"center",justifyContent:"center"}}><div className="animate-spin" aria-label="Cargando" style={{width:28,height:28,border:"3px solid var(--border,#e5e7eb)",borderTopColor:"var(--primary,#C8860A)",borderRadius:"50%"}}/></div>}>
             <Routes>
               {/* Enlace público de video compartido (cliente, sin login) */}
@@ -1662,6 +1696,7 @@ export default function App() {
 
             </Routes>
             </Suspense>
+            </PersistentChrome>
           </BrowserRouter>
         </ClientSelectionProvider>
       </AuthProvider>

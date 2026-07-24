@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import Header from "@/components/header";
 import Sidebar from "@/components/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,7 +17,24 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
+// True inside the ONE mounted shell. The CRM renders the shell (topbar/sidebar/
+// radio/onboarding) once at the router level (see PersistentChrome in App.tsx),
+// so pages that still wrap themselves in <AppLayout> (directly or via nested
+// layouts like PostSiteLayout/GuardsLayout) must NOT paint a second shell — and,
+// crucially, must not REMOUNT the shell on every navigation. When this context is
+// already true, AppLayout is a transparent passthrough: it just renders its
+// children into the persistent shell, so the topbar/side menu never reload.
+const AppLayoutMountedContext = createContext(false);
+
 export default function AppLayout({ children }: AppLayoutProps) {
+  const alreadyInShell = useContext(AppLayoutMountedContext);
+  // Nested (page-level) AppLayout → passthrough. No hooks below run here, so the
+  // persistent shell above owns all the shell state/effects exactly once.
+  if (alreadyInShell) return <>{children}</>;
+  return <AppLayoutShell>{children}</AppLayoutShell>;
+}
+
+function AppLayoutShell({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth >= 1024 : true
   );
@@ -25,6 +42,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const mainRef = useRef<HTMLElement>(null);
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);
 
@@ -198,10 +216,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
     if (isMobile) {
       setSidebarOpen(false);
     }
+    // The scroll container (<main>) now persists across navigation, so reset it
+    // to the top on each route change — otherwise a new page opens mid-scroll.
+    try { mainRef.current?.scrollTo({ top: 0, left: 0 }); } catch { /* ignore */ }
   }, [location.pathname]);
 
 
   return (
+    <AppLayoutMountedContext.Provider value={true}>
     <div className="app-shell h-screen w-full bg-background">
       <div className={["app-header sticky top-0 z-50 h-14 transition-[margin] duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-0"].join(" ")}>
         <Header toggleSidebar={toggleSidebar} />
@@ -230,6 +252,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       )}
 
       <main
+        ref={mainRef}
         className={[
           "relative h-[calc(100vh-56px)] overflow-y-auto transition-[margin] duration-300",
           sidebarOpen ? "lg:ml-64" : "lg:ml-0",
@@ -257,5 +280,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
 
     </div>
+    </AppLayoutMountedContext.Provider>
   );
 }
