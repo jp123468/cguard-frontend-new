@@ -234,6 +234,24 @@ const OVERRIDE_STYLES: Record<string, { bg: string; text: string }> = {
 // Keyboard → novedad code (spreadsheet typing).
 const KEY_CODES: Record<string, string> = { d: 'D', n: 'N', l: 'L', v: 'V', f: 'F', p: 'PM', '2': '24' };
 
+// Día/Noche letter for a WORKING cell. Standard 24h alternates by rotation
+// phase; 12h-day/12h-night are fixed. A CUSTOM puesto has no día/noche split in
+// its rotation (the work count sits in dayShifts, so the phase is always 'day'),
+// so classify it by the block's ACTUAL start hour — a 20:00→08:00 block is Noche.
+// Mirrors the backend's shiftHalfByStart (18/6 threshold) so the grid label
+// matches the generated shift instead of hard-forcing 'D' for every custom puesto.
+function dnCode(
+  scheduleType: string | null | undefined,
+  posStartTime: string | null | undefined,
+  status: 'day' | 'night',
+): 'D' | 'N' {
+  if (scheduleType === '24h') return status === 'night' ? 'N' : 'D';
+  if (scheduleType === '12h-night') return 'N';
+  if (scheduleType === '12h-day') return 'D';
+  const h = parseInt(String(posStartTime || '').split(':')[0], 10);
+  return !Number.isNaN(h) && (h >= 18 || h < 6) ? 'N' : 'D';
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function Schedule() {
@@ -1617,12 +1635,8 @@ export default function Schedule() {
                 </div>
               );
             }
-            // Use STATION scheduleType to determine D vs N label
-            const is24hSlot = station.scheduleType === '24h';
-            const isNightSlot = station.scheduleType === '12h-night';
-            const code = is24hSlot
-              ? (slotStatus === 'night' ? 'N' : 'D')
-              : isNightSlot ? 'N' : 'D';
+            // D vs N by station type, or by the block's start hour for custom puestos.
+            const code = dnCode(station.scheduleType, pos.startTime, slotStatus as 'day' | 'night');
             const bg = code === 'N' ? 'bg-indigo-500/8 border-indigo-500/20' : 'bg-sky-500/8 border-sky-500/20';
             const textColor = code === 'N' ? 'text-indigo-400/50' : 'text-sky-500/50';
             return (
@@ -1658,9 +1672,9 @@ export default function Schedule() {
               }
 
               const workStatus = isWorkDay(assignment, day);
-              // Determine display label based on STATION scheduleType
+              // is24h drives the cell COLOR (amber vs sky); the D/N letter itself
+              // comes from dnCode (which also handles custom night puestos).
               const is24h = station.scheduleType === '24h';
-              const isNightPos = station.scheduleType === '12h-night';
 
               if (workStatus === 'rest') {
                 const coverKey = `${station.id}-${dateStr}`;
@@ -1683,12 +1697,7 @@ export default function Schedule() {
                 );
               }
 
-              // For 24H: show D/N based on rotation phase
-              // For 12H DAY: always D
-              // For 12H NIGHT: always N
-              const code = is24h
-                ? (workStatus === 'night' ? 'N' : 'D')
-                : isNightPos ? 'N' : 'D';
+              const code = dnCode(station.scheduleType, pos.startTime, workStatus as 'day' | 'night');
               const bg = code === 'N'
                 ? 'bg-indigo-500/15'
                 : is24h ? 'bg-amber-500/15' : 'bg-sky-500/15';
