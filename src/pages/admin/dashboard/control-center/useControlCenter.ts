@@ -3,6 +3,7 @@ import { io } from "socket.io-client";
 import api, { getAuthToken } from "@/lib/api";
 import { openEventStream } from "@/lib/api/eventStream";
 import securityGuardService from "@/lib/api/securityGuardService";
+import { supervisorService } from "@/lib/api/supervisorService";
 import tenantService from "@/services/tenant.service";
 import { resolveDefaultCenter, companyCenter } from "./defaultCenter";
 import type {
@@ -99,7 +100,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
     let alive = true;
     (async () => {
       const gaps: string[] = [];
-      const [stats, active, stationsR, postsR, clientsR, guardsR, incidentsR, openIncR, usersR, tenantR, eventsR, opsR] = await Promise.all([
+      const [stats, active, stationsR, postsR, clientsR, guardsR, incidentsR, openIncR, usersR, tenantR, eventsR, opsR, supsR] = await Promise.all([
         safe<DashboardStats>(get("/dashboard/stats"), {}),
         safe(securityGuardService.activeLocations(), null as any),
         safe(get("/station?limit=500"), null),
@@ -119,6 +120,10 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
         // Operational "today" counters (incidents today, rondas/tag-scans today) —
         // computed server-side with correct day boundaries. Route has no /tenant/ prefix.
         safe(api.get(`/operations/kpis`).then((r) => r.data), null),
+        // On-duty supervisors with a live position — so a clocked-in supervisor
+        // shows on the map immediately (not only when a socket ping happens to
+        // land while the map is open). Mirrors the guard activeLocations feed.
+        safe(supervisorService.list(), null as any),
       ]);
       if (!alive) return;
 
@@ -152,6 +157,19 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
         entities.push({ id: `g-${g.guardId || g.id}`, kind: "guard", lat: la, lng: ln, status: "online",
           label: g.fullName || g.name || "Vigilante", sub: g.postSiteName || "En servicio",
           meta: { punchInTime: g.punchInTime, battery: g.punchInBattery } });
+      });
+
+      // Supervisores en servicio con posición (profile lat/lng, sembrada al fichar
+      // y refrescada por el ping del app). Mismo id `sup-<userId>` que el emit
+      // realtime, así el location:update solo mueve el marcador, no lo duplica.
+      const supRows = rows(supsR) as any[];
+      supRows.forEach((sup: any) => {
+        if (!sup || !(sup.isOnDuty ?? sup.onDuty)) return;
+        const la = coord(sup.latitude ?? sup.lat), ln = coord(sup.longitude ?? sup.lng);
+        if (la == null || ln == null) return;
+        entities.push({ id: `sup-${sup.id}`, kind: "supervisor", lat: la, lng: ln, status: "patrol",
+          label: sup.fullName || "Supervisor", sub: sup.zone || "En patrulla",
+          meta: { onDutySince: sup.onDutySince } });
       });
 
       // ── revenue from /dashboard/stats (billing.montoPorPagar by month) ──
