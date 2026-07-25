@@ -91,6 +91,15 @@ const ACTION_SUFFIXES = [
   'Approve','Correct','Send','Manage','Reply','Complete','Attempt','Confirm','Volunteer',
 ];
 
+// Some small resources are clearer folded into one display group in the role
+// editor. Key = derived resource, value = the group bucket it should render in.
+// (Only affects grouping/labels in the UI — the permission ids never change.)
+const GROUP_OVERRIDES: Record<string, string> = {
+  bannerSuperiorApp: 'clienteApp',
+  service: 'clienteApp',
+  certification: 'clienteApp',
+};
+
 export function groupPermissions(perms: string[]) {
   const groups: Record<string, string[]> = {};
   for (const p of perms) {
@@ -103,6 +112,7 @@ export function groupPermissions(perms: string[]) {
       }
     }
     resource = resource || p;
+    resource = GROUP_OVERRIDES[resource] || resource;
     if (!groups[resource]) groups[resource] = [];
     groups[resource].push(p);
   }

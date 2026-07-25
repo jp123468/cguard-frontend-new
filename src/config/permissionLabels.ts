@@ -11,6 +11,7 @@ export const RESOURCE_LABELS: Record<string, string> = {
   category: 'Sectores',
   auditLog: 'Registro de auditoría',
   settings: 'Ajustes',
+  clienteApp: 'App del Cliente',
   bannerSuperiorApp: 'Banner superior',
   service: 'Servicios',
   certification: 'Certificaciones',
@@ -19,7 +20,7 @@ export const RESOURCE_LABELS: Record<string, string> = {
   businessInfo: 'Información de negocio',
   representanteEmpresa: 'Representantes',
   incident: 'Incidentes',
-  station: 'Postes',
+  station: 'Estaciones',
   shift: 'Turnos',
   guardShift: 'Turnos de vigilante',
   patrol: 'Patrullas',
@@ -48,7 +49,7 @@ export const RESOURCE_LABELS: Record<string, string> = {
   timeOffRequest: 'Tiempo libre',
   shiftTemplate: 'Plantillas de turno',
   shiftExchangeRequest: 'Intercambio de turnos',
-  postSite: 'Sitios de servicio',
+  postSite: 'Sedes del cliente',
   route: 'Rutas (patrulla vehicular)',
   vehicle: 'Vehículos',
   visitorLog: 'Control de visitas',
@@ -77,6 +78,7 @@ export const RESOURCE_LABELS: Record<string, string> = {
 };
 
 const RESOURCE_LABELS_EN: Record<string, string> = {
+  clienteApp: 'Client app',
   user: 'Users',
   category: 'Sectors',
   auditLog: 'Audit log',
@@ -89,7 +91,7 @@ const RESOURCE_LABELS_EN: Record<string, string> = {
   businessInfo: 'Business info',
   representanteEmpresa: 'Representatives',
   incident: 'Incidents',
-  station: 'Posts',
+  station: 'Stations',
   shift: 'Shifts',
   guardShift: 'Guard shifts',
   patrol: 'Patrols',
@@ -118,7 +120,7 @@ const RESOURCE_LABELS_EN: Record<string, string> = {
   timeOffRequest: 'Time off',
   shiftTemplate: 'Shift templates',
   shiftExchangeRequest: 'Shift exchanges',
-  postSite: 'Service sites',
+  postSite: 'Client sites',
   route: 'Routes (vehicle patrol)',
   vehicle: 'Vehicles',
   visitorLog: 'Visitor log',
@@ -147,6 +149,7 @@ const RESOURCE_LABELS_EN: Record<string, string> = {
 };
 
 const RESOURCE_LABELS_PT: Record<string, string> = {
+  clienteApp: 'App do Cliente',
   user: 'Usuários',
   category: 'Setores',
   auditLog: 'Registro de auditoria',
@@ -159,7 +162,7 @@ const RESOURCE_LABELS_PT: Record<string, string> = {
   businessInfo: 'Informações do negócio',
   representanteEmpresa: 'Representantes',
   incident: 'Incidentes',
-  station: 'Postos',
+  station: 'Estações',
   shift: 'Turnos',
   guardShift: 'Turnos de vigilante',
   patrol: 'Patrulhas',
@@ -188,7 +191,7 @@ const RESOURCE_LABELS_PT: Record<string, string> = {
   timeOffRequest: 'Folgas',
   shiftTemplate: 'Modelos de turno',
   shiftExchangeRequest: 'Troca de turnos',
-  postSite: 'Locais de serviço',
+  postSite: 'Sedes do cliente',
   route: 'Rotas (patrulha veicular)',
   vehicle: 'Veículos',
   visitorLog: 'Controle de visitas',
