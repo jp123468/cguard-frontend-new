@@ -226,6 +226,11 @@
         "path": "/schedule"
       },
       {
+        "id": "cobertura",
+        "name": "Cobertura en vivo",
+        "path": "/coverage"
+      },
+      {
         "id": "plantillas",
         "name": "Plantillas de turno",
         "path": "/shift-templates"

@@ -136,6 +136,7 @@ const ShiftExchange = lazy(() => import("./pages/admin/programmer/ShiftExchange"
 const ShiftStatus = lazy(() => import("./pages/admin/programmer/ShiftStatus"));
 const ShiftTemplates = lazy(() => import("./pages/admin/programmer/ShiftTemplates"));
 const OpenShifts = lazy(() => import("./pages/admin/programmer/OpenShifts"));
+const Coverage = lazy(() => import("./pages/admin/programmer/Coverage"));
 const CheckInOut = lazy(() => import("./pages/admin/Reports/CheckInOut"));
 const SiteTour = lazy(() => import("./pages/admin/Reports/SiteTour"));
 const Task = lazy(() => import("./pages/admin/Reports/Task"));
@@ -1274,6 +1275,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <OpenShifts />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/coverage"
+                element={
+                  <ProtectedRoute>
+                    <Coverage />
                   </ProtectedRoute>
                 }
               />
