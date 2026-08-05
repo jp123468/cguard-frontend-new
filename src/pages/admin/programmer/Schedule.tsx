@@ -2276,15 +2276,14 @@ export default function Schedule() {
                       <Shield size={12} />
                       Optimizar Sacafrancos
                     </button>
-                    <button
-                      onClick={runGeocode}
-                      disabled={geocoding}
-                      className="w-full mt-2 px-3 py-2 bg-background border border-input text-foreground rounded-xl text-xs font-semibold hover:bg-muted/40 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                      title="Geolocaliza las direcciones de los vigilantes para asignar por cercanía real"
-                    >
-                      {geocoding ? <Loader2 size={12} className="animate-spin" /> : <MapPin size={12} />}
-                      {geocoding ? 'Geolocalizando...' : 'Geolocalizar vigilantes'}
-                    </button>
+                    {/* RETIRADO (2026-08-05, a pedido): "Geolocalizar vigilantes".
+                        Convertía la dirección de domicilio de cada vigilante en
+                        coordenadas (Nominatim) para ordenar por cercanía. Su
+                        ÚNICO consumidor era el ranking por distancia de
+                        auto-asignar, que ya está retirado, así que no aportaba
+                        nada por sí solo. Además Nominatim admite ~1 pedido/s, de
+                        modo que procesaba 10 por clic y había que repetirlo.
+                        Endpoint intacto: POST /security-guard/geocode-missing. */}
                     <button
                       onClick={runAiRecommend}
                       disabled={aiLoading}
