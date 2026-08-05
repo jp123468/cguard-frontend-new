@@ -2253,33 +2253,21 @@ export default function Schedule() {
                       <Sparkles size={14} className="text-primary" />
                       <h3 className="text-xs font-bold text-foreground">Herramientas</h3>
                     </div>
-                    <button
-                      onClick={generateDraft}
-                      disabled={proposalLoading}
-                      className="w-full px-3 py-2 bg-primary text-white rounded-xl text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
-                    >
-                      {proposalLoading ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}
-                      {proposalLoading ? 'Generando borrador...' : 'Generar borrador de horario'}
-                    </button>
-                    <p className="mt-1 mb-2 text-[10px] text-muted-foreground">
-                      Muestra los cambios antes de aplicar. No modifica nada hasta que publiques.
-                    </p>
-                    <button
-                      onClick={runAutoAssign}
-                      disabled={autoAssigning}
-                      className="w-full px-3 py-2 bg-background border border-input text-foreground rounded-xl text-xs font-semibold hover:bg-muted/40 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                    >
-                      {autoAssigning ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />}
-                      {autoAssigning ? 'Asignando...' : 'Auto-asignar puestos vacíos'}
-                    </button>
-                    {autoResult && (
-                      <div className="mt-2 p-2 bg-background/60 rounded-lg space-y-1">
-                        <div className="text-[11px] text-foreground font-medium">Resultado:</div>
-                        <div className="text-[10px] text-muted-foreground">• {autoResult.titularesAssigned} titulares asignados</div>
-                        <div className="text-[10px] text-muted-foreground">• {autoResult.sacafrancosAssigned} sacafrancos asignados</div>
-                        <div className="text-[10px] text-muted-foreground">• {autoResult.unassignedRemaining} vigilantes sin asignar</div>
-                      </div>
-                    )}
+                    {/* RETIRADOS (2026-08-05, a pedido): "Generar borrador de
+                        horario" y "Auto-asignar puestos vacíos".
+
+                        Auto-asignar sólo reparte vigilantes que NO tienen
+                        ninguna asignación activa, así que en una operación ya
+                        montada no encuentra a nadie y devuelve ceros sin
+                        explicar por qué. El borrador recalcula la rotación
+                        desde cero y la compara contra los turnos reales: con
+                        turnos creados fuera del motor da cifras sin sentido
+                        (7% de cobertura, 431 huecos, +465% de costo).
+
+                        El backend (/scheduler/auto-assign, /scheduler/proposals)
+                        y el modal de revisión siguen intactos — esto es sólo el
+                        punto de entrada, para poder reponerlo cuando la lógica
+                        esté corregida. */}
                     <button
                       onClick={runOptimizeSacafrancos}
                       disabled={autoAssigning}
