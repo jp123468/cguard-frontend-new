@@ -35,6 +35,9 @@ const STATUS_STYLE: Record<string, string> = {
   idle: "bg-muted text-muted-foreground border-border",
 };
 
+/** Overrides the operator can confirm when the service refuses. */
+type ConfirmFlags = { allowRestDay: boolean; allowDoubleShift: boolean };
+
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString("es-EC", { hour: "2-digit", minute: "2-digit" });
 
@@ -89,20 +92,38 @@ export default function Coverage() {
    * `rest_day` is the server asking for confirmation of a real decision, not a
    * failure — re-issue with the confirmation instead of dead-ending the user.
    */
-  const runWithConfirm = async (call: (confirm: boolean) => Promise<any>, okMsg: string) => {
+  const runWithConfirm = async (call: (flags: ConfirmFlags) => Promise<any>, okMsg: string) => {
     setBusy(true);
     try {
-      try {
-        await call(false);
-      } catch (e: any) {
-        const code = coverageErrorCode(e);
-        if (code === "rest_day") {
-          if (!window.confirm("Ese vigilante está en descanso ese día. ¿Asignarlo de todos modos?")) return;
-          await call(true);
-        } else if (code) {
-          toast.error(e?.response?.data?.message || "No se pudo completar la acción");
-          return;
-        } else {
+      // Two refusals are operational decisions rather than errors — the guard is
+      // on their descanso, or already has an overlapping turno (doblar turno,
+      // which is exactly what happens when the relief does not show). Ask, then
+      // repeat with the confirmation. Each is asked at most once so a genuine
+      // failure surfaces instead of looping.
+      const flags: ConfirmFlags = { allowRestDay: false, allowDoubleShift: false };
+      const asked = { rest_day: false, double_booking: false };
+      for (;;) {
+        try {
+          await call(flags);
+          break;
+        } catch (e: any) {
+          const code = coverageErrorCode(e);
+          if (code === "rest_day" && !asked.rest_day) {
+            asked.rest_day = true;
+            if (!window.confirm("Ese vigilante está en descanso ese día. ¿Asignarlo de todos modos?")) return;
+            flags.allowRestDay = true;
+            continue;
+          }
+          if (code === "double_booking" && !asked.double_booking) {
+            asked.double_booking = true;
+            if (!window.confirm("Ya tiene otro turno que se cruza con ese horario. ¿Doblar turno?")) return;
+            flags.allowDoubleShift = true;
+            continue;
+          }
+          if (code) {
+            toast.error(e?.response?.data?.message || "No se pudo completar la acción");
+            return;
+          }
           throw e;
         }
       }
@@ -158,7 +179,7 @@ export default function Coverage() {
     if (!row || !toStationId) return;
     const range = transferMode === "range" && transferUntil;
     const ok = await runWithConfirm(
-      (confirm) =>
+      (flags) =>
         coverageService.transfer({
           guardId: row.guardId,
           toStationId,
@@ -169,7 +190,7 @@ export default function Coverage() {
             ? { dateFrom: tenantToday(), dateTo: transferUntil }
             : { shiftIds: row.shiftId ? [row.shiftId] : undefined }),
           reasonNote: note.trim() || undefined,
-          allowRestDay: confirm,
+          ...flags,
         }),
       range ? `Trasladado hasta el ${transferUntil}` : "Vigilante trasladado",
     );
@@ -425,7 +446,7 @@ export default function Coverage() {
                   className="flex w-full items-center gap-3 rounded-lg border p-3 text-left hover:bg-muted/50"
                   onClick={async () => {
                     const ok = await runWithConfirm(
-                      (confirm) => coverageService.cover(coverFor.id, c.guardId, confirm),
+                      (flags) => coverageService.cover(coverFor.id, c.guardId, flags),
                       "Puesto cubierto",
                     );
                     if (ok) setCoverFor(null);

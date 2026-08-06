@@ -37,6 +37,7 @@ import { confirmDialog } from "@/components/ui/confirmDialog";
 import ScheduleTimeline, { dateToWall, wallToDate, startPan } from "./ScheduleTimeline";
 import RotationStyleSelect from "@/components/schedule/RotationStyleSelect";
 import ContextMenu, { CtxItem, CtxMenuState } from "./ContextMenu";
+import TransferShiftModal, { TransferTarget } from "./TransferShiftModal";
 import type {
   RotationStyle,
   StationPosition,
@@ -875,6 +876,8 @@ export default function Schedule() {
   // ─── Right-click menu on the year canvas ─────────────────────────────────
 
   const [ctxMenu, setCtxMenu] = useState<CtxMenuState | null>(null);
+  // "Trasladar a otra estación" from a right-clicked cell.
+  const [transferTarget, setTransferTarget] = useState<TransferTarget | null>(null);
 
   const duplicateShiftNextDay = async (s: ShiftRecord) => {
     try {
@@ -911,7 +914,17 @@ export default function Schedule() {
       const s = shiftByGuardDate.get(`${a.guardId}|${dateStr}`);
       if (s && s.stationId === station.id) {
         const nm = a.guard?.firstName || 'vigilante';
+        const full = a.guard ? `${a.guard.firstName || ''} ${a.guard.lastName || ''}`.trim() : nm;
         items.push({ label: `Editar turno de ${nm} (vista Día)…`, onClick: () => jumpToDay(dateStr) });
+        // Move this turno to another puesto. Temporary by construction — only
+        // the turnos in the chosen range move, so they return by themselves.
+        items.push({
+          label: `Trasladar a ${nm} a otra estación…`,
+          onClick: () => setTransferTarget({
+            guardId: a.guardId, guardName: full, shiftId: s.id,
+            stationId: station.id, stationName: station.stationName, dateStr,
+          }),
+        });
         items.push({ label: 'Duplicar turno al día siguiente', onClick: () => void duplicateShiftNextDay(s) });
         items.push({ label: 'Eliminar turno de este día', danger: true, onClick: () => void deleteDayShift(s) });
         items.push({ label: '—' });
@@ -944,6 +957,17 @@ export default function Schedule() {
       const covShift = shiftByGuardDate.get(`${sfGuard.guardId}|${dateStr}`);
       if (covShift) {
         items.push({ label: 'Editar cobertura (vista Día)…', onClick: () => jumpToDay(dateStr) });
+        items.push({
+          label: 'Trasladar a otra estación…',
+          onClick: () => setTransferTarget({
+            guardId: sfGuard.guardId,
+            guardName: sfGuard.guard ? `${sfGuard.guard.firstName || ''} ${sfGuard.guard.lastName || ''}`.trim() : 'Sacafranco',
+            shiftId: covShift.id,
+            stationId: covShift.stationId,
+            stationName: stations.find(st => st.id === covShift.stationId)?.stationName || null,
+            dateStr,
+          }),
+        });
         items.push({ label: 'Duplicar al día siguiente', onClick: () => void duplicateShiftNextDay(covShift) });
         items.push({ label: 'Quitar cobertura', danger: true, onClick: () => void removeSfCoverage(covShift) });
         items.push({ label: '—' });
@@ -2471,6 +2495,12 @@ export default function Schedule() {
       </div>
 
       {ctxMenu && <ContextMenu menu={ctxMenu} onClose={() => setCtxMenu(null)} />}
+      <TransferShiftModal
+        target={transferTarget}
+        stations={stations}
+        onClose={() => setTransferTarget(null)}
+        onDone={() => fetchAll({ silent: true })}
+      />
 
       {/* ─── SF coverage modal (drop an SF día on a puesto → shape the turno) ── */}
       {sfCover && (() => {

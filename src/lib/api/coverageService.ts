@@ -156,9 +156,14 @@ export const coverageService = {
     allowRestDay?: boolean;
   }) => api.post(`/tenant/${getTenantId()}/coverage/transfer`, body).then((r) => r.data?.data ?? r.data),
 
-  cover: (eventId: string, coveringGuardId: string, allowRestDay = false) =>
+  /** `flags` carries the operator's confirmations (descanso, doblar turno). */
+  cover: (
+    eventId: string,
+    coveringGuardId: string,
+    flags: { allowRestDay?: boolean; allowDoubleShift?: boolean } = {},
+  ) =>
     api
-      .post(`/tenant/${getTenantId()}/coverage/events/${eventId}/cover`, { coveringGuardId, allowRestDay })
+      .post(`/tenant/${getTenantId()}/coverage/events/${eventId}/cover`, { coveringGuardId, ...flags })
       .then((r) => r.data?.data ?? r.data),
 
   cancel: (eventId: string) =>
