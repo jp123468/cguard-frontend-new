@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import coverageService, {
   COVERAGE_REASONS, REASON_LABEL, STATUS_LABEL, coverageErrorCode,
+  stationLabel,
   type LiveCoverage, type StationCoverage, type CoverageEvent, type CoverageReason,
 } from "@/lib/api/coverageService";
 
@@ -206,7 +207,14 @@ export default function Coverage() {
     <div className="rounded-xl border bg-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate font-semibold">{st.stationName || "—"}</p>
+          <p className="flex items-center gap-2 font-semibold">
+            {st.nickname && (
+              <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 font-mono text-xs font-bold text-muted-foreground">
+                {st.nickname}
+              </span>
+            )}
+            <span className="truncate">{st.stationName || "—"}</span>
+          </p>
           {st.minutesSinceStart != null && st.status !== "covered" && (
             <p className="mt-0.5 text-xs text-muted-foreground">
               {st.minutesSinceStart} min desde el inicio del turno
@@ -340,8 +348,8 @@ export default function Coverage() {
                         </span>
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {ev.originStation?.stationName || "—"}
-                        {ev.targetStation ? ` → ${ev.targetStation.stationName}` : ""}
+                        {stationLabel(ev.originStation)}
+                        {ev.targetStation ? ` → ${stationLabel(ev.targetStation)}` : ""}
                         {" · "}
                         {new Date(ev.windowStart).toLocaleDateString("es-EC")}
                         {/* Same day start/end reads as one turno; otherwise show
@@ -355,7 +363,7 @@ export default function Coverage() {
                           to, so nobody goes looking for a button to undo it. */}
                       {ev.kind === "transfer" && ev.status !== "cancelled" && ev.originStation && (
                         <p className="mt-0.5 text-[11px] text-primary">
-                          Vuelve a {ev.originStation.stationName} después del{" "}
+                          Vuelve a {stationLabel(ev.originStation)} después del{" "}
                           {new Date(ev.windowEnd).toLocaleDateString("es-EC")}
                         </p>
                       )}
@@ -490,7 +498,7 @@ export default function Coverage() {
                     .filter((s) => String(s.stationId) !== String(transferFor?.stationId))
                     .map((s) => (
                       <SelectItem key={s.stationId} value={String(s.stationId)}>
-                        {s.stationName || s.stationId}
+                        {stationLabel(s)}
                       </SelectItem>
                     ))}
                 </SelectContent>

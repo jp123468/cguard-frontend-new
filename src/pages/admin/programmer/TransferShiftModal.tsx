@@ -7,7 +7,7 @@ import {
 import { Modal } from "@/components/kit";
 import { ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
-import coverageService, { coverageErrorCode } from "@/lib/api/coverageService";
+import coverageService, { coverageErrorCode, stationLabel } from "@/lib/api/coverageService";
 
 /**
  * "Trasladar a otra estación" straight from the Horario.
@@ -36,7 +36,7 @@ export default function TransferShiftModal({
   onDone,
 }: {
   target: TransferTarget | null;
-  stations: Array<{ id: string; stationName: string }>;
+  stations: Array<{ id: string; stationName: string; nickname?: string | null }>;
   onClose: () => void;
   onDone: () => void;
 }) {
@@ -135,7 +135,7 @@ export default function TransferShiftModal({
               {stations
                 .filter((s) => String(s.id) !== String(target?.stationId))
                 .map((s) => (
-                  <SelectItem key={s.id} value={String(s.id)}>{s.stationName}</SelectItem>
+                  <SelectItem key={s.id} value={String(s.id)}>{stationLabel(s)}</SelectItem>
                 ))}
             </SelectContent>
           </Select>
@@ -175,8 +175,8 @@ export default function TransferShiftModal({
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs">
           <p className="font-semibold text-foreground">
             {mode === "range" && until
-              ? `Cubre ${dest?.stationName || "el destino"} hasta el ${until}.`
-              : `Cubre ${dest?.stationName || "el destino"} solo en este turno.`}
+              ? `Cubre ${dest ? stationLabel(dest) : "el destino"} hasta el ${until}.`
+              : `Cubre ${dest ? stationLabel(dest) : "el destino"} solo en este turno.`}
           </p>
           <p className="mt-1 text-muted-foreground">
             Después vuelve automáticamente a <strong>{target?.stationName || "su puesto"}</strong>.

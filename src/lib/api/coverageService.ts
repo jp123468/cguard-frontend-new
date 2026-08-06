@@ -30,6 +30,9 @@ export type CoverageStatus = "covered" | "at_risk" | "uncovered" | "idle";
 export interface StationCoverage {
   stationId: string;
   stationName: string | null;
+  /** Internal call-sign ("nominativo", e.g. P-031) — how operations names posts,
+   *  and the only way to tell apart several that share a stationName. */
+  nickname: string | null;
   postSiteId: string | null;
   status: CoverageStatus;
   expected: Array<{ guardId: string; fullName: string | null; startTime: string; endTime: string; shiftId: string }>;
@@ -58,8 +61,8 @@ export interface CoverageEvent {
   countsAgainstGuard: boolean;
   absentGuard?: { id: string; firstName?: string; lastName?: string } | null;
   coveringGuard?: { id: string; firstName?: string; lastName?: string } | null;
-  originStation?: { id: string; stationName?: string } | null;
-  targetStation?: { id: string; stationName?: string } | null;
+  originStation?: { id: string; stationName?: string; nickname?: string | null } | null;
+  targetStation?: { id: string; stationName?: string; nickname?: string | null } | null;
 }
 
 /**
@@ -171,3 +174,11 @@ export const coverageService = {
 };
 
 export default coverageService;
+
+/** "P-031 · Caseta Principal" — the nominativo leads, as operations says it. */
+export function stationLabel(
+  s?: { stationName?: string | null; nickname?: string | null } | null,
+): string {
+  if (!s) return "—";
+  return [s.nickname, s.stationName].filter(Boolean).join(" · ") || "—";
+}
