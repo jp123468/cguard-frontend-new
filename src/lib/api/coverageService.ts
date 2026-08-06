@@ -147,6 +147,10 @@ export const coverageService = {
     shiftIds?: string[];
     windowStart?: string;
     windowEnd?: string;
+    /** Tenant-local calendar range, inclusive — resolved server-side in the
+     *  tenant's timezone so "hasta el 9" includes the whole of the 9th. */
+    dateFrom?: string;
+    dateTo?: string;
     reason?: CoverageReason;
     reasonNote?: string;
     allowRestDay?: boolean;

@@ -54,9 +54,13 @@ export default function Coverage() {
   const [coverFor, setCoverFor] = useState<any | null>(null);
   const [candidates, setCandidates] = useState<any[] | null>(null);
 
-  // Transfer modal
+  // Transfer modal. A traslado is temporary by construction: it moves only the
+  // turnos inside the chosen range, so the vigilante returns to their own post
+  // on the next one — there is no separate "expiry" to run or forget.
   const [transferFor, setTransferFor] = useState<any | null>(null);
   const [toStationId, setToStationId] = useState("");
+  const [transferMode, setTransferMode] = useState<"shift" | "range">("shift");
+  const [transferUntil, setTransferUntil] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -139,21 +143,37 @@ export default function Coverage() {
     }
   };
 
+  /** Today in the TENANT's calendar, so the date input matches the operation. */
+  const tenantToday = () => {
+    try {
+      return new Intl.DateTimeFormat("en-CA", { timeZone: live?.tz || "America/Mexico_City" })
+        .format(new Date());
+    } catch {
+      return new Date().toISOString().slice(0, 10);
+    }
+  };
+
   const submitTransfer = async () => {
     const row = transferFor;
     if (!row || !toStationId) return;
+    const range = transferMode === "range" && transferUntil;
     const ok = await runWithConfirm(
       (confirm) =>
         coverageService.transfer({
           guardId: row.guardId,
           toStationId,
-          shiftIds: row.shiftId ? [row.shiftId] : undefined,
+          // Either this one turno, or every turno from today through the chosen
+          // date. Dates go as plain YYYY-MM-DD and are resolved in the tenant's
+          // timezone server-side — parsing them here would drop the last day.
+          ...(range
+            ? { dateFrom: tenantToday(), dateTo: transferUntil }
+            : { shiftIds: row.shiftId ? [row.shiftId] : undefined }),
           reasonNote: note.trim() || undefined,
           allowRestDay: confirm,
         }),
-      "Vigilante trasladado",
+      range ? `Trasladado hasta el ${transferUntil}` : "Vigilante trasladado",
     );
-    if (ok) { setTransferFor(null); setToStationId(""); setNote(""); }
+    if (ok) { setTransferFor(null); setToStationId(""); setNote(""); setTransferMode("shift"); setTransferUntil(""); }
   };
 
   const summary = live?.summary || {};
@@ -303,8 +323,21 @@ export default function Coverage() {
                         {ev.targetStation ? ` → ${ev.targetStation.stationName}` : ""}
                         {" · "}
                         {new Date(ev.windowStart).toLocaleDateString("es-EC")}
+                        {/* Same day start/end reads as one turno; otherwise show
+                            the span so a multi-day traslado is legible. */}
+                        {new Date(ev.windowEnd).toLocaleDateString("es-EC") !==
+                          new Date(ev.windowStart).toLocaleDateString("es-EC") &&
+                          ` – ${new Date(ev.windowEnd).toLocaleDateString("es-EC")}`}
                         {ev.coveringGuard && ` · Cubre ${[ev.coveringGuard.firstName, ev.coveringGuard.lastName].filter(Boolean).join(" ")}`}
                       </p>
+                      {/* A traslado expires on its own — say where they go back
+                          to, so nobody goes looking for a button to undo it. */}
+                      {ev.kind === "transfer" && ev.status !== "cancelled" && ev.originStation && (
+                        <p className="mt-0.5 text-[11px] text-primary">
+                          Vuelve a {ev.originStation.stationName} después del{" "}
+                          {new Date(ev.windowEnd).toLocaleDateString("es-EC")}
+                        </p>
+                      )}
                     </div>
                     {/* Payroll/discipline consequences, visible where they are decided. */}
                     {ev.countsAgainstGuard && <Badge variant="destructive">Falta grave</Badge>}
@@ -443,12 +476,55 @@ export default function Coverage() {
               </Select>
             </div>
             <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Duración</label>
+              <div className="flex gap-2">
+                <Button
+                  type="button" size="sm"
+                  variant={transferMode === "shift" ? "default" : "outline"}
+                  onClick={() => setTransferMode("shift")}
+                >
+                  Solo este turno
+                </Button>
+                <Button
+                  type="button" size="sm"
+                  variant={transferMode === "range" ? "default" : "outline"}
+                  onClick={() => { setTransferMode("range"); if (!transferUntil) setTransferUntil(tenantToday()); }}
+                >
+                  Hasta una fecha
+                </Button>
+              </div>
+              {transferMode === "range" && (
+                <input
+                  type="date"
+                  value={transferUntil}
+                  min={tenantToday()}
+                  onChange={(e) => setTransferUntil(e.target.value)}
+                  className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                />
+              )}
+            </div>
+            <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Motivo (opcional)</label>
               <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2}
                 placeholder="Ej.: refuerzo por evento en el cliente" />
             </div>
+            {/* The single most important thing to state plainly: the traslado
+                ENDS BY ITSELF. It moves only the turnos in the range, so the
+                next one is back at their own post — nothing to remember. */}
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs">
+              <p className="font-semibold text-foreground">
+                {transferMode === "range" && transferUntil
+                  ? `Cubre ${transferFor?.stationName ? "otro puesto" : "el destino"} hasta el ${transferUntil}.`
+                  : "Cubre el destino solo en este turno."}
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Después vuelve automáticamente a <strong>{transferFor?.stationName || "su puesto"}</strong>.
+                No hace falta revertirlo: solo se trasladan los turnos del rango.
+              </p>
+            </div>
             <p className="text-xs text-muted-foreground">
-              El vigilante podrá marcar entrada en la estación destino. El puesto que deja
+              El vigilante podrá marcar entrada en la estación destino y recibirá sus
+              recordatorios de turno allí, como cualquier turno normal. El puesto que deja
               queda visible como <strong>sin cubrir</strong> hasta que se asigne un reemplazo.
             </p>
           </div>
