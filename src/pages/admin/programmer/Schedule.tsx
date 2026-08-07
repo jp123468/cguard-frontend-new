@@ -2315,14 +2315,21 @@ export default function Schedule() {
                         y el modal de revisión siguen intactos — esto es sólo el
                         punto de entrada, para poder reponerlo cuando la lógica
                         esté corregida. */}
-                    <button
-                      onClick={runOptimizeSacafrancos}
-                      disabled={autoAssigning}
-                      className="w-full mt-2 px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
-                    >
-                      <Shield size={12} />
-                      Optimizar Sacafrancos
-                    </button>
+                    {/* RETIRADO (2026-08-06, a pedido): "Optimizar Sacafrancos".
+                        Reordena los offsets de los puestos y reparte el relevo,
+                        pero el resultado no cuadra todavía: los sacafrancos
+                        quedan con L irregulares porque la grilla no distingue
+                        "descansa" de "trabaja pero no le tocó hueco ese día", y
+                        con más sacafrancos que huecos simultáneos la mayoría de
+                        sus días caen en el segundo caso.
+
+                        Efecto secundario de dejarlo visible: cada corrida vuelve
+                        a crear los turnos de sacafranco que se habían borrado a
+                        mano.
+
+                        Backend intacto (POST /scheduler/optimize-sacafrancos y
+                        runOptimizeSacafrancos) — esto es solo el punto de
+                        entrada, para reponerlo cuando la lógica esté resuelta. */}
                     {/* RETIRADO (2026-08-05, a pedido): "Geolocalizar vigilantes".
                         Convertía la dirección de domicilio de cada vigilante en
                         coordenadas (Nominatim) para ordenar por cercanía. Su
