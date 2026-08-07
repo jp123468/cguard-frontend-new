@@ -38,6 +38,7 @@ import ScheduleTimeline, { dateToWall, wallToDate, startPan } from "./ScheduleTi
 import RotationStyleSelect from "@/components/schedule/RotationStyleSelect";
 import ContextMenu, { CtxItem, CtxMenuState } from "./ContextMenu";
 import TransferShiftModal, { TransferTarget } from "./TransferShiftModal";
+import { stationLabel } from "@/lib/stationName";
 import type {
   RotationStyle,
   StationPosition,
@@ -66,6 +67,7 @@ interface RawGuardRow {
 interface StationAlert {
   stationId: string;
   stationName: string;
+  nickname?: string | null;
   missingFijoCount: number;
   sfUncoveredDays: number;
 }
@@ -614,7 +616,7 @@ export default function Schedule() {
 
   // Per-station alerts for uncovered fijo slots and SF rest-day coverage gaps.
   const localStationAlerts = useMemo(() => {
-    const rows: { stationId: string; stationName: string; missingFijoCount: number; sfUncoveredDays: number }[] = [];
+    const rows: { stationId: string; stationName: string; nickname?: string | null; missingFijoCount: number; sfUncoveredDays: number }[] = [];
 
     for (const st of stations) {
       const stationFijoPositions = positions.filter(p => p.stationId === st.id && p.type === 'fijo');
@@ -643,6 +645,7 @@ export default function Schedule() {
         rows.push({
           stationId: st.id,
           stationName: st.stationName,
+          nickname: st.nickname,
           missingFijoCount,
           sfUncoveredDays,
         });
@@ -655,9 +658,14 @@ export default function Schedule() {
 
   const stationAlerts = useMemo<StationAlert[]>(() => {
     const apiAlerts = staffing?.stationAlerts;
-    if (Array.isArray(apiAlerts)) return apiAlerts;
-    return localStationAlerts;
-  }, [staffing, localStationAlerts]);
+    const rows = Array.isArray(apiAlerts) ? apiAlerts : localStationAlerts;
+    // The staffing endpoint does not return the nominativo, and this panel is
+    // where you pick which puesto to fix — so stitch it back on from the
+    // stations we already hold. Several puestos share a stationName; without it
+    // the list names four different posts identically.
+    const nickById = new Map(stations.map(st => [String(st.id), st.nickname ?? null]));
+    return rows.map(a => (a.nickname ? a : { ...a, nickname: nickById.get(String(a.stationId)) ?? null }));
+  }, [staffing, localStationAlerts, stations]);
 
   const stationAlertByStationId = useMemo(() => {
     const map = new Map<string, StationAlert>();
@@ -851,7 +859,7 @@ export default function Schedule() {
       await ApiService.post(`/tenant/${tenantId}/shift`, {
         data: { startTime: start.toISOString(), endTime: end.toISOString(), station: sfCover.station.id, guard: sfCover.sfGuardId, postSiteId: sfCover.station.postSiteId },
       });
-      toast.success(`Sacafranco cubre ${sfCover.station.stationName}`);
+      toast.success(`Sacafranco cubre ${stationLabel(sfCover.station)}`);
       setSfCover(null);
       fetchAll({ silent: true });
     } catch (e: any) {
@@ -916,15 +924,6 @@ export default function Schedule() {
         const nm = a.guard?.firstName || 'vigilante';
         const full = a.guard ? `${a.guard.firstName || ''} ${a.guard.lastName || ''}`.trim() : nm;
         items.push({ label: `Editar turno de ${nm} (vista Día)…`, onClick: () => jumpToDay(dateStr) });
-        // Move this turno to another puesto. Temporary by construction — only
-        // the turnos in the chosen range move, so they return by themselves.
-        items.push({
-          label: `Trasladar a ${nm} a otra estación…`,
-          onClick: () => setTransferTarget({
-            guardId: a.guardId, guardName: full, shiftId: s.id,
-            stationId: station.id, stationName: station.stationName, dateStr,
-          }),
-        });
         items.push({ label: 'Duplicar turno al día siguiente', onClick: () => void duplicateShiftNextDay(s) });
         items.push({ label: 'Eliminar turno de este día', danger: true, onClick: () => void deleteDayShift(s) });
         items.push({ label: '—' });
@@ -941,6 +940,21 @@ export default function Schedule() {
         items.push({ label: 'Asignar sacafranco…', onClick: () => setSfPick({ station, pos, dateStr, assignment: a, guardName }) });
         items.push({ label: '—' });
       }
+      // Trasladar works with or without a generated shift row: with one we move
+      // that exact turno, without one the backend resolves the cell's date in
+      // the tenant timezone. Gating this on a shift row hid it on most cells,
+      // because the grid paints D/N/L from the rotation, not from shift rows.
+      items.push({
+        label: `Trasladar a ${a.guard?.firstName || 'vigilante'} a otra estación…`,
+        onClick: () => setTransferTarget({
+          guardId: a.guardId,
+          guardName,
+          shiftId: shiftByGuardDate.get(`${a.guardId}|${dateStr}`)?.id ?? null,
+          stationId: station.id,
+          stationName: station.stationName,
+          dateStr,
+        }),
+      });
       items.push({ label: 'Registrar novedad…', onClick: () => setOverrideTarget({ guardId: a.guardId, guardName, date: dateStr, assignmentId: a.id }) });
       const ov = getOverride(a.guardId, dateStr);
       if (ov) items.push({ label: `Quitar novedad (${ov.type})`, danger: true, onClick: () => void removeOverride(ov.id) });
@@ -957,22 +971,22 @@ export default function Schedule() {
       const covShift = shiftByGuardDate.get(`${sfGuard.guardId}|${dateStr}`);
       if (covShift) {
         items.push({ label: 'Editar cobertura (vista Día)…', onClick: () => jumpToDay(dateStr) });
-        items.push({
-          label: 'Trasladar a otra estación…',
-          onClick: () => setTransferTarget({
-            guardId: sfGuard.guardId,
-            guardName: sfGuard.guard ? `${sfGuard.guard.firstName || ''} ${sfGuard.guard.lastName || ''}`.trim() : 'Sacafranco',
-            shiftId: covShift.id,
-            stationId: covShift.stationId,
-            stationName: stations.find(st => st.id === covShift.stationId)?.stationName || null,
-            dateStr,
-          }),
-        });
         items.push({ label: 'Duplicar al día siguiente', onClick: () => void duplicateShiftNextDay(covShift) });
         items.push({ label: 'Quitar cobertura', danger: true, onClick: () => void removeSfCoverage(covShift) });
         items.push({ label: '—' });
       }
       const gName = sfGuard.guard ? `${sfGuard.guard.firstName || ''} ${sfGuard.guard.lastName || ''}`.trim() : 'Sacafranco';
+      items.push({
+        label: 'Trasladar a otra estación…',
+        onClick: () => setTransferTarget({
+          guardId: sfGuard.guardId,
+          guardName: gName,
+          shiftId: covShift?.id ?? null,
+          stationId: covShift?.stationId ?? pos.stationId,
+          stationName: stations.find(st => st.id === (covShift?.stationId ?? pos.stationId))?.stationName || null,
+          dateStr,
+        }),
+      });
       items.push({ label: 'Registrar novedad…', onClick: () => setOverrideTarget({ guardId: sfGuard.guardId, guardName: gName, date: dateStr, assignmentId: sfGuard.id }) });
       const ov = getOverride(sfGuard.guardId, dateStr);
       if (ov) items.push({ label: `Quitar novedad (${ov.type})`, danger: true, onClick: () => void removeOverride(ov.id) });
@@ -1931,7 +1945,16 @@ export default function Schedule() {
                         <div className="grid bg-muted/10" style={{ gridTemplateColumns: gridCols }}>
                           <div className="px-4 py-2 flex items-center gap-2 border-r border-border/20 sticky left-0 z-20 bg-card">
                             <div className="flex-1 min-w-0">
-                              <div className="text-sm font-semibold text-foreground truncate">{station.stationName}</div>
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {/* Nominativo: several puestos share a name, so
+                                    the name alone identifies nothing. */}
+                                {station.nickname && (
+                                  <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] font-bold text-muted-foreground">
+                                    {station.nickname}
+                                  </span>
+                                )}
+                                <div className="text-sm font-semibold text-foreground truncate">{station.stationName}</div>
+                              </div>
                               <button
                                 onClick={() => configureStation(station)}
                                 className="text-[11px] text-muted-foreground hover:text-primary transition-colors"
@@ -2383,7 +2406,7 @@ export default function Schedule() {
                             <div className="max-h-[160px] overflow-y-auto space-y-1 pr-1">
                               {stationAlerts.map(alert => (
                                 <div key={alert.stationId} className="text-[10px] bg-red-500/5 border border-red-500/20 rounded px-2 py-1">
-                                  <div className="font-medium text-foreground truncate">{alert.stationName}</div>
+                                  <div className="font-medium text-foreground truncate">{stationLabel(alert)}</div>
                                   {alert.missingFijoCount > 0 && (
                                     <div className="text-red-500">• {alert.missingFijoCount} fijo(s) sin vigilante</div>
                                   )}
@@ -2518,7 +2541,7 @@ export default function Schedule() {
                 <div>
                   <h4 className="text-sm font-semibold text-foreground">Cubrir con sacafranco</h4>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {sfCover.sfName} → {sfCover.station.stationName} · {fechaHuman}
+                    {sfCover.sfName} → {stationLabel(sfCover.station)} · {fechaHuman}
                   </p>
                 </div>
                 <button onClick={() => setSfCover(null)} className="p-1.5 rounded-lg hover:bg-muted/30 text-muted-foreground"><X size={15} /></button>
@@ -2602,7 +2625,7 @@ export default function Schedule() {
               <div className="px-5 py-4 border-b border-border/20 flex items-center justify-between">
                 <div>
                   <h4 className="text-sm font-semibold text-foreground">Asignar sacafranco</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{station.stationName} · {fecha}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{stationLabel(station)} · {fecha}</p>
                 </div>
                 <button onClick={() => setSfPick(null)} className="p-1.5 rounded-lg hover:bg-muted/30 text-muted-foreground"><X size={15} /></button>
               </div>
@@ -2658,7 +2681,7 @@ export default function Schedule() {
                 const colors = POSITION_COLORS[pos.type] || POSITION_COLORS.fijo;
                 return (
                   <div className={`px-3 py-2 rounded-xl border ${colors.border} ${colors.bg}`}>
-                    <div className={`text-xs font-semibold ${colors.text}`}>{st.stationName} <ArrowRight className="inline h-3 w-3" /> {pos.name}</div>
+                    <div className={`text-xs font-semibold ${colors.text}`}>{stationLabel(st)} <ArrowRight className="inline h-3 w-3" /> {pos.name}</div>
                     <div className="text-[10px] text-muted-foreground">{pos.startTime} – {pos.endTime}</div>
                   </div>
                 );
@@ -2741,7 +2764,7 @@ export default function Schedule() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setConfigStation(null)}>
           <div className="bg-card border border-border/30 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-border/20 flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-foreground">Configurar: {configStation.stationName}</h4>
+              <h4 className="text-sm font-semibold text-foreground">Configurar: {stationLabel(configStation)}</h4>
               <button onClick={() => setConfigStation(null)} className="p-1.5 rounded-lg hover:bg-muted/30 text-muted-foreground"><X size={15} /></button>
             </div>
             <div className="p-5 space-y-4">

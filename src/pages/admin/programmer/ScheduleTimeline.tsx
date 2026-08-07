@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { confirmDialog } from '@/components/ui/confirmDialog';
 import ContextMenu, { CtxMenuState } from './ContextMenu';
 import type { Station, ShiftRecord, GuardOption } from '@/types';
+import { stationLabel, stationShort } from "@/lib/stationName";
 
 /**
  * Semana/Día timeline for Programador › Horario, Google-Calendar style with a
@@ -475,8 +476,11 @@ export default function ScheduleTimeline({
                       {/* Estación sub-columns */}
                       <div className="absolute left-0 right-0 bottom-0 flex" style={{ height: 22 }}>
                         {stations.map(st => (
-                          <div key={st.id} className="shrink-0 border-r border-border/15 last:border-r-0 px-1.5 flex items-center overflow-hidden" style={{ width: SUBCOL_W }} title={st.stationName}>
-                            <span className="text-[9px] font-medium text-muted-foreground truncate">{st.stationName}</span>
+                          <div key={st.id} className="shrink-0 border-r border-border/15 last:border-r-0 px-1.5 flex items-center overflow-hidden" style={{ width: SUBCOL_W }} title={stationLabel(st)}>
+                            {/* Too narrow for both — show the nominativo, which
+                                is the UNIQUE identifier, and keep the full
+                                "P-031 · Caseta Principal" in the tooltip. */}
+                            <span className="text-[9px] font-mono font-semibold text-muted-foreground truncate">{stationShort(st)}</span>
                           </div>
                         ))}
                       </div>
@@ -641,7 +645,7 @@ export default function ScheduleTimeline({
                     className={inputCls}
                   >
                     <option value="">Seleccionar estación...</option>
-                    {stations.map(s => <option key={s.id} value={s.id}>{s.stationName}</option>)}
+                    {stations.map(s => <option key={s.id} value={s.id}>{stationLabel(s)}</option>)}
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -724,7 +728,7 @@ export default function ScheduleTimeline({
                 </div>
                 <div className="flex items-center gap-2 text-foreground">
                   <MapPin size={14} className="text-muted-foreground" />
-                  <span>{station?.stationName || 'Estación'}</span>
+                  <span>{station ? stationLabel(station) : 'Estación'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-foreground">
                   <Clock size={14} className="text-muted-foreground" />

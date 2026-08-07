@@ -1,5 +1,9 @@
 import api from "../api";
 
+// Station labels live in one place — the nominativo is what disambiguates
+// posts that share a stationName. Re-exported so existing imports keep working.
+export { stationLabel } from "../stationName";
+
 /**
  * Coverage / novedades de turno — the office view of "who is actually standing
  * at each post, and what to do about the ones that are empty".
@@ -174,11 +178,3 @@ export const coverageService = {
 };
 
 export default coverageService;
-
-/** "P-031 · Caseta Principal" — the nominativo leads, as operations says it. */
-export function stationLabel(
-  s?: { stationName?: string | null; nickname?: string | null } | null,
-): string {
-  if (!s) return "—";
-  return [s.nickname, s.stationName].filter(Boolean).join(" · ") || "—";
-}
