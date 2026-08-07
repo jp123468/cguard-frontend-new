@@ -1,4 +1,5 @@
 import { ApiService } from '../api/apiService'
+import { deviceSignals } from './deviceFingerprint'
 
 export interface LoginCredentials {
   email: string
@@ -24,7 +25,16 @@ export class AuthService {
       // `app` tags the session channel for single-active-session enforcement:
       // a second WEB login supersedes the previous browser session, while the
       // mobile apps ('worker'/'supervisor') live on their own channels.
-      const response = await ApiService.post('/auth/sign-in', { ...credentials, app: 'web' }, { skipAuth: true })
+      // Device signals (fingerprint + browser timezone/locale) travel with the
+      // request so the superadmin panel can tell "same person, new account" from
+      // "different person". Best-effort: never blocks the login. See
+      // deviceFingerprint.ts — review signal only, not an auth input.
+      const signals = await deviceSignals()
+      const response = await ApiService.post(
+        '/auth/sign-in',
+        { ...credentials, ...signals, app: 'web' },
+        { skipAuth: true }
+      )
       return response
     } catch (err: any) {
       const msg = err?.message || ''
@@ -58,6 +68,7 @@ export class AuthService {
 
     const payload = {
       ...data,
+      ...(await deviceSignals()),
       fullName: rawName || undefined,
       firstName: firstName || undefined,
       lastName: lastName || undefined,
