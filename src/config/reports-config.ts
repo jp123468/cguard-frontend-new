@@ -194,31 +194,31 @@ export const REPORT_SECTIONS: ReportSection[] = [
   },
   {
     id: "payroll",
-    title: "Informes de Horas de Nómina",
+    title: "Informes de Horas Trabajadas",
     reports: [
       {
         id: "payroll-client",
-        title: "Horas de Nómina por Cliente",
-        description: "Ver horas de nómina por cliente",
+        title: "Horas Trabajadas por Cliente",
+        description: "Ver horas trabajadas por cliente",
         href: "/reports/payroll/by-client",
       },
       {
         id: "payroll-post",
-        title: "Horas de Nómina por Puesto de seguridad",
+        title: "Horas Trabajadas por Puesto de seguridad",
         description:
-          "Ver horas de nómina por puesto de seguridad",
+          "Ver horas trabajadas por puesto de seguridad",
         href: "/reports/payroll/by-post",
       },
       {
         id: "payroll-skillset",
-        title: "Horas de Nómina por Conjunto de Habilidades",
+        title: "Horas Trabajadas por Conjunto de Habilidades",
         description:
-          "Ver horas de nómina por conjunto de habilidades",
+          "Ver horas trabajadas por conjunto de habilidades",
         href: "/reports/payroll/by-skillset",
       },
       {
         id: "payroll-department",
-        title: "Horas de Nómina por Departamento",
+        title: "Horas Trabajadas por Departamento",
         description:
           "Ver horas de nómina por departamento",
         href: "/reports/payroll/by-department",

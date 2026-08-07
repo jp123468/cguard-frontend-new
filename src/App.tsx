@@ -122,8 +122,7 @@ const NominaApprovals = lazy(() => import("./pages/admin/nomina/NominaApprovals"
 const TaskApprovals = lazy(() => import("./pages/admin/tasks/TaskApprovals"));
 const TaskTracking = lazy(() => import("./pages/admin/tasks/TaskTracking"));
 const PassdownsPage = lazy(() => import("./pages/admin/passdown/PassdownsPage"));
-const NominaPayrollSummary = lazy(() => import("./pages/admin/nomina/NominaPayrollSummary"));
-const NominaRolDePagos = lazy(() => import("./pages/admin/nomina/NominaRolDePagos"));
+const NominaHoursSummary = lazy(() => import("./pages/admin/nomina/NominaHoursSummary"));
 const NominaSettings = lazy(() => import("./pages/admin/nomina/NominaSettings"));
 const Visitors = lazy(() => import("./pages/admin/visitor-management/Visitors"));
 const Vehicles = lazy(() => import("./pages/admin/visitor-management/Vehicles"));
@@ -1199,9 +1198,9 @@ export default function App() {
 
               {/* NOMINA */}
 
-              {/* NÓMINA · Time & Attendance.
-                  Payroll output lives in /nomina/payroll-summary (the old /payroll/*
-                  stub pages were removed — they had no backend). */}
+              {/* ASISTENCIA · Time & Attendance.
+                  Timesheets only. "Rol de Pagos" was removed on 2026-08-06 —
+                  pay has to be rebuilt for any country, not just Ecuador. */}
               <Route path="/nomina/dashboard" element={<ProtectedRoute><NominaDashboard /></ProtectedRoute>} />
               <Route path="/nomina/time-clock" element={<ProtectedRoute><NominaTimeClock /></ProtectedRoute>} />
               <Route path="/nomina/records" element={<ProtectedRoute><NominaRecords /></ProtectedRoute>} />
@@ -1220,8 +1219,9 @@ export default function App() {
               <Route path="/tasks" element={<ProtectedRoute><TaskTracking /></ProtectedRoute>} />
               <Route path="/tasks/approvals" element={<ProtectedRoute><TaskApprovals /></ProtectedRoute>} />
               <Route path="/passdowns" element={<ProtectedRoute><PassdownsPage /></ProtectedRoute>} />
-              <Route path="/nomina/payroll-summary" element={<ProtectedRoute><NominaPayrollSummary /></ProtectedRoute>} />
-              <Route path="/nomina/rol-de-pagos" element={<ProtectedRoute><NominaRolDePagos /></ProtectedRoute>} />
+              <Route path="/nomina/payroll-summary" element={<ProtectedRoute><NominaHoursSummary /></ProtectedRoute>} />
+              {/* Bookmarks and old notification links must not land on a 404. */}
+              <Route path="/nomina/rol-de-pagos" element={<Navigate to="/nomina/payroll-summary" replace />} />
               <Route path="/nomina/settings" element={<ProtectedRoute><NominaSettings /></ProtectedRoute>} />
 
               {/* FIN NOMINA */}

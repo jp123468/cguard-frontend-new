@@ -259,13 +259,13 @@
   },
   {
     "id": "nomina",
-    "name": "Nómina",
-    "icon": "DollarSign",
+    "name": "Asistencia",
+    "icon": "Clock",
     "expandable": true,
     "subItems": [
       {
         "id": "nomina-dashboard",
-        "name": "Asistencia · Dashboard",
+        "name": "Dashboard",
         "path": "/nomina/dashboard"
       },
       {
@@ -290,13 +290,8 @@
       },
       {
         "id": "nomina-payroll-summary",
-        "name": "Resumen de Nómina",
+        "name": "Resumen de Horas",
         "path": "/nomina/payroll-summary"
-      },
-      {
-        "id": "nomina-rol-de-pagos",
-        "name": "Rol de Pagos",
-        "path": "/nomina/rol-de-pagos"
       },
       {
         "id": "nomina-settings",

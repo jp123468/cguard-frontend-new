@@ -44,7 +44,7 @@ export const RESOURCE_LABELS: Record<string, string> = {
   deviceIdInformation: 'Dispositivos',
   insurance: 'Seguros',
   file: 'Archivos',
-  attendance: 'Asistencia (Nómina)',
+  attendance: 'Asistencia',
   attendanceSettings: 'Ajustes de asistencia',
   timeOffRequest: 'Tiempo libre',
   shiftTemplate: 'Plantillas de turno',

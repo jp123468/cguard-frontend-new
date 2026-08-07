@@ -4,7 +4,7 @@ import { DataTable, type Column } from "@/components/table/DataTable";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { confirmDialog } from "@/components/ui/confirmDialog";
-import { FileDown, Printer, Lock, FileSpreadsheet, Save, Wallet, CalendarDays, Clock, Timer, Pencil } from "lucide-react";
+import { FileDown, Printer, Lock, FileSpreadsheet, CalendarDays, Clock, Timer, UserX } from "lucide-react";
 import * as XLSX from "xlsx";
 import attendanceService from "@/lib/api/attendanceService";
 import { PageContainer, PageHeader, Section, StatCard, Stagger } from "@/components/kit";
@@ -21,11 +21,7 @@ interface SummaryRow {
   missedClockouts: number;
   noShows: number;
   approvedCorrections: number;
-  payableHours: number;
-  grossPay: number | null;
-  hourlyRate: number | null;
   daysWorked?: number;
-  monthlySalary?: number | null;
   role?: string;
 }
 
@@ -33,60 +29,42 @@ function isoDay(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-interface PayrollTotals {
+interface HoursTotals {
   shifts: number;
   totalHours: number;
   overtimeHours: number;
-  grossPay: number;
   lateCount: number;
   noShows: number;
 }
 
 // Shape returned by attendanceService.payrollSummary (unwrapped API payload).
-interface PayrollSummaryResponse {
+// The endpoint keeps its historical name; it returns hours only — see the note
+// on payrollSummary in the backend's attendanceAdminService.
+interface HoursSummaryResponse {
   rows?: SummaryRow[];
-  totals?: PayrollTotals;
-  ratesEnabled?: boolean;
-  salaryBasis?: string;
-  currency?: string;
+  totals?: HoursTotals;
 }
 
-export default function NominaPayrollSummary() {
+export default function NominaHoursSummary() {
   const [from, setFrom] = useState(isoDay(new Date(Date.now() - 14 * 864e5)));
   const [to, setTo] = useState(isoDay(new Date()));
   const [rows, setRows] = useState<SummaryRow[]>([]);
-  const [totals, setTotals] = useState<PayrollTotals | null>(null);
+  const [totals, setTotals] = useState<HoursTotals | null>(null);
   const [loading, setLoading] = useState(false);
-  const [ratesEnabled, setRatesEnabled] = useState(false);
-  const [salaryBasis, setSalaryBasis] = useState<"hourly" | "monthly">("hourly");
-  const [currency, setCurrency] = useState("USD");
   const [closing, setClosing] = useState(false);
-  const [editRates, setEditRates] = useState(false);
-  const [rateEdits, setRateEdits] = useState<Record<string, number>>({});
-  const [savingRates, setSavingRates] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
     attendanceService
       .payrollSummary({ from: `${from}T00:00:00`, to: `${to}T23:59:59` })
-      .then((d: PayrollSummaryResponse) => {
-        const rws: SummaryRow[] = (d.rows || []).map((r: SummaryRow) => ({ ...r, id: r.id ?? r.guardId }));
-        setRows(rws);
+      .then((d: HoursSummaryResponse) => {
+        setRows((d.rows || []).map((r: SummaryRow) => ({ ...r, id: r.id ?? r.guardId })));
         setTotals(d.totals || null);
-        setRatesEnabled(!!d.ratesEnabled);
-        setSalaryBasis(d.salaryBasis === "monthly" ? "monthly" : "hourly");
-        setCurrency(d.currency || "USD");
-        const re: Record<string, number> = {};
-        rws.forEach((r) => { re[r.guardId] = r.hourlyRate || 0; });
-        setRateEdits(re);
       })
       .catch((e) => toast.error(e?.message || "Error al generar el resumen"))
       .finally(() => setLoading(false));
   }, [from, to]);
   useEffect(load, []);
-
-  const money = (n: number | null | undefined) =>
-    n == null ? "—" : `${currency} ${Number(n).toFixed(2)}`;
 
   const closePeriod = async () => {
     if (!(await confirmDialog({ title: 'Cerrar periodo', message: `Cerrar el periodo hasta ${to}? Los registros quedarán bloqueados (solo lectura).`, confirmText: 'Cerrar periodo', tone: 'danger' }))) return;
@@ -101,26 +79,11 @@ export default function NominaPayrollSummary() {
     }
   };
 
-  const saveRates = async () => {
-    setSavingRates(true);
-    try {
-      await attendanceService.saveGuardRates(rateEdits);
-      toast.success("Tarifas guardadas");
-      setEditRates(false);
-      load();
-    } catch (e) {
-      toast.error((e as { message?: string })?.message || "Error al guardar tarifas");
-    } finally {
-      setSavingRates(false);
-    }
-  };
-
   const exportXlsx = () => {
     const data = rows.map((r) => ({
       Vigilante: r.guardName,
       Turnos: r.shifts,
       "Días trabajados": r.daysWorked ?? 0,
-      ...(salaryBasis === "monthly" ? { "Sueldo mensual": r.monthlySalary ?? 0 } : {}),
       "Horas regulares": r.regularHours,
       "Horas extra": r.overtimeHours,
       "Horas totales": r.totalHours,
@@ -128,33 +91,30 @@ export default function NominaPayrollSummary() {
       "Sin salida": r.missedClockouts,
       Inasistencias: r.noShows,
       Correcciones: r.approvedCorrections,
-      ...(ratesEnabled ? { "Tarifa/h": r.hourlyRate ?? 0, "Pago bruto": r.grossPay ?? 0 } : {}),
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Nómina");
-    XLSX.writeFile(wb, `nomina-${from}_${to}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, "Horas");
+    XLSX.writeFile(wb, `horas-trabajadas-${from}_${to}.xlsx`);
   };
 
   const exportPdf = () => {
     const esc = (s: unknown) =>
       String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
-    const head = ["Vigilante", "Turnos", "H. reg.", "H. extra", "H. tot.", "Tardanzas", "Inasist.", "Correc."]
-      .concat(ratesEnabled ? ["Pago bruto"] : []);
+    const head = ["Vigilante", "Días trab.", "Turnos", "H. reg.", "H. extra", "H. tot.", "Tardanzas", "Inasist.", "Correc."];
     const body = rows
       .map((r) => {
-        const cells = [r.guardName, r.shifts, r.regularHours.toFixed(2), r.overtimeHours.toFixed(2), r.totalHours.toFixed(2), r.lateCount, r.noShows, r.approvedCorrections]
-          .concat(ratesEnabled ? [money(r.grossPay)] : []);
+        const cells = [r.guardName, r.daysWorked ?? 0, r.shifts, r.regularHours.toFixed(2), r.overtimeHours.toFixed(2), r.totalHours.toFixed(2), r.lateCount, r.noShows, r.approvedCorrections];
         return `<tr>${cells.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`;
       })
       .join("");
     const w = window.open("", "_blank");
     if (!w) return;
-    w.document.write(`<html><head><title>Nómina ${esc(from)} a ${esc(to)}</title>
+    w.document.write(`<html><head><title>Horas trabajadas ${esc(from)} a ${esc(to)}</title>
       <style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h1{font-size:18px}
       table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}
       th,td{border:1px solid #ddd;padding:6px;text-align:left}th{background:#C8860A;color:#fff}</style></head>
-      <body><h1>Resumen de Nómina · ${esc(from)} a ${esc(to)}</h1>
+      <body><h1>Resumen de horas · ${esc(from)} a ${esc(to)}</h1>
       <table><thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table>
       </body></html>`);
     w.document.close();
@@ -164,12 +124,11 @@ export default function NominaPayrollSummary() {
 
   const exportCsv = () => {
     const headers = [
-      "Vigilante", "Turnos", "Horas regulares", "Horas extra", "Horas totales",
-      "Tardanzas", "Sin salida", "Inasistencias", "Correcciones", "Horas pagables",
-    ].concat(ratesEnabled ? ["Pago bruto"] : []);
+      "Vigilante", "Días trabajados", "Turnos", "Horas regulares", "Horas extra",
+      "Horas totales", "Tardanzas", "Sin salida", "Inasistencias", "Correcciones",
+    ];
     const lines = rows.map((r) =>
-      [r.guardName, r.shifts, r.regularHours, r.overtimeHours, r.totalHours, r.lateCount, r.missedClockouts, r.noShows, r.approvedCorrections, r.payableHours]
-        .concat(ratesEnabled ? [r.grossPay ?? 0] : [])
+      [r.guardName, r.daysWorked ?? 0, r.shifts, r.regularHours, r.overtimeHours, r.totalHours, r.lateCount, r.missedClockouts, r.noShows, r.approvedCorrections]
         .map((v) => `"${String(v).replace(/"/g, '""')}"`)
         .join(","),
     );
@@ -177,7 +136,7 @@ export default function NominaPayrollSummary() {
     const link = document.createElement("a");
     // Prepend UTF-8 BOM so Excel renders accented guard names (ñ/á/é) correctly.
     link.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
-    link.download = `nomina-${from}_${to}.csv`;
+    link.download = `horas-trabajadas-${from}_${to}.csv`;
     link.click();
   };
 
@@ -201,51 +160,23 @@ export default function NominaPayrollSummary() {
         </span>
       ),
     },
+    { key: "daysWorked", header: "Días trabajados", render: (_v, r) => <span className="font-semibold">{r.daysWorked ?? 0}</span> },
     { key: "shifts", header: "Turnos" },
-    { key: "daysWorked", header: "Días trab.", render: (_v, r) => <span className="font-medium">{r.daysWorked ?? 0}</span> },
     { key: "regularHours", header: "H. regulares", render: (_v, r) => r.regularHours.toFixed(2) },
     { key: "overtimeHours", header: "H. extra", render: (_v, r) => r.overtimeHours.toFixed(2) },
     { key: "totalHours", header: "H. totales", render: (_v, r) => r.totalHours.toFixed(2) },
     { key: "lateCount", header: "Tardanzas" },
     { key: "noShows", header: "Inasistencias" },
     { key: "approvedCorrections", header: "Correcciones" },
-    { key: "payableHours", header: "H. pagables", render: (_v, r) => <span className="font-semibold">{r.payableHours.toFixed(2)}</span> },
-    // Hourly basis → editable per-guard rate. Monthly basis → monthly salary column.
-    ...(salaryBasis === "hourly"
-      ? [{
-          key: "hourlyRate",
-          header: "Tarifa/h",
-          render: (_v, r) =>
-            editRates ? (
-              <input
-                type="number"
-                step="0.01"
-                value={rateEdits[r.guardId] ?? 0}
-                onChange={(e) => setRateEdits((p) => ({ ...p, [r.guardId]: Number(e.target.value) }))}
-                className="w-20 rounded border border-border bg-background px-2 py-1 text-sm"
-                onClick={(e) => e.stopPropagation()}
-              />
-            ) : (
-              <span className="text-muted-foreground">{r.hourlyRate ? `${currency} ${r.hourlyRate}` : "—"}</span>
-            ),
-        } as Column<SummaryRow>]
-      : [{
-          key: "monthlySalary",
-          header: "Sueldo mensual",
-          render: (_v, r) => <span className="text-muted-foreground">{r.monthlySalary != null ? money(r.monthlySalary) : "—"}</span>,
-        } as Column<SummaryRow>]),
-    ...(ratesEnabled
-      ? [{ key: "grossPay", header: salaryBasis === "monthly" ? "Total a pagar" : "Pago bruto", render: (_v, r) => <span className="font-semibold text-primary">{money(r.grossPay)}</span> } as Column<SummaryRow>]
-      : []),
   ];
 
   return (
     <AppLayout>
       <PageContainer width="wide" className="p-4 sm:p-6">
         <PageHeader
-          icon={<Wallet />}
-          title="Resumen de Nómina"
-          subtitle="Días trabajados, horas y pago por vigilante en el periodo"
+          icon={<Clock />}
+          title="Resumen de horas"
+          subtitle="Días trabajados y horas por persona en el periodo"
         />
 
         {/* Toolbar: rango de fechas (izquierda) · exportar y acciones (derecha) */}
@@ -273,17 +204,6 @@ export default function NominaPayrollSummary() {
             <Button variant="outline" size="sm" onClick={exportPdf} disabled={!rows.length}>
               <Printer className="mr-1.5 h-4 w-4" /> PDF
             </Button>
-            {salaryBasis === "hourly" && (
-              editRates ? (
-                <Button size="sm" onClick={saveRates} disabled={savingRates} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                  <Save className="mr-1.5 h-4 w-4" /> {savingRates ? "Guardando…" : "Guardar tarifas"}
-                </Button>
-              ) : (
-                <Button variant="outline" size="sm" onClick={() => setEditRates(true)} disabled={!rows.length}>
-                  <Pencil className="mr-1.5 h-4 w-4" /> Editar tarifas
-                </Button>
-              )
-            )}
             <Button variant="outline" size="sm" onClick={closePeriod} disabled={closing} className="text-red-600">
               <Lock className="mr-1.5 h-4 w-4" /> {closing ? "Cerrando…" : "Cerrar periodo"}
             </Button>
@@ -295,17 +215,12 @@ export default function NominaPayrollSummary() {
             <StatCard icon={<CalendarDays />} accent="primary" label="Turnos" value={totals.shifts} />
             <StatCard icon={<Clock />} accent="blue" label="Horas totales" value={Number(totals.totalHours).toFixed(2)} />
             <StatCard icon={<Timer />} accent="orange" label="Horas extra" value={Number(totals.overtimeHours).toFixed(2)} />
-            <StatCard
-              icon={<Wallet />}
-              accent={ratesEnabled ? "green" : "red"}
-              label={ratesEnabled ? (salaryBasis === "monthly" ? "Total a pagar" : "Pago bruto") : "Tardanzas / Inasist."}
-              value={ratesEnabled ? money(totals.grossPay) : `${totals.lateCount} / ${totals.noShows}`}
-            />
+            <StatCard icon={<UserX />} accent="red" label="Tardanzas / Inasist." value={`${totals.lateCount} / ${totals.noShows}`} />
           </Stagger>
         )}
 
         <div className="mt-5">
-          <Section title="Detalle por vigilante" icon={<Wallet />}>
+          <Section title="Detalle por persona" icon={<Clock />}>
             <div className="overflow-x-auto">
               <DataTable
                 columns={columns}

@@ -191,7 +191,7 @@ export default function PostingGlobalPage() {
                                     to="/nomina/settings"
                                     icon={<MapPin className="h-4 w-4" />}
                                     title="Geocerca al marcar entrada"
-                                    description="Bloquear marcaciones fuera de geocerca, radio por defecto y auto-cierre de turnos sin salida: Nómina › Ajustes."
+                                    description="Bloquear marcaciones fuera de geocerca, radio por defecto y auto-cierre de turnos sin salida: Asistencia › Ajustes."
                                 />
                                 <LinkCard
                                     to="/setting/notifications"

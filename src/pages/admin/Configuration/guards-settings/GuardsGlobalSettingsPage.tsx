@@ -234,7 +234,7 @@ export default function GuardsGlobalSettingsPage() {
                                     to="/nomina/settings"
                                     icon={<Wallet className="h-4 w-4" />}
                                     title="Marcaciones y geocerca"
-                                    description="Bloqueo fuera de geocerca, tolerancias de entrada/salida y cierre automático de turnos: Nómina › Ajustes."
+                                    description="Bloqueo fuera de geocerca, tolerancias de entrada/salida y cierre automático de turnos: Asistencia › Ajustes."
                                 />
                                 <LinkCard
                                     to="/setting/publishing-sites"

@@ -61,7 +61,7 @@ export default function NominaDashboard() {
       <PageContainer width="wide" className="p-4 sm:p-6">
         <PageHeader
           icon={<ClipboardList />}
-          title="Nómina · Asistencia"
+          title="Asistencia"
           subtitle="Resumen de asistencia de hoy"
           actions={
             <Button variant="brand" onClick={load} disabled={loading}>
