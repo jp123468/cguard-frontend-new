@@ -103,7 +103,7 @@ export default function SacafrancoAssignModal({
       let sf = posList.find((p: PositionRow) => p.type === 'sacafranco');
       if (!sf) {
         const created: any = await ApiService.post(`/tenant/${tenantId}/station/${stationId}/positions`, {
-          data: { name: 'Sacafranco', type: 'sacafranco', startTime: '07:00', endTime: '19:00', platoonOffset: 0, sortOrder: 2, guardsNeeded: 1 },
+          data: { name: 'Sacafranco', type: 'sacafranco', startTime: '07:00', endTime: '19:00', sortOrder: 2, guardsNeeded: 1 },
         });
         sf = created?.data || created;
       }

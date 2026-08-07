@@ -16,7 +16,7 @@ interface StationDetail extends Station {
 }
 
 // A scheduler position row from `/station/:id/positions`.
-interface PositionRow { id: string; type?: string; platoonOffset?: number; sortOrder?: number }
+interface PositionRow { id: string; type?: string; sortOrder?: number }
 // A rotation style (patrón) — dayShifts/nightShifts/restDays define the cycle.
 interface RotationStyleRow extends RotationCycle { id: string; name?: string }
 // A raw shift row from `/shift` (only the fields this modal reads).

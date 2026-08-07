@@ -532,29 +532,6 @@ export default function Schedule() {
     return 'rest';
   }, [positionsById, stationsById, rotationStylesById]);
 
-  // Compute the rotation slot status for a position (no guard needed)
-  // Uses the station's rotation style and position offset
-  const getSlotStatus = useCallback((stationId: string, position: StationPosition, date: Date): 'day' | 'night' | 'rest' => {
-    const station = stationsById.get(stationId);
-    if (!station?.rotationStyleId) return 'rest';
-    const rot = rotationStylesById.get(station.rotationStyleId);
-    if (!rot) return 'rest';
-
-    const cycleLength = rot.dayShifts + rot.nightShifts + rot.restDays;
-    if (cycleLength === 0) return 'rest';
-
-    const daysSinceEpoch = dseOf(date); // DST-safe day index (matches backend getGlobalEpoch)
-    // Use position's platoonOffset (station-defined) to stagger positions
-    const offset = position.platoonOffset ?? position.sortOrder ?? 0;
-    const adjustedDay = ((daysSinceEpoch - offset) % cycleLength + cycleLength) % cycleLength;
-
-    // For 24H positions: distinguish day vs night phase
-    // For 12H positions: both phases are "work" (day)
-    const is24hSlot = station?.scheduleType === '24h';
-    if (adjustedDay < rot.dayShifts) return 'day';
-    if (adjustedDay < rot.dayShifts + rot.nightShifts) return is24hSlot ? 'night' : 'day';
-    return 'rest';
-  }, [stationsById, rotationStylesById]);
 
   // Unassigned guards (not in any active assignment)
   const unassignedGuards = useMemo(() => {
@@ -1677,26 +1654,17 @@ export default function Schedule() {
         onContextMenu={e => openCellCtx(e, station, pos, posAssignments, dateStr)}
       >
         {posAssignments.length === 0 ? (
-          (() => {
-            // Show rotation pattern even without a guard assigned
-            const slotStatus = getSlotStatus(station.id, pos, day);
-            if (slotStatus === 'rest') {
-              return (
-                <div className="flex-1 rounded bg-muted/20 border border-dashed border-border/30 flex items-center justify-center cursor-pointer" title="Slot libre (sin vigilante — doble clic para asignar)" onDoubleClick={() => openAssignForm(station.id, pos.id, dateStr)}>
-                  <span className="text-[10px] font-bold text-muted-foreground/40">L</span>
-                </div>
-              );
-            }
-            // D vs N by station type, or by the block's start hour for custom puestos.
-            const code = dnCode(station.scheduleType, pos.startTime, slotStatus as 'day' | 'night');
-            const bg = code === 'N' ? 'bg-indigo-500/8 border-indigo-500/20' : 'bg-sky-500/8 border-sky-500/20';
-            const textColor = code === 'N' ? 'text-indigo-400/50' : 'text-sky-500/50';
-            return (
-              <div className={`flex-1 rounded border border-dashed flex items-center justify-center cursor-pointer ${bg}`} title={`Slot ${code} (sin vigilante — doble clic para asignar)`} onDoubleClick={() => openAssignForm(station.id, pos.id, dateStr)}>
-                <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
-              </div>
-            );
-          })()
+          // SIN VIGILANTE = SIN ROTACIÓN. Aquí se pintaba D/N/L a partir del
+          // offset guardado en el puesto: una rotación inventada para un puesto
+          // que nadie trabaja, que es de dónde salían las "L" que no cuadraban
+          // con nadie. La fase es del vigilante; sin vigilante no hay fase.
+          <div
+            className="flex-1 rounded bg-muted/10 border border-dashed border-border/40 flex items-center justify-center cursor-pointer"
+            title="Puesto sin vigilante — doble clic para asignar"
+            onDoubleClick={() => openAssignForm(station.id, pos.id, dateStr)}
+          >
+            <span className="text-[10px] font-bold text-muted-foreground/30">·</span>
+          </div>
         ) : (
           <div className="flex-1 flex flex-col gap-0.5">
             {posAssignments.map(assignment => {
