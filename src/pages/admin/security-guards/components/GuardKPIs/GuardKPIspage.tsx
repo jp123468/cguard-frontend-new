@@ -27,6 +27,7 @@ import { toast } from 'sonner';
 import KpiBarChart from '@/components/KpiBarChart';
 import GuardPerformancePanel from './GuardPerformancePanel';
 import KpiService from '@/services/kpi.service';
+import { useAuth } from "@/contexts/AuthContext";
 import { ApiService } from '@/services/api/apiService';
 import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
@@ -60,6 +61,10 @@ interface KpiMetric {
 }
 
 export default function GuardIndicators({ guard }: Props) {
+  // Mismo criterio que PostSiteKPIs: escribir indicadores exige settingsEdit
+  // (sólo admin), que el backend aplica desde 2026-08-08.
+  const { hasPermission } = useAuth();
+  const canEdit = hasPermission("settingsEdit");
   const { t } = useTranslation();
   // The guard route (/guards/:id/indicadores) mounts this page WITHOUT a `guard`
   // prop, so all guard-scoped data must fall back to the route id (the
@@ -503,7 +508,12 @@ export default function GuardIndicators({ guard }: Props) {
             title={t('guards.KPI.title', { defaultValue: 'Indicadores de rendimiento' })}
             subtitle={t('guards.KPI.subtitle', { defaultValue: 'KPIs y desempeño del vigilante.' })}
             actions={
-              <Button variant="brand" onClick={handleAddKPI}>
+              <Button
+                variant="brand"
+                onClick={handleAddKPI}
+                disabled={!canEdit}
+                title={canEdit ? undefined : t('postSites.KPI.noPermission', 'Solo un administrador puede crear o modificar indicadores')}
+              >
                 <Plus size={16} />
                 {t('guards.KPI.kpiadded', 'Añadir Nuevo KPI')}
               </Button>

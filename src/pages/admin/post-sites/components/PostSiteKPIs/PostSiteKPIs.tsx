@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Search,
   ChevronDown,
@@ -33,6 +34,13 @@ type Props = {
 };
 
 export default function PostSiteKPIs({ site }: Props) {
+  // Escribir KPIs exige settingsEdit (sólo admin), igual que ya exigía
+  // settingsRead para leerlos. El backend lo aplica desde 2026-08-08; sin esto,
+  // quien no lo tiene vería el botón, lo pulsaría y recibiría un 403 sin
+  // explicación. Mejor que el botón diga la verdad.
+  const { hasPermission } = useAuth();
+  const canEdit = hasPermission("settingsEdit");
+
   const { t } = useTranslation();
   const [actionOpen, setActionOpen] = useState(false);
   const [actionSelection, setActionSelection] = useState<string>(t('actions.action', 'Actions'));
@@ -449,7 +457,13 @@ export default function PostSiteKPIs({ site }: Props) {
             </div>
           </div>
 
-          <Button variant="brand" onClick={handleAddKPI} className="ml-2">
+          <Button
+            variant="brand"
+            onClick={handleAddKPI}
+            disabled={!canEdit}
+            title={canEdit ? undefined : t('postSites.KPI.noPermission', 'Solo un administrador puede crear o modificar indicadores')}
+            className="ml-2"
+          >
             <Plus size={16} />
             {t('postSites.KPI.kpiadded', 'Añadir Nuevo KPI')}
           </Button>
@@ -528,7 +542,7 @@ export default function PostSiteKPIs({ site }: Props) {
 
                           {menuOpenId === kpi.id && (
                             <div data-kpi-menu={"kpi-" + (kpi.id || idx)} className="absolute right-4 top-full translate-y-2 w-44 min-w-[11rem] bg-card border rounded shadow-lg z-50 py-1 divide-y divide-border overflow-hidden">
-                            <button onClick={() => { setEditingId(kpi.id); setFormData({
+                            <button disabled={!canEdit} onClick={() => { if (!canEdit) return; setEditingId(kpi.id); setFormData({
                               frequency: kpi.frequency || '',
                               description: kpi.description || '',
                               standardReports: !!kpi.standardReports,
@@ -547,7 +561,7 @@ export default function PostSiteKPIs({ site }: Props) {
                               <div className="flex items-center gap-2 text-sm text-foreground"><Edit size={16} />{t('actions.edit', 'Edit')}</div>
                             </button>
 
-                            <button onClick={() => { setToDeleteId(kpi.id); setDeleteModalOpen(true); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-muted">
+                            <button disabled={!canEdit} onClick={() => { if (!canEdit) return; setToDeleteId(kpi.id); setDeleteModalOpen(true); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40">
                               <div className="flex items-center gap-2 text-sm text-red-600"><Trash size={16} />{t('actions.delete', 'Delete')}</div>
                             </button>
 
