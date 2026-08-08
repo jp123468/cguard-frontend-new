@@ -95,7 +95,6 @@ const RoutesPage = lazy(() => import("./pages/admin/routes/RoutesPage"));
 const PatrullaBoardPage = lazy(() => import("./pages/admin/vehicle-patrol/PatrullaBoardPage"));
 const NewRoutePage = lazy(() => import("./pages/admin/routes/NewRoutePage"));
 const EditRoutePage = lazy(() => import("./pages/admin/routes/EditRoutePage"));
-const PatrolExecutionPage = lazy(() => import("./pages/guard/PatrolExecutionPage"));
 const LiveTrackingPage = lazy(() => import("./pages/admin/gps-tracker/LiveTracking"));
 const TrackingHistoryPage = lazy(() => import("./pages/admin/gps-tracker/TrackingHistory"));
 const Reports = lazy(() => import("./pages/admin/Reports/Reports"));
@@ -1438,14 +1437,12 @@ export default function App() {
                 }
               />
 
-              <Route
-                path="/patrol/:id/execute"
-                element={
-                  <ProtectedRoute>
-                    <PatrolExecutionPage />
-                  </ProtectedRoute>
-                }
-              />
+              {/* /patrol/:id/execute RETIRADA (2026-08-08): copia vieja del flujo
+                  de rondas del app del vigilante. Sin entrada de menú, sin nada
+                  que navegara a ella, y su acción publicaba en /patrolLog — un
+                  endpoint que nunca existió. El flujo real vive en worker-app
+                  (GuardPatrol) contra /site-tour/tag-scan. Implementar /patrolLog
+                  habría creado un segundo camino paralelo para registrar lo mismo. */}
 
 
 
