@@ -22,10 +22,29 @@ interface IncidentRow {
   incidentDate?: string;
   date?: string;
   stationId?: string;
-  guard?: IncidentGuardRef | null;
-  securityGuard?: IncidentGuardRef | null;
-  responsibleGuard?: IncidentGuardRef | null;
-  guardName?: string;
+  // `guardName` ES la asociación del vigilante, no un texto: el backend declara
+  // `incident.belongsTo(securityGuard, { as: 'guardName' })` y la envía con
+  // `attributes: ['id','fullName']`. Tiparla como string hacía que el compilador
+  // bendijera renderizarla directa — y renderizar un objeto es React #31, que
+  // aquí tumbaba el CRM entero a pantalla blanca.
+  // Se admite string por si alguna ruta antigua devuelve el nombre plano.
+  guardName?: IncidentGuardRef | string | null;
+}
+
+/**
+ * Nombre legible del vigilante de un incidente.
+ *
+ * Devuelve SIEMPRE un string. Es la barrera contra React #31: el valor puede
+ * llegar como objeto de asociación, como texto plano o como null según la ruta,
+ * y renderizar el objeto crudo rompe todo el árbol de React.
+ */
+function guardLabel(value: IncidentGuardRef | string | null | undefined): string {
+  if (!value) return '-';
+  if (typeof value === 'string') return value.trim() || '-';
+  const full = value.fullName || value.name;
+  if (full) return String(full);
+  const parts = `${value.firstName || ''} ${value.lastName || ''}`.trim();
+  return parts || '-';
 }
 
 export default function StationIncidents({ stationId, postSiteId }: Props) {
@@ -142,13 +161,10 @@ export default function StationIncidents({ stationId, postSiteId }: Props) {
                   r.description || r.subject || r.title || r.incidentDescription || '-';
                 const status = r.status || r.incidentStatus || '-';
                 const date = r.createdAt || r.incidentDate || r.date;
-                const g = r.guard || r.securityGuard || r.responsibleGuard || {};
-                const guardName =
-                  g.fullName ||
-                  g.name ||
-                  `${g.firstName || ''} ${g.lastName || ''}`.trim() ||
-                  r.guardName ||
-                  '-';
+                // El incidente NO trae `guard`, `securityGuard` ni
+                // `responsibleGuard`: ninguno de esos alias existe en el modelo.
+                // El vigilante viaja bajo `guardName`, que es un OBJETO.
+                const guardName = guardLabel(r.guardName);
                 return (
                   <tr key={r.id || i} className="hover:bg-muted/30">
                     <td className="px-6 py-3 text-foreground max-w-xs">

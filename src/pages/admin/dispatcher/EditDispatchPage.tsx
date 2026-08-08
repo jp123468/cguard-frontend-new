@@ -237,7 +237,7 @@ export default function EditDispatchPage() {
             d.guard?.name ||
             d.guard?.user?.fullName ||
             d.guard?.employeeName ||
-            d.guardName ||
+            (typeof d.guardName === 'string' ? d.guardName : '') ||
             d.guard?.username ||
             d.guard?.email ||
             "";

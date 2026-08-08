@@ -234,7 +234,7 @@ export default function DispatchPublicView() {
                   <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Incident Location</td>
                   <td className="py-3 px-4 text-sm text-foreground">{payload.location || payload.incidentLocation || '-'}</td>
                   <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Dispatcher</td>
-                  <td className="py-3 px-4 text-sm text-foreground">{(payload.guardName && (payload.guardName.fullName || payload.guardName.name)) || payload.guardName || '-'}</td>
+                  <td className="py-3 px-4 text-sm text-foreground">{(typeof payload.guardName === 'string' ? payload.guardName : (payload.guardName?.fullName || payload.guardName?.name)) || '-'}</td>
                 </tr>
               </tbody>
             </table>

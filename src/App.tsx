@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams, useLocation } from "react-router-dom"
 import { useEffect, lazy, Suspense } from "react"
+import AppErrorBoundary from "./components/AppErrorBoundary"
 import ProtectedRoute, { PublicOnlyRoute } from "@/components/ProtectedRoute"
 import AppLayout from "@/layouts/app-layout"
 import Login from "./pages/auth/login";
@@ -277,6 +278,7 @@ export default function App() {
           <BrowserRouter>
             <PersistentChrome>
             <Suspense fallback={<div style={{minHeight:"60vh",display:"flex",alignItems:"center",justifyContent:"center"}}><div className="animate-spin" aria-label="Cargando" style={{width:28,height:28,border:"3px solid var(--border,#e5e7eb)",borderTopColor:"var(--primary,#C8860A)",borderRadius:"50%"}}/></div>}>
+            <AppErrorBoundary scope="routes">
             <Routes>
               {/* Enlace público de video compartido (cliente, sin login) */}
               <Route path="/video/shared/:token" element={<VideoSharedClip />} />
@@ -1704,6 +1706,7 @@ export default function App() {
               <Route path="*" element={<NotFound />} />
 
             </Routes>
+            </AppErrorBoundary>
             </Suspense>
             </PersistentChrome>
           </BrowserRouter>
