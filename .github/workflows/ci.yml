@@ -1,0 +1,47 @@
+# Verificación automática del CRM antes de fusionar.
+#
+# POR QUÉ EXISTE. Hasta 2026-08-08 no había CI en ninguno de los seis
+# repositorios: nada comprobaba el código antes de que llegara a producción.
+# Se pudo encender sin limpiar nada porque el repositorio ya compila con cero
+# errores; el gate no exige trabajo previo, sólo impide que eso se rompa sin que
+# nadie se entere.
+#
+# 537 archivos, cero pruebas: por ahora el gate es typecheck + build. Ver el plan de QA para las primeras pruebas de Vitest.
+#
+# Node 22 para igualar el servidor de producción (v22.22.2).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # `npm ci` respeta el lockfile exactamente y falla si está desincronizado
+      # con package.json — que es justo lo que conviene saber.
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Compilar
+        run: npm run build
